@@ -38,14 +38,18 @@ winget install Git.Git
 ```
 
 ```bash
-irm https://claude.ai/install.ps1 | iex
+winget install Anthropic.ClaudeCode
 ```
 
-(Последняя команда — официальный установщик Claude Code для Windows. Не ставьте его через `npm`: на части компьютеров npm-версия выдаёт ошибку «claude.exe is not a valid application for this OS platform».
-Если она уже была поставлена через npm, сначала удалите её: `npm uninstall -g @anthropic-ai/claude-code`.)
+(Это официальная версия Claude Code для Windows. Не ставьте его через `npm`: на части компьютеров npm-версия выдаёт ошибку
+«claude.exe is not a valid application for this OS platform». Если npm-версия уже стоит, сначала удалите её:
+`npm uninstall -g @anthropic-ai/claude-code`.)
 
 2. **Закройте и заново откройте PowerShell**, проверьте `claude --version` (должен показать номер версии).
+   Проверка установки: `claude doctor`.
    Затем один раз войдите в Claude Code: наберите `claude`, следуйте подсказкам (откроется браузер), потом закройте.
+   Если `winget` не сработал — запасной способ (две команды в одном окне, установщик молчит 1–2 минуты, это нормально):
+   `[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12`, затем `irm https://claude.ai/install.ps1 | iex`.
 3. Обновите драйвер NVIDIA (GeForce Experience или nvidia.com) — нужен драйвер с поддержкой CUDA 12.8.
 4. Скачайте проект (зелёная кнопка **Code → Download ZIP** на GitHub), распакуйте.
 5. Дважды щёлкните **`setup.bat`**. Он всё поставит (15–30 минут, ~6 ГБ) и в конце покажет проверку:
@@ -105,8 +109,8 @@ irm https://claude.ai/install.ps1 | iex
 | Страница не открывается | Проверьте, что окно `start.bat` открыто; откройте `http://localhost:8765` вручную |
 | `[!!] nvidia-smi не найден` | Всё работает на процессоре, просто медленнее. Обновите драйвер NVIDIA |
 | Агенты не работают | В PowerShell наберите `claude` и проверьте, что вы вошли в аккаунт |
-| `claude : The term 'claude' is not recognized` | Проверьте `Test-Path "$env:USERPROFILE\.local\bin\claude.exe"`. Если `True` — добавьте папку в PATH: `[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";$env:USERPROFILE\.local\bin", "User")` и переоткройте PowerShell. Если `False` — повторите установку и пришлите её вывод |
-| `claude.exe ... is not a valid application for this OS platform` | Удалите npm-версию (`npm uninstall -g @anthropic-ai/claude-code`) и поставьте официальную: `irm https://claude.ai/install.ps1 \| iex`, затем переоткройте PowerShell |
+| `claude : The term 'claude' is not recognized` | Проверьте `Test-Path "$env:USERPROFILE\.local\bin\claude.exe"`. Если `True` — добавьте папку в PATH: `[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";$env:USERPROFILE\.local\bin", "User")` и переоткройте PowerShell. Если `False` — установка не завершилась: поставьте через `winget install Anthropic.ClaudeCode` |
+| `claude.exe ... is not a valid application for this OS platform` | Удалите npm-версию (`npm uninstall -g @anthropic-ai/claude-code`) и поставьте официальную: `winget install Anthropic.ClaudeCode`, затем переоткройте PowerShell |
 | Голос с ошибками в редких словах | Установите eSpeak-NG (см. установку) |
 
 ## 7. Настройки
