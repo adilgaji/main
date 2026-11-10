@@ -21,7 +21,7 @@ from common import MODELS, Log, ffprobe_duration, gpu_available, run  # noqa: E4
 
 DEFAULT_VOICE = "am_fenrir"  # выбран пользователем; запасные: am_michael, af_heart, bf_emma
 SPEED = 0.92  # чуть медленнее обычного — легче успевать за субтитрами
-SENTENCE_PAUSE = 0.3  # пауза между предложениями, сек
+SENTENCE_PAUSE = 0.05  # без искусственных пауз: естественная интонация Kokoro
 
 
 def clean_text(text: str) -> str:
