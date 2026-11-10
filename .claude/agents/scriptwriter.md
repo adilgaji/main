@@ -29,6 +29,7 @@ Write the result as JSON to <job>/script.json (UTF-8) with exactly this shape:
 {
   "topic": "...", "angle": "one sentence: what makes this short unique",
   "script": "full narration with *keywords*",
+  "script_ru": "точный перевод текста на русский для редактора (простыми словами)",
   "word_count": 0,
   "claims": [{"id": "c1", "sentence": "exact sentence from script", "evidence": "proven|early|myth", "sources": ["s1"]}],
   "sources": [{"id": "s1", "title": "...", "authors": "First author et al.", "venue": "Journal / Org", "year": 2020,

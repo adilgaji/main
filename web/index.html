@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Фабрика Shorts</title>
+<style>
+  :root {
+    --bg: #0E1A2B; --panel: #15263D; --panel2: #1D3556; --ink: #F5F1E8; --muted: #8FA3BF;
+    --accent: #FFC845; --ok: #5BD68A; --warn: #FFB547; --bad: #FF6B6B; --line: #2A4468;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display: flex; align-items: center; gap: 16px; padding: 16px 24px; border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 20px; margin: 0; flex: 1; }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  button { font: inherit; border: 0; border-radius: 10px; padding: 10px 18px; cursor: pointer; background: var(--panel2); color: var(--ink); }
+  button.primary { background: var(--accent); color: #0E1A2B; font-weight: 700; }
+  button.big { font-size: 20px; padding: 18px 28px; }
+  button:disabled { opacity: .5; cursor: default; }
+  input, textarea { font: inherit; width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+  textarea { min-height: 90px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin: 16px 0; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .muted { color: var(--muted); }
+  .steps { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .step { padding: 6px 14px; border-radius: 999px; background: var(--panel); color: var(--muted); font-size: 14px; }
+  .step.on { background: var(--accent); color: #0E1A2B; font-weight: 700; }
+  .step.done { color: var(--ok); }
+  .kw { background: var(--accent); color: #0E1A2B; border-radius: 6px; padding: 0 4px; }
+  .script { font-size: 20px; line-height: 1.6; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; }
+  .badge { display: inline-block; border-radius: 999px; padding: 1px 10px; font-size: 12px; font-weight: 700; }
+  .proven { background: #1f4d33; color: var(--ok); } .early { background: #4d3a17; color: var(--warn); } .myth { background: #4d1f24; color: var(--bad); }
+  .log { font: 13px/1.5 ui-monospace, Consolas, monospace; background: #0a1422; border-radius: 10px; padding: 12px; max-height: 260px; overflow: auto; white-space: pre-wrap; }
+  .spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; vertical-align: -3px; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .grid2 { display: grid; grid-template-columns: 360px 1fr; gap: 24px; }
+  @media (max-width: 800px) { .grid2 { grid-template-columns: 1fr; } }
+  video, img.thumb { width: 100%; border-radius: 14px; background: #000; }
+  .err { border-color: var(--bad); }
+  .jobs a { color: var(--ink); text-decoration: none; display: block; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .progress li { margin: 4px 0; list-style: none; }
+  pre { white-space: pre-wrap; margin: 0; font: inherit; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🧬 Фабрика Shorts · биология тела</h1>
+  <button onclick="go('#/')">Мои ролики</button>
+  <button class="primary" onclick="go('#/new')">▶ Запустить</button>
+</header>
+<main id="app"></main>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const api = async (url, opts = {}) => {
+  const r = await fetch(url, {headers: {'Content-Type': 'application/json'}, ...opts});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.detail || 'Ошибка ' + r.status);
+  return j;
+};
+const post = (url, body = {}) => api(url, {method: 'POST', body: JSON.stringify(body)});
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const kw = (s) => esc(s).replace(/\*([^*]+)\*/g, '<span class="kw">$1</span>');
+const go = (h) => { location.hash = h; };
+let timer = null;
+const poll = (fn, ms = 2500) => { clearTimeout(timer); timer = setTimeout(fn, ms); };
+const fail = (e) => alert(e.message);
+
+const STEPS = ['1. Тема', '2. Текст', '3. Раскадровка', '4. Производство', '5. Результат'];
+const stepIndex = (st) => ({script: 1, storyboard: 2, production: 3, packaging: 3, done: 4}[st.step] ?? 0);
+const stepsBar = (i) => `<div class="steps">${STEPS.map((s, k) => `<span class="step ${k === i ? 'on' : k < i ? 'done' : ''}">${k < i ? '✓ ' : ''}${s}</span>`).join('')}</div>`;
+
+/* ---------------- список роликов ---------------- */
+async function home() {
+  const jobs = await api('/api/jobs');
+  $('#app').innerHTML = `
+    <div class="card" style="text-align:center;padding:40px">
+      <p class="muted">Новый ролик: тема → текст → раскадровка → видео. Каждый шаг ждёт вашего решения.</p>
+      <button class="primary big" onclick="go('#/new')">▶ Запустить</button>
+    </div>
+    <div class="card jobs"><h3>Мои ролики</h3>
+      ${jobs.length ? jobs.map((j) => `<a href="#/job/${j.id}">${esc(j.topic)} <span class="muted">· ${esc(j.id.slice(0, 10))} · ${esc(statusText(j))}</span></a>`).join('') : '<p class="muted">Пока нет роликов.</p>'}
+    </div>`;
+}
+const statusText = (j) => j.status === 'error' ? 'ошибка' : j.step === 'done' ? 'готово' : j.status === 'review' ? 'ждёт вашего решения' : 'в работе';
+
+/* ---------------- шаг 1: тема ---------------- */
+function newVideo() {
+  $('#app').innerHTML = `${stepsBar(0)}
+    <div class="card"><h2>Шаг 1. Выберите тему</h2>
+      <div class="row">
+        <button class="big" onclick="manualTopic()">✍️ Ввести тему сам</button>
+        <button class="big" onclick="autoTopic()">🔎 Найти тему автоматически</button>
+      </div>
+      <div id="topicBox"></div>
+    </div>`;
+}
+function manualTopic() {
+  $('#topicBox').innerHTML = `<p>Тема (можно по-русски или по-английски):</p>
+    <input id="topic" placeholder="Например: что происходит в теле, когда ты волнуешься">
+    <p><button class="primary" onclick="confirmTopic($('#topic').value)">Подтвердить</button></p>`;
+  $('#topic').focus();
+}
+async function autoTopic() {
+  try { await post('/api/idea'); } catch (e) { /* уже идёт поиск */ }
+  ideaPoll();
+}
+async function ideaPoll() {
+  const r = await api('/api/idea');
+  if (r.running) {
+    $('#topicBox').innerHTML = `<p><span class="spinner"></span>Ищу, что сейчас ищут и смотрят про биологию тела… (1–3 минуты)</p>`;
+    return poll(ideaPoll, 3000);
+  }
+  if (r.error) { $('#topicBox').innerHTML = `<div class="card err">Не получилось: <pre>${esc(r.error.slice(0, 600))}</pre><button onclick="autoTopic()">Попробовать снова</button></div>`; return; }
+  const i = r.idea;
+  if (!i) return;
+  $('#topicBox').innerHTML = `<div class="card">
+      <h3>${esc(i.topic)}</h3><p class="muted">${esc(i.topic_ru)}</p>
+      <p><b>Уникальный угол:</b> ${esc(i.angle)}</p>
+      <p><b>Почему сейчас:</b> ${esc(i.why_now)}</p>
+      <p><b>Научная база:</b> ${esc(i.evidence_base)}</p>
+      <p><b>Что покажем:</b> ${esc(i.visual_idea)}</p>
+      <p><b>Риски:</b> ${esc(i.risk)}</p>
+      <div class="row"><button class="primary" onclick='confirmTopic(${JSON.stringify(i.topic)}, ${JSON.stringify(i.angle)})'>Подтвердить</button>
+      <button onclick="autoTopic()">Сделать заново</button></div></div>`;
+}
+async function confirmTopic(topic, angle = '') {
+  try { const r = await post('/api/jobs', {topic, angle}); go('#/job/' + r.id); } catch (e) { fail(e); }
+}
+
+/* ---------------- ролик ---------------- */
+async function job(id) {
+  let d;
+  try { d = await api('/api/jobs/' + id); } catch (e) { $('#app').innerHTML = `<div class="card err">${esc(e.message)}</div>`; return; }
+  const st = d.state;
+  const i = stepIndex(st);
+  let html = `${stepsBar(i)}<h2>${esc(st.topic)}</h2>`;
+  if (st.status === 'error' && !st.running) {
+    html += `<div class="card err"><h3>Шаг не удался (после 3 попыток)</h3><pre>${esc(st.error)}</pre>
+      <p><button class="primary" onclick="act('${id}','retry')">Повторить</button></p></div>${logBox(d)}`;
+  } else if (st.running || st.status === 'working' || st.status === 'new') {
+    html += working(d) + logBox(d);
+    poll(() => job(id));
+  } else if (st.step === 'script') html += scriptView(d);
+  else if (st.step === 'storyboard') html += storyboardView(d);
+  else html += resultView(d);
+  $('#app').innerHTML = html;
+}
+const logBox = (d) => `<details class="card" ${d.state.running ? 'open' : ''}><summary>Журнал (на русском)</summary><div class="log">${esc(d.log.join('\n'))}</div></details>`;
+
+function working(d) {
+  const st = d.state;
+  const L = d.log.join('\n');
+  if (st.step === 'production' || st.step === 'packaging' || st.storyboard_confirmed && st.step !== 'done') {
+    const stages = [['Озвучка', /Озвучка готова|Шаг 4/], ['Субтитры', /Субтитры готовы|Шаг 4/], ['Сборка сцен и рендер', /Рендер готов/], ['Проверки качества', /Все проверки|ПРОВЕРКА/], ['Названия, описание, теги', /Агент scriptwriter: DONE[\s\S]*Обложка|Обложка готова/], ['Обложка', /Обложка готова/], ['Контроль качества', /Контроль качества:/]];
+    const last = L.slice(L.lastIndexOf('Шаг 4'));
+    return `<div class="card"><h3><span class="spinner"></span>Шаг 4. Автоматическая работа</h3><ul class="progress">
+      ${stages.map(([n, re]) => `<li>${re.test(last) ? '✅' : '⏳'} ${n}</li>`).join('')}</ul>
+      <p class="muted">Вопросов не будет. Упавший шаг повторяется до 3 раз.</p></div>`;
+  }
+  const what = st.step === 'script' ? 'Сценарист пишет текст, проверяющий сверяет каждый факт с источниками (3–8 минут)…' : 'Озвучка, субтитры и раскадровка (2–5 минут)…';
+  return `<div class="card"><p><span class="spinner"></span>${what}</p></div>`;
+}
+
+/* ---------------- шаг 2: текст ---------------- */
+function scriptView(d) {
+  const s = d.script;
+  if (!s) return '<div class="card">Текста ещё нет.</div>';
+  const fc = s.fact_check || {};
+  const src = Object.fromEntries((s.sources || []).map((x) => [x.id, x]));
+  const rd = s.readability || {};
+  return `<div class="card"><h3>Шаг 2. Текст ролика</h3>
+      <p class="script">${kw(s.script)}</p>
+      ${s.script_ru ? `<p class="muted"><b>Перевод:</b> ${esc(s.script_ru.replace(/\*/g, ''))}</p>` : ''}
+      <p class="muted">${s.word_count || ''} слов · простота: ${rd.grade ?? '—'} класс · проверка фактов: ${esc(fc.verdict || '—')}</p>
+    </div>
+    <div class="card"><h3>Факты и источники</h3><table><tr><th>Фраза</th><th>Уровень</th><th>Источники</th></tr>
+      ${(s.claims || []).map((c) => `<tr><td>${kw(c.sentence)}</td><td><span class="badge ${c.evidence}">${{proven: 'доказано', early: 'предварительно', myth: 'миф'}[c.evidence] || c.evidence}</span></td>
+        <td>${c.sources.map((id) => src[id] ? `<a style="color:var(--accent)" href="${esc(src[id].url)}" target="_blank">${esc((src[id].authors || '').split(' ')[0])} ${esc(src[id].year)}</a> <span class="muted">(${esc(src[id].type)})</span>` : id).join('<br>')}</td></tr>`).join('')}
+      </table>
+      ${(fc.warnings || []).length ? `<details><summary>Замечания проверяющего (${fc.warnings.length})</summary><ul>${fc.warnings.map((w) => `<li class="muted">${esc(w)}</li>`).join('')}</ul></details>` : ''}
+    </div>
+    <div class="card">
+      <div class="row"><button class="primary" onclick="act('${d.id}','script/confirm')">✓ Подтвердить</button>
+      <button onclick="$('#rw').classList.toggle('hidden')">↻ Переписать</button>
+      <button onclick="$('#man').classList.toggle('hidden')">✎ Править вручную</button></div>
+      <div id="rw" class="hidden"><p>Замечания (можно по-русски):</p><textarea id="remarks"></textarea>
+        <p><button class="primary" onclick="act('${d.id}','script/rewrite',{remarks:$('#remarks').value})">Переписать</button></p></div>
+      <div id="man" class="hidden"><p>Текст (английский; *звёздочки* = выделенные слова). После сохранения его проверит fact-checker:</p>
+        <textarea id="manual" style="min-height:180px">${esc(s.script)}</textarea>
+        <p><button class="primary" onclick="act('${d.id}','script/manual',{script:$('#manual').value})">Сохранить и проверить</button></p></div>
+    </div>${logBox(d)}`;
+}
+
+/* ---------------- шаг 3: раскадровка ---------------- */
+function storyboardView(d) {
+  const sb = d.storyboard;
+  if (!sb) return '<div class="card">Раскадровки ещё нет.</div>';
+  const tr = {cut: 'склейка', zoom: 'зум', slide: 'сдвиг', fade: 'растворение'};
+  return `<div class="card"><h3>Шаг 3. Раскадровка · ${sb.shots.length} кадров · ${sb.total} с</h3>
+      <audio controls src="/api/jobs/${d.id}/file/voice.wav?t=${Date.now()}" style="width:100%"></audio>
+      <p class="muted">Сумма длительностей кадров: ${sb.sum_of_shots} с = длина озвучки ${sb.total} с.</p>
+      <table><tr><th>№</th><th>Время, с</th><th>Что на экране</th><th>Текст озвучки</th><th>Переход</th><th></th></tr>
+      ${sb.shots.map((s) => `<tr><td>${s.id}</td><td>${s.start.toFixed(2)}–${s.end.toFixed(2)}<br><span class="muted">${s.duration} с</span></td>
+        <td><b>${esc(s.template)}</b> — ${esc(s.description_ru)}</td><td><i>${esc(s.text)}</i></td><td>${tr[s.transition] || esc(s.transition)}</td>
+        <td><button title="Изменить этот кадр" onclick="editShot(${s.id})">✎</button></td></tr>
+        <tr id="edit${s.id}" class="hidden"><td></td><td colspan="5"><input id="shotr${s.id}" placeholder="Что изменить в кадре ${s.id}?">
+          <p><button class="primary" onclick="act('${d.id}','storyboard/redo',{shot:${s.id},remarks:$('#shotr${s.id}').value})">Переделать кадр ${s.id}</button></p></td></tr>`).join('')}
+      </table></div>
+    <div class="card"><div class="row">
+      <button class="primary" onclick="if(confirm('Начать производство видео по этой раскадровке?')) act('${d.id}','storyboard/confirm')">✓ Подтвердить и начать работу</button>
+      <button onclick="$('#sbr').classList.toggle('hidden')">↻ Переделать</button></div>
+      <div id="sbr" class="hidden"><p>Замечания ко всей раскадровке:</p><textarea id="sbremarks"></textarea>
+        <p><button class="primary" onclick="act('${d.id}','storyboard/redo',{remarks:$('#sbremarks').value})">Переделать</button></p></div>
+    </div>${logBox(d)}`;
+}
+const editShot = (n) => $('#edit' + n).classList.toggle('hidden');
+
+/* ---------------- шаг 5: результат ---------------- */
+function resultView(d) {
+  const st = d.state;
+  const rv = d.review;
+  const problems = st.problems || [];
+  return `<div class="grid2">
+      <div><video controls src="/api/jobs/${d.id}/file/video.mp4?t=${Date.now()}"></video></div>
+      <div>
+        ${problems.length ? `<div class="card err"><b>Проверки нашли проблемы:</b><ul>${problems.map((p) => `<li>${esc(p)}</li>`).join('')}</ul></div>` : '<div class="card">✅ Все автоматические проверки пройдены</div>'}
+        ${rv ? `<div class="card ${rv.verdict === 'pass' ? '' : 'err'}"><b>Контроль качества: ${rv.verdict === 'pass' ? '✅ пройден' : '⚠️ нужна доработка'}</b><p>${esc(rv.summary_ru)}</p>
+          ${(rv.fixes || []).length ? `<ul>${rv.fixes.map((f) => `<li class="muted">${esc(f.file)}: ${esc(f.problem)} → ${esc(f.suggestion)}</li>`).join('')}</ul>` : ''}</div>` : ''}
+        <div class="card"><b>Названия</b><pre>${esc(d.title)}</pre></div>
+        <div class="card"><b>Описание</b><pre class="muted">${esc(d.description)}</pre></div>
+        <div class="card"><b>Теги</b><pre class="muted">${esc(d.tags)}</pre></div>
+        <div class="card"><b>Обложка</b>${d.files['thumbnail.png'] ? `<img class="thumb" style="max-width:240px;display:block;margin-top:8px" src="/api/jobs/${d.id}/file/thumbnail.png?t=${Date.now()}">` : ''}</div>
+        <button class="primary big" onclick="act('${d.id}','open')">📂 Открыть папку</button>
+        <p class="muted">Автозагрузки нет: посмотрите ролик и загрузите сами.</p>
+      </div></div>${logBox(d)}`;
+}
+
+async function act(id, path, body = {}) {
+  try { await post(`/api/jobs/${id}/${path}`, body); if (path !== 'open') job(id); } catch (e) { fail(e); }
+}
+
+/* ---------------- маршруты ---------------- */
+function route() {
+  clearTimeout(timer);
+  const h = location.hash || '#/';
+  if (h === '#/new') return newVideo();
+  if (h.startsWith('#/job/')) return job(h.slice(6));
+  return home();
+}
+window.addEventListener('hashchange', route);
+route();
+</script>
+</body>
+</html>

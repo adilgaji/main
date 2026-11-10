@@ -23,7 +23,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import OUTPUT, ROOT, Log, ffprobe_duration, retry  # noqa: E402
 
 MIN_SEC, MAX_SEC = 30, 55  # допустимая длина ролика (сек)
-CLAUDE = "claude.cmd" if sys.platform == "win32" else "claude"
+import shutil  # noqa: E402
+
+CLAUDE = shutil.which("claude") or ("claude.cmd" if sys.platform == "win32" else "claude")
 AGENT_TOOLS = {
     "idea-researcher": "WebSearch WebFetch Read Write",
     "scriptwriter": "WebSearch WebFetch Read Write",

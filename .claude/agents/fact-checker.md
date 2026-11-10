@@ -20,7 +20,7 @@ For EVERY sentence of the script:
    *keywords* preserved, word count within ±10 of the original. A simplification must stay true to the source
    (an analogy may simplify but must not change the science).
 
-Write <job>/script.json back (same shape; updated script/claims/sources) and add
+Write <job>/script.json back (same shape; updated script/claims/sources; keep "script_ru" an exact Russian translation of the final script) and add
 "fact_check": {"verdict": "pass|fixed", "checked_claims": N, "changes": ["what you changed and why"],
                "removed": ["claims removed and why"], "warnings": ["anything the human should look at"]}.
 If the script cannot be fixed, set verdict "fail" and explain in warnings.

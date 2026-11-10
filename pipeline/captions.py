@@ -51,7 +51,26 @@ def _hotwords(prompt: str) -> str:
     return " ".join(sorted(w for w in words if len(w) >= 8))[:300]
 
 
+def _windows_cuda_dlls():
+    """Windows: faster-whisper ищет библиотеки CUDA (cuBLAS/cuDNN) в PATH.
+    Они уже лежат внутри PyTorch — подключаем их оттуда."""
+    import os
+
+    if os.name != "nt":
+        return
+    try:
+        import torch
+
+        lib = Path(torch.__file__).parent / "lib"
+        os.add_dll_directory(str(lib))
+        os.environ["PATH"] = str(lib) + os.pathsep + os.environ.get("PATH", "")
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def _transcribe(wav: Path, prompt: str, device: str, compute: str, vad: bool = False):
+    if device == "cuda":
+        _windows_cuda_dlls()
     from faster_whisper import WhisperModel
 
     import subprocess
