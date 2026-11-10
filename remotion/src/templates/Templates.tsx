@@ -347,7 +347,9 @@ export const TipsT: React.FC = () => {
       {p.headline && <Headline text={p.headline} top={HEAD_TOP} />}
       <div style={{position: 'absolute', left: SAFE.left, width: VIDEO.width - SAFE.left - SAFE.right, top: 480, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 36}}>
         {items.map((it, i) => {
-          const s0 = at(it.text.split(' ')[0], 0.3 + i * 0.2);
+          // карточка появляется, когда звучит любое из её слов (иначе — по очереди)
+          const fb = (0.3 + i * 0.2) * dur;
+          const s0 = Math.min(...it.text.split(' ').map((w) => at(w, 0.3 + i * 0.2)), fb + 0.001);
           const k = ramp(t, s0 - 0.1, s0 + 0.35);
           return (
             <div key={i} style={{opacity: k, translate: `${(1 - k) * 120}px 0px`, display: 'flex', alignItems: 'center', gap: 30, background: COLORS.bgSoft, borderRadius: 36, padding: '26px 40px', border: `5px solid ${COLORS.bgGlow}`}}>

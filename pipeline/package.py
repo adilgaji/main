@@ -31,6 +31,9 @@ def check_packaging(pk: dict) -> list[str]:
             problems.append(f"title longer than 60 characters ({len(t)}): {t}")
         if any(w in t.lower() for w in FORBIDDEN):
             problems.append(f"forbidden word in title: {t}")
+    for t in pk.get("tags", []) + pk.get("titles", []):
+        if any(w in t.lower() for w in ("kid", "child")):
+            problems.append(f"do not target kids (made-for-kids risk): {t}")
     if len(", ".join(pk.get("tags", []))) > 480:
         problems.append("tags are longer than 480 characters in total")
     if not pk.get("thumbnail", {}).get("text"):
@@ -149,7 +152,9 @@ def full_production(job: Path, log: Log | None = None):
     log = log or Log(job / "log.txt")
     produce(job, log)
     res = package(job, log)
-    if res.get("review", {}).get("verdict") == "revise" and auto_fix(job, res["review"], log):
+    for _ in range(2):  # до 2 кругов автоисправлений
+        if res.get("review", {}).get("verdict") != "revise" or not auto_fix(job, res["review"], log):
+            break
         log("Перерисовываю видео с исправлениями")
         produce(job, log)
         res = package(job, log)

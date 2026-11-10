@@ -1,0 +1,36 @@
+НАУЧНЫЕ ИСТОЧНИКИ
+[s1] Bernard C et al. Role of macrophages during skeletal muscle regeneration and hypertrophy: Implications for immunomodulatory strategies. Physiological Reports 2022. https://pmc.ncbi.nlm.nih.gov/articles/PMC9535344
+[s2] Bazgir B et al. Satellite Cells Contribution to Exercise Mediated Muscle Hypertrophy and Repair. Cell Journal (Yakhteh) 2016. https://pmc.ncbi.nlm.nih.gov/articles/PMC5086326
+[s3] Churchward-Venne TA et al. Nutritional regulation of muscle protein synthesis with resistance exercise: strategies to enhance anabolism. Nutrition & Metabolism 2012. https://pmc.ncbi.nlm.nih.gov/articles/PMC3464665/
+[s5] Lamon S et al. The effect of acute sleep deprivation on skeletal muscle protein synthesis and the hormonal environment. Physiological Reports 2021. https://pubmed.ncbi.nlm.nih.gov/33400856/
+[s6] Wilke J, Behringer M Is "Delayed Onset Muscle Soreness" a False Friend? The Potential Implication of the Fascial Connective Tissue in Post-Exercise Discomfort. International Journal of Molecular Sciences 2021. https://pmc.ncbi.nlm.nih.gov/articles/PMC8431437/
+[s7] Morrison M et al. Sleep, circadian biology and skeletal muscle interactions: Implications for metabolic health. Sleep Medicine Reviews 2022. https://pubmed.ncbi.nlm.nih.gov/36272396/
+
+УТВЕРЖДЕНИЯ И ИХ ИСТОЧНИКИ
+  [c1] (proven) Your muscles don't really grow while you lift. → s2, s3
+  [c2] (proven) They grow while you *rest*. → s2, s3
+  [c3] (proven) Hard training can make tiny tears in muscle. → s1, s2
+  [c4] (proven) Then a *repair crew* shows up. → s1, s2
+  [c5] (proven) Among the first are *cleanup cells*. → s1
+  [c6] (proven) They eat the broken bits. → s1
+  [c7] (proven) Next, *sleeping repair cells* on the muscle wake up. → s1, s2
+  [c8] (proven) They split into more cells. → s1, s2
+  [c9] (proven) Then they join the muscle to patch it. → s2
+  [c10] (proven) Muscle *building* stays high for up to two days. → s3
+  [c11] (myth) Many think sore muscles the next day come from acid made during exercise. → s6
+  [c12] (myth) That's mostly a *myth*. → s6
+  [c13] (early) Early research suggests one night with no sleep slows muscle building. → s5, s7
+  [c14] (proven) So eat meals with *protein*, your body's building blocks. → s3
+  [c15] (proven) And *sleep* well. → s7
+  [c16] (proven) Your strength is built at rest. → s2, s3
+
+ЛИЦЕНЗИИ МАТЕРИАЛОВ
+# Внешние ресурсы проекта и их лицензии
+# (каждый файл, который не нарисован кодом, обязан быть здесь)
+
+Montserrat (шрифт) — SIL Open Font License 1.1
+  источник: npm @fontsource/montserrat, https://github.com/JulietaUla/Montserrat
+  файлы: remotion/public/fonts/montserrat-latin-*.woff2
+
+Вся графика (стикмен, тело, органы, клетки, молекулы, иконки, графики) — нарисована кодом (SVG), собственная.
+Музыка — не используется.
