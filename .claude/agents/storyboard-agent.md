@@ -18,7 +18,8 @@ Make a storyboard:
 - Anatomy must be correct (use only organs/regions listed in the schema). Visuals must show exactly
   what the words say at that moment.
 - The final shot uses template "outro" (it shows "Educational, not medical advice").
-- Headlines ≤ 5 words, uppercase-friendly, may contain one *keyword*.
+- Headlines ≤ 5 words, uppercase-friendly, may contain one *keyword*. On-screen text uses plain words
+  (docs/PLAIN_LANGUAGE.md): prefer "CLEANUP CELLS" over "MACROPHAGES" unless the term is being introduced.
 
 Write <job>/storyboard.json:
 {"shots": [{"id": 1, "first_word": 0, "last_word": 8, "template": "hook", "params": {...},

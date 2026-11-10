@@ -1,0 +1,23 @@
+# Упаковка ролика (задание для scriptwriter в режиме packaging)
+
+Прочитай docs/MEDICAL_RULES.md, docs/PLAIN_LANGUAGE.md, <job>/script.json, <job>/storyboard.json.
+Напиши <job>/packaging.json:
+
+{
+  "titles": ["...", "...", "..."],
+  "description": "...",
+  "tags": ["...", "..."],
+  "thumbnail": {"text": "WHY MUSCLES *GROW* AT REST", "visual": "muscle", "visual_params": {"repair": 1, "flex": 0.6},
+                "pose": "think", "emotion": "surprised"}
+}
+
+Правила:
+- 3 разных названия на английском, каждое ≤ 60 символов (считай!). Простые слова, интрига без обмана,
+  без кликбейта, без «cure/guarantee/secret/hack», без CAPS LOCK целиком. Можно 1 эмодзи в конце (необязательно).
+  Пусть разные: вопрос / удивительный факт / «что происходит внутри».
+- description: 2–3 коротких предложения простыми словами, о чём ролик (английский).
+  НЕ добавляй источники и дисклеймер — программа добавит их сама из script.json.
+  В конце 2–3 хештега, первым #Shorts.
+- tags: 10–15 тегов (английский, нижний регистр), общая длина всех тегов ≤ 450 символов.
+- thumbnail.text: 2–5 слов КАПСОМ, одно *ключевое* слово. visual — из docs/STORYBOARD_SCHEMA.md (hook.visual).
+Ответь одной строкой: DONE.

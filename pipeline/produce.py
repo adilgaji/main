@@ -45,8 +45,10 @@ def checks(job: Path, log: Log) -> list[str]:
         problems.append(f"Длительность видео {vdur:.2f} с ≠ озвучки {adur:.2f} с")
     if abs(sb["sum_of_shots"] - adur) > 0.05:
         problems.append(f"Сумма кадров {sb['sum_of_shots']} с ≠ озвучки {adur:.2f} с")
-    if not 30 <= adur <= 40.5:
-        problems.append(f"Длина ролика {adur:.1f} с — вне 30–40 с")
+    from job import MAX_SEC, MIN_SEC
+
+    if not MIN_SEC <= adur <= MAX_SEC:
+        problems.append(f"Длина ролика {adur:.1f} с — вне {MIN_SEC}–{MAX_SEC} с")
     # 2. формат
     info = run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height,r_frame_rate", "-of", "csv=p=0", str(video)])
     if not info.strip().startswith("1080,1920"):

@@ -22,6 +22,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import OUTPUT, ROOT, Log, ffprobe_duration, retry  # noqa: E402
 
+MIN_SEC, MAX_SEC = 30, 55  # допустимая длина ролика (сек)
 CLAUDE = "claude.cmd" if sys.platform == "win32" else "claude"
 AGENT_TOOLS = {
     "idea-researcher": "WebSearch WebFetch Read Write",
@@ -100,7 +101,25 @@ def step_script(job: Path, remarks: str = "", log: Log | None = None) -> dict:
             prompt += f"Previous version is in {rel}/script.json — rewrite it.\n"
     retry("сценарий", run_agent, log, name="scriptwriter", prompt=prompt, log=log)
     retry("проверка фактов", run_agent, log, name="fact-checker", prompt=f"Job folder: {rel}\nCheck {rel}/script.json.", log=log)
+    # проверка простоты языка: сложный текст автоматически уходит на упрощение (1 раз)
+    from readability import analyze, problems as read_problems
+
+    sj = json.loads((job / "script.json").read_text(encoding="utf-8"))
+    issues = read_problems(sj["script"])
+    a = analyze(sj["script"])
+    log(f"Простота текста: уровень {a['grade']} класса, в среднем {a['avg_sentence']} слов в предложении")
+    if a["grade"] > 6.0 or a["long_sentences"] or len(a["hard_words"]) > 3:
+        log("Текст сложноват — отправляю сценаристу на упрощение")
+        simp = ("Make the language simpler so a 10-year-old understands it (docs/PLAIN_LANGUAGE.md). Problems: "
+                + "; ".join(issues) + f". Rewrite {rel}/script.json keeping the facts and sources.")
+        retry("упрощение текста", run_agent, log, name="scriptwriter", prompt=f"Job folder: {rel}\nTopic: {st['topic']}\n{simp}", log=log)
+        retry("проверка фактов", run_agent, log, name="fact-checker", prompt=f"Job folder: {rel}\nCheck {rel}/script.json.", log=log)
+        sj = json.loads((job / "script.json").read_text(encoding="utf-8"))
+        a = analyze(sj["script"])
+        log(f"После упрощения: уровень {a['grade']} класса")
     sj = write_script_txt(job)
+    sj["readability"] = analyze(sj["script"])
+    (job / "script.json").write_text(json.dumps(sj, ensure_ascii=False, indent=2), encoding="utf-8")
     words = len(re.sub(r"[*]", "", sj["script"]).split())
     update_state(job, step="script", status="review", word_count=words)
     log(f"Текст готов: {words} слов, источников: {len(sj['sources'])}, проверка: {sj.get('fact_check', {}).get('verdict')}")
@@ -161,12 +180,12 @@ def step_storyboard(job: Path, remarks: str = "", log: Log | None = None):
     # длина ролика должна быть 30–40 с: иначе текст автоматически сокращается/дополняется
     for _ in range(2):
         dur = ffprobe_duration(job / "voice.wav")
-        if 30 <= dur <= 40.5:
+        if MIN_SEC <= dur <= MAX_SEC:
             break
         words_now = len(json.loads((job / "words.json").read_text(encoding="utf-8")))
-        target = round(words_now * 36 / dur)
-        log(f"Озвучка {dur:.1f} с — вне нормы 30–40 с. Прошу сценариста привести текст к ~{target} словам")
-        step_script(job, remarks=f"The voiceover is {dur:.1f} s, it must be 33-38 s. Rewrite to about {target} words, keep the hook, the core idea and the strongest facts.", log=log)
+        target = round(words_now * (45 if dur > MAX_SEC else 35) / dur)
+        log(f"Озвучка {dur:.1f} с — вне нормы {MIN_SEC}–{MAX_SEC} с. Прошу сценариста привести текст к ~{target} словам")
+        step_script(job, remarks=f"The voiceover is {dur:.1f} s, it must be {MIN_SEC}-{MAX_SEC} s. Rewrite to about {target} words, keep the hook, the core idea, the plain-language explanations and the strongest facts.", log=log)
         update_state(job, step="storyboard", status="working")
         make_voice(job, log)
     rel = job.relative_to(ROOT).as_posix()
