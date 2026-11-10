@@ -58,11 +58,11 @@ export const HookT: React.FC = () => {
     <AbsoluteFill>
       <Background tint="#2C2240" />
       <Headline text={p.headline ?? ''} top={HEAD_TOP} />
-      <div style={{position: 'absolute', left: SAFE.left, top: 560}}>
-        <Stickman pose={(p.pose ?? 'think') as PoseName} emotion={(p.emotion ?? 'surprised') as Emotion} size={440} />
+      <div style={{position: 'absolute', left: SAFE.left - 20, top: 600}}>
+        <Stickman pose={(p.pose ?? 'think') as PoseName} emotion={(p.emotion ?? 'surprised') as Emotion} size={420} />
       </div>
-      <div style={{position: 'absolute', left: 430, top: 600, width: 480, height: 480, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-        <Visual kind={p.visual ?? 'heart'} params={p.visual_params} size={470} k={k} />
+      <div style={{position: 'absolute', left: 370, top: 580, width: 560, height: 500, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+        <Visual kind={p.visual ?? 'heart'} params={p.visual_params} size={p.visual === 'muscle' ? 560 : 480} k={k} />
       </div>
     </AbsoluteFill>
   );
