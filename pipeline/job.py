@@ -158,6 +158,17 @@ def step_storyboard(job: Path, remarks: str = "", log: Log | None = None):
     update_state(job, step="storyboard", status="working")
     if not (job / "words.json").exists() or remarks == "__revoice__":
         make_voice(job, log)
+    # длина ролика должна быть 30–40 с: иначе текст автоматически сокращается/дополняется
+    for _ in range(2):
+        dur = ffprobe_duration(job / "voice.wav")
+        if 30 <= dur <= 40.5:
+            break
+        words_now = len(json.loads((job / "words.json").read_text(encoding="utf-8")))
+        target = round(words_now * 36 / dur)
+        log(f"Озвучка {dur:.1f} с — вне нормы 30–40 с. Прошу сценариста привести текст к ~{target} словам")
+        step_script(job, remarks=f"The voiceover is {dur:.1f} s, it must be 33-38 s. Rewrite to about {target} words, keep the hook, the core idea and the strongest facts.", log=log)
+        update_state(job, step="storyboard", status="working")
+        make_voice(job, log)
     rel = job.relative_to(ROOT).as_posix()
     prompt = f"Job folder: {rel}\n"
     if remarks and remarks != "__revoice__":

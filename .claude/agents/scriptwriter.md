@@ -10,7 +10,7 @@ Input (in the prompt): topic, optional angle, optional reviewer remarks, and the
 First read docs/MEDICAL_RULES.md and follow it strictly.
 
 Write ONE script:
-- English, 80–88 spoken words (target length 30–40 s at a calm pace). Count words.
+- English, 70–78 spoken words (target 33–38 s at a calm pace; the voice reads ~2.3 words per second plus pauses between sentences). Count words.
 - Structure: HOOK in the first sentence (2–3 s, a surprising question or fact, no clickbait lies) →
   ONE core idea → "what happens inside" step by step (cells, hormones, organs) →
   one practical, evidence-based takeaway if relevant → short memorable ending.

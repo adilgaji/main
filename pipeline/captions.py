@@ -60,7 +60,8 @@ def _transcribe(wav: Path, prompt: str, device: str, compute: str):
     audio = np.frombuffer(pcm, dtype=np.float32)
     model = WhisperModel(WHISPER_MODEL, device=device, compute_type=compute, download_root=str(MODELS / "whisper"))
     segments, _ = model.transcribe(
-        audio, language="en", word_timestamps=True, initial_prompt=prompt[:800], vad_filter=False, beam_size=5
+        audio, language="en", word_timestamps=True, initial_prompt=prompt[:400], vad_filter=False, beam_size=5,
+        condition_on_previous_text=False,  # не «зацикливаться» на длинных записях
     )
     words = []
     for seg in segments:

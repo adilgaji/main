@@ -20,8 +20,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import MODELS, Log, ffprobe_duration, gpu_available, run  # noqa: E402
 
 DEFAULT_VOICE = "am_fenrir"  # выбран пользователем; запасные: am_michael, af_heart, bf_emma
-SPEED = 0.85  # чуть медленнее обычного — легче успевать за субтитрами
-SENTENCE_PAUSE = 0.35  # пауза между предложениями, сек
+SPEED = 0.92  # чуть медленнее обычного — легче успевать за субтитрами
+SENTENCE_PAUSE = 0.3  # пауза между предложениями, сек
 
 
 def clean_text(text: str) -> str:
