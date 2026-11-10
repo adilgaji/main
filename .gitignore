@@ -1,0 +1,6 @@
+node_modules/
+output/
+.venv/
+models/
+__pycache__/
+*.pyc

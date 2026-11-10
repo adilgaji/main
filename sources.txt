@@ -1,0 +1,9 @@
+# Внешние ресурсы проекта и их лицензии
+# (каждый файл, который не нарисован кодом, обязан быть здесь)
+
+Montserrat (шрифт) — SIL Open Font License 1.1
+  источник: npm @fontsource/montserrat, https://github.com/JulietaUla/Montserrat
+  файлы: remotion/public/fonts/montserrat-latin-*.woff2
+
+Вся графика (стикмен, тело, органы, клетки, молекулы, иконки, графики) — нарисована кодом (SVG), собственная.
+Музыка — не используется.
