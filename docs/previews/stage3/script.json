@@ -1,0 +1,44 @@
+{
+  "topic": "How muscles recover after training",
+  "angle": "Muscle grows during recovery, not in the gym. This short follows the cleanup crew and the stem cells step by step and calls the lactic-acid soreness belief a myth.",
+  "script": "Your muscles don't grow in the gym. They grow during *recovery*. Hard training can cause tiny fiber damage. Immune cells called *macrophages* can clear debris. Then *satellite cells*, muscle stem cells, wake and fuse into fibers to repair them. *Protein building* stays elevated for up to two days. Soreness from *lactic acid*? Largely a *myth*. Early research suggests one sleepless night slows protein building. So eat protein-rich meals, and *sleep*. Strength is built at rest.",
+  "word_count": 75,
+  "claims": [
+    {"id": "c1", "sentence": "Your muscles don't grow in the gym.", "evidence": "proven", "sources": ["s2", "s3"]},
+    {"id": "c2", "sentence": "They grow during *recovery*.", "evidence": "proven", "sources": ["s2", "s3"]},
+    {"id": "c3", "sentence": "Hard training can cause tiny fiber damage.", "evidence": "proven", "sources": ["s1", "s2"]},
+    {"id": "c4", "sentence": "Immune cells called *macrophages* can clear debris.", "evidence": "proven", "sources": ["s1"]},
+    {"id": "c5", "sentence": "Then *satellite cells*, muscle stem cells, wake and fuse into fibers to repair them.", "evidence": "proven", "sources": ["s2", "s1"]},
+    {"id": "c6", "sentence": "*Protein building* stays elevated for up to two days.", "evidence": "proven", "sources": ["s3"]},
+    {"id": "c7", "sentence": "Soreness from *lactic acid*? Largely a *myth*.", "evidence": "myth", "sources": ["s6"]},
+    {"id": "c8", "sentence": "Early research suggests one sleepless night slows protein building.", "evidence": "early", "sources": ["s5", "s7"]},
+    {"id": "c9", "sentence": "So eat protein-rich meals, and *sleep*.", "evidence": "proven", "sources": ["s3", "s7"]},
+    {"id": "c10", "sentence": "Strength is built at rest.", "evidence": "proven", "sources": ["s2", "s3"]}
+  ],
+  "sources": [
+    {"id": "s1", "title": "Role of macrophages during skeletal muscle regeneration and hypertrophy: Implications for immunomodulatory strategies", "authors": "Bernard C et al.", "venue": "Physiological Reports", "year": 2022, "type": "review", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9535344", "pmid": "36200266"},
+    {"id": "s2", "title": "Satellite Cells Contribution to Exercise Mediated Muscle Hypertrophy and Repair", "authors": "Bazgir B et al.", "venue": "Cell Journal (Yakhteh)", "year": 2016, "type": "review", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5086326", "pmid": "28042532"},
+    {"id": "s3", "title": "Nutritional regulation of muscle protein synthesis with resistance exercise: strategies to enhance anabolism", "authors": "Churchward-Venne TA et al.", "venue": "Nutrition & Metabolism", "year": 2012, "type": "review", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3464665/", "pmid": "22594765"},
+    {"id": "s5", "title": "The effect of acute sleep deprivation on skeletal muscle protein synthesis and the hormonal environment", "authors": "Lamon S et al.", "venue": "Physiological Reports", "year": 2021, "type": "other", "url": "https://europepmc.org/article/MED/33400856", "pmid": "33400856"},
+    {"id": "s6", "title": "Is \"Delayed Onset Muscle Soreness\" a False Friend? The Potential Implication of the Fascial Connective Tissue in Post-Exercise Discomfort", "authors": "Wilke J, Behringer M", "venue": "International Journal of Molecular Sciences", "year": 2021, "type": "review", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8431437/", "pmid": "34502387"},
+    {"id": "s7", "title": "Sleep, circadian biology and skeletal muscle interactions: Implications for metabolic health", "authors": "Morrison M et al.", "venue": "Sleep Medicine Reviews", "year": 2022, "type": "review", "url": "https://europepmc.org/article/MED/36272396", "pmid": "36272396"}
+  ],
+  "notes": "This is a rewrite for the editor's timing remark. The previous voiceover ran 42.1 s for 87 words (about 2.07 words/s including pauses). The narration is 75 words, not 74 (recounted during the fact-check). At that pace it should run about 36.3 s, still inside the 33-38 s window. Kept: the hook ('Your muscles don't grow in the gym'), the core idea (growth happens in recovery), the macrophage → satellite cell → protein synthesis sequence, the lactic-acid myth, the sleep line labeled 'early', the food/sleep takeaway, and the ending. Cuts: (1) the separate 'soreness peaks a day or two later' sentence was removed and the myth line was merged into 'Soreness from lactic acid? Largely a myth.'; (2) the two satellite-cell sentences were merged into one 14-word sentence, which drops 'multiply'; (3) 'strains fibers and can cause tiny damage' became 'can cause tiny fiber damage'; (4) 'the debris' became 'debris'. The 'can' hedge on macrophages from the earlier fact-check is kept. There are 7 highlights. Verified evidence: s1 full text: 'A major role of macrophages is efferocytosis, which consists in the phagocytosis of dead cells and cell debris'. s2: SCs are 'the most abundant skeletal muscle stem cells', and they 'proliferate, differentiate, and fuse into preexisting myofibers'. s3: 'resistance exercise increases MPS for up to ~48 h' (fasted young adults). s5: 18% lower MPS after one night without sleep, N=13, randomized crossover, so it is labeled early. s6 (Wilke & Behringer 2021): 'the lactic acid theory has been largely rejected as a cause of DOMS'. s7: insufficient sleep results in 'reduced rates of skeletal muscle protein synthesis'. DOIs: s1 10.14814/phy2.15480; s2 10.22074/cellj.2016.4714; s3 10.1186/1743-7075-9-40; s5 10.14814/phy2.14660; s6 10.3390/ijms22179482. Still left out: protein amounts and timing, supplements, recovery gadgets, hormone details. Disclaimer 'Educational, not medical advice.' goes in the description and on the last frame.",
+  "fact_check": {
+    "verdict": "fixed",
+    "checked_claims": 10,
+    "changes": [
+      "c7 (lactic-acid myth): replaced the sources. The old s6 (Cheung et al. 2003, Sports Med) abstract only lists lactic acid as one of six 'hypothesised theories' and does not refute it. The old s4 (Sonkodi 2022) is a hypothesis paper whose thesis is that lactate's role in DOMS 'should not be void', which works against the myth label. New s6 is Wilke & Behringer 2021, Int J Mol Sci, a review (PMC8431437). It states 'the lactic acid theory has been largely rejected as a cause of DOMS', which matches 'Largely a myth'.",
+      "word_count corrected from 74 to 75. The narration is unchanged; the earlier manual count was off by one. Estimated runtime is about 36.3 s, still inside the 33-38 s window.",
+      "notes updated with the evidence quotes verified in this check and the new DOI for s6. The s4 and old s6 DOIs were removed."
+    ],
+    "removed": [
+      "Source s4 (Sonkodi 2022, Metabolites) removed: it argues lactate may still play a role in DOMS, so it does not support the myth claim. No narration was removed."
+    ],
+    "warnings": [
+      "s5 (Lamon 2021) is a single small randomized crossover trial (N=13), not a review. It is kept only for the 'early' sleep claim, which is hedged in the narration, and the review s7 backs it at a general level ('reduced rates of skeletal muscle protein synthesis' with insufficient sleep). The s7 abstract does not specifically mention a single night.",
+      "c1/c10 ('don't grow in the gym' / 'built at rest') are rhetorical simplifications. Exercise is the stimulus, and protein synthesis and the satellite-cell response happen in the hours and days afterward (s2: 72-96 h; s3: up to ~48 h). This is acceptable as a hook, but the editor may want to confirm the framing.",
+      "europepmc.org article pages (s5, s7) returned HTTP 403 to automated fetch. Their content was verified through the Europe PMC REST API. They should open fine in a browser, but please spot-check, or swap in pubmed.ncbi.nlm.nih.gov links."
+    ]
+  }
+}

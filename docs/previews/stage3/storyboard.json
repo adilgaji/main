@@ -1,0 +1,245 @@
+{
+  "shots": [
+    {
+      "id": 1,
+      "first_word": 0,
+      "last_word": 10,
+      "template": "hook",
+      "params": {
+        "headline": "Muscles grow during *recovery*",
+        "pose": "think",
+        "emotion": "surprised",
+        "visual": "muscle",
+        "visual_params": {
+          "damage": 0,
+          "repair": 1,
+          "flex": 0.6
+        }
+      },
+      "description_ru": "Хук: гид в позе «думает» с удивлённым лицом рядом с крупной мышцей. На «don't grow in the gym» мышца спокойная, на «grow during recovery» по ней проходит волна восстановления и она слегка утолщается. Заголовок вылетает сверху, слово RECOVERY на жёлтой плашке.",
+      "transition": "cut",
+      "start": 0.0,
+      "end": 4.63,
+      "duration": 4.63,
+      "text": "Your muscles don't grow in the gym. They grow during recovery."
+    },
+    {
+      "id": 2,
+      "first_word": 11,
+      "last_word": 17,
+      "template": "zoom",
+      "params": {
+        "organ": "muscles",
+        "label": "MUSCLE FIBER",
+        "end": "fiber"
+      },
+      "description_ru": "Фирменный зум: контур тела с подсвеченными мышцами → крупный план мышцы → отдельное мышечное волокно. Навигация BODY › MUSCLE › FIBER сверху. Зум доходит до волокна на словах «tiny fiber damage», подпись MUSCLE FIBER.",
+      "transition": "zoom",
+      "start": 4.63,
+      "end": 7.62,
+      "duration": 2.99,
+      "text": "Hard training can cause tiny fiber damage."
+    },
+    {
+      "id": 3,
+      "first_word": 18,
+      "last_word": 24,
+      "template": "fiber",
+      "params": {
+        "stage": "immune",
+        "headline": "*Macrophages* clear debris",
+        "labels": [
+          "MACROPHAGES"
+        ]
+      },
+      "description_ru": "То же волокно с микроразрывами. На «macrophages» подплывают иммунные клетки (подпись MACROPHAGES), на «clear debris» они поглощают обломки, место повреждения очищается.",
+      "transition": "cut",
+      "start": 7.62,
+      "end": 10.62,
+      "duration": 3.0,
+      "text": "Immune cells called macrophages can clear debris."
+    },
+    {
+      "id": 4,
+      "first_word": 25,
+      "last_word": 30,
+      "template": "fiber",
+      "params": {
+        "stage": "satellite",
+        "headline": "Muscle *stem* cells",
+        "labels": [
+          "SATELLITE CELLS"
+        ]
+      },
+      "description_ru": "У края волокна загораются маленькие спящие клетки-сателлиты с подписью SATELLITE CELLS. Заголовок поясняет: это стволовые клетки мышцы.",
+      "transition": "slide",
+      "start": 10.62,
+      "end": 13.19,
+      "duration": 2.57,
+      "text": "Then satellite cells, muscle stem cells,"
+    },
+    {
+      "id": 5,
+      "first_word": 31,
+      "last_word": 38,
+      "template": "flow",
+      "params": {
+        "steps": [
+          {
+            "label": "Wake up",
+            "color": "cell"
+          },
+          {
+            "label": "Fuse to fiber",
+            "color": "muscle"
+          },
+          {
+            "label": "Repair",
+            "color": "proven"
+          }
+        ]
+      },
+      "description_ru": "Цепочка из трёх шагов, каждый появляется под голос: «Wake up» (клетки просыпаются) → «Fuse to fiber» (сливаются с волокном) → «Repair» (зелёный, волокно восстановлено). Стрелки прорисовываются между шагами.",
+      "transition": "slide",
+      "start": 13.19,
+      "end": 16.61,
+      "duration": 3.42,
+      "text": "wake and fuse into fibers to repair them."
+    },
+    {
+      "id": 6,
+      "first_word": 39,
+      "last_word": 43,
+      "template": "fiber",
+      "params": {
+        "stage": "rebuild",
+        "headline": "Protein *building*",
+        "labels": [
+          "PROTEIN SYNTHESIS"
+        ]
+      },
+      "description_ru": "Восстановленное волокно: на «protein building» к нему стекаются частицы белка (подпись PROTEIN SYNTHESIS), на «stays elevated» волокно продолжает плавно утолщаться.",
+      "transition": "fade",
+      "start": 16.61,
+      "end": 19.12,
+      "duration": 2.51,
+      "text": "Protein building stays elevated for"
+    },
+    {
+      "id": 7,
+      "first_word": 44,
+      "last_word": 47,
+      "template": "graph",
+      "params": {
+        "title": "Muscle protein synthesis",
+        "data": [
+          0.2,
+          0.8,
+          0.9,
+          0.7,
+          0.45
+        ],
+        "x_labels": [
+          "0h",
+          "12h",
+          "24h",
+          "36h",
+          "48h"
+        ],
+        "y_label": "",
+        "highlight_index": 2
+      },
+      "description_ru": "Качественный график синтеза белка после тренировки: кривая рисуется слева направо и остаётся выше исходного уровня до отметки 48h ровно на «two days». Пик на 24h подсвечен.",
+      "transition": "slide",
+      "start": 19.12,
+      "end": 22.54,
+      "duration": 3.42,
+      "text": "up to two days."
+    },
+    {
+      "id": 8,
+      "first_word": 48,
+      "last_word": 54,
+      "template": "myth",
+      "params": {
+        "myth": "Soreness from lactic acid",
+        "fact": "Theory largely rejected",
+        "pose": "shrug"
+      },
+      "description_ru": "Гид пожимает плечами. Слева карточка МИФ «Soreness from lactic acid» — на «Largely a myth» её перечёркивает красный штамп MYTH, справа появляется карточка факта «Theory largely rejected».",
+      "transition": "cut",
+      "start": 22.54,
+      "end": 26.84,
+      "duration": 4.3,
+      "text": "Soreness from lactic acid? Largely a myth."
+    },
+    {
+      "id": 9,
+      "first_word": 55,
+      "last_word": 60,
+      "template": "bars",
+      "params": {
+        "title": "Protein building (early data)",
+        "bars": [
+          {
+            "label": "Full night",
+            "value": 0.9,
+            "color": "proven"
+          },
+          {
+            "label": "Sleepless night",
+            "value": 0.74,
+            "color": "early"
+          }
+        ]
+      },
+      "description_ru": "Два столбца с пометкой ранних данных: на «Early research» вырастает высокий столбец «Full night», на «one sleepless night» рядом поднимается столбец «Sleepless night» цвета «early» и останавливается заметно ниже.",
+      "transition": "slide",
+      "start": 26.84,
+      "end": 29.34,
+      "duration": 2.5,
+      "text": "Early research suggests one sleepless night"
+    },
+    {
+      "id": 10,
+      "first_word": 61,
+      "last_word": 67,
+      "template": "tips",
+      "params": {
+        "headline": "Fuel the *repair*",
+        "items": [
+          {
+            "icon": "food",
+            "text": "Protein meals",
+            "evidence": "proven"
+          }
+        ]
+      },
+      "description_ru": "На «slows protein building» появляется заголовок FUEL THE REPAIR, на «So eat protein-rich meals» выезжает карточка с иконкой еды «Protein meals» и зелёной меткой доказанности.",
+      "transition": "cut",
+      "start": 29.34,
+      "end": 33.04,
+      "duration": 3.7,
+      "text": "slows protein building. So eat protein-rich meals,"
+    },
+    {
+      "id": 11,
+      "first_word": 68,
+      "last_word": 74,
+      "template": "outro",
+      "params": {
+        "headline": "Strength is built at *rest*",
+        "pose": "wave",
+        "emotion": "happy"
+      },
+      "description_ru": "Финал: гид машет рукой и улыбается. На «and sleep» он подводит итог, на «Strength is built at rest» появляется заголовок, слово REST на жёлтой плашке. Внизу плашка «Educational, not medical advice».",
+      "transition": "fade",
+      "start": 33.04,
+      "end": 36.8,
+      "duration": 3.76,
+      "text": "and sleep. Strength is built at rest."
+    }
+  ],
+  "total": 36.8,
+  "sum_of_shots": 36.8
+}
