@@ -52,10 +52,17 @@ winget install Anthropic.ClaudeCode
    `[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12`, затем `irm https://claude.ai/install.ps1 | iex`.
 3. Обновите драйвер NVIDIA (GeForce Experience или nvidia.com) — нужен драйвер с поддержкой CUDA 12.8.
 4. Скачайте проект (зелёная кнопка **Code → Download ZIP** на GitHub), распакуйте.
-5. Дважды щёлкните **`setup.bat`**. Он всё поставит (15–30 минут, ~6 ГБ) и в конце покажет проверку:
+5. Откройте папку проекта, щёлкните правой кнопкой по пустому месту → «Открыть в терминале» и выполните
+   `Get-ChildItem -Recurse | Unblock-File` (снимает блокировку Windows со скачанных файлов), затем `.\setup.bat`.
+   Он всё поставит (10–30 минут, ~2 ГБ) и в конце покажет проверку:
    `[OK]` — всё хорошо, `[!!]` — работает, но медленнее, `[НЕТ]` — нужно установить (команда будет написана).
 
-Проверить компьютер можно в любой момент: `python scripts\check_env.py`.
+Проверить компьютер можно в любой момент: `.venv\Scripts\python scripts\check_env.py`.
+
+6. (По желанию, можно позже) **Ускорение видеокартой:** запустите `install_gpu.bat` — докачает PyTorch для NVIDIA (~2,8 ГБ).
+   Без него всё работает, озвучка просто идёт на процессоре (~30 с на ролик).
+
+Совет: держите папку проекта на диске C: (например `C:\bodyshorts`), не на Рабочем столе/в OneDrive — иначе OneDrive будет выгружать гигабайты.
 
 ## 2. Запуск
 
@@ -108,6 +115,7 @@ winget install Anthropic.ClaudeCode
 | На странице «Шаг не удался» | Нажмите «Повторить». Подробности — в журнале под кнопкой |
 | Страница не открывается | Проверьте, что окно `start.bat` открыто; откройте `http://localhost:8765` вручную |
 | `[!!] nvidia-smi не найден` | Всё работает на процессоре, просто медленнее. Обновите драйвер NVIDIA |
+| Windows: «Интеллектуальное управление приложениями заблокировало файл» | В папке проекта: «Открыть в терминале» → `Get-ChildItem -Recurse \| Unblock-File`, затем запускайте `.\setup.bat` / `.\start.bat` из терминала |
 | Агенты не работают | В PowerShell наберите `claude` и проверьте, что вы вошли в аккаунт |
 | `claude : The term 'claude' is not recognized` | Проверьте `Test-Path "$env:USERPROFILE\.local\bin\claude.exe"`. Если `True` — добавьте папку в PATH: `[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";$env:USERPROFILE\.local\bin", "User")` и переоткройте PowerShell. Если `False` — установка не завершилась: поставьте через `winget install Anthropic.ClaudeCode` |
 | `claude.exe ... is not a valid application for this OS platform` | Удалите npm-версию (`npm uninstall -g @anthropic-ai/claude-code`) и поставьте официальную: `winget install Anthropic.ClaudeCode`, затем переоткройте PowerShell |
