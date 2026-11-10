@@ -34,10 +34,18 @@ winget install eSpeak-NG.eSpeak-NG
 ```
 
 ```bash
-npm install -g @anthropic-ai/claude-code
+winget install Git.Git
 ```
 
-2. Один раз войдите в Claude Code (откроется браузер): наберите `claude` в PowerShell и следуйте подсказкам, затем закройте.
+```bash
+irm https://claude.ai/install.ps1 | iex
+```
+
+(Последняя команда — официальный установщик Claude Code для Windows. Не ставьте его через `npm`: на части компьютеров npm-версия выдаёт ошибку «claude.exe is not a valid application for this OS platform».
+Если она уже была поставлена через npm, сначала удалите её: `npm uninstall -g @anthropic-ai/claude-code`.)
+
+2. **Закройте и заново откройте PowerShell**, проверьте `claude --version` (должен показать номер версии).
+   Затем один раз войдите в Claude Code: наберите `claude`, следуйте подсказкам (откроется браузер), потом закройте.
 3. Обновите драйвер NVIDIA (GeForce Experience или nvidia.com) — нужен драйвер с поддержкой CUDA 12.8.
 4. Скачайте проект (зелёная кнопка **Code → Download ZIP** на GitHub), распакуйте.
 5. Дважды щёлкните **`setup.bat`**. Он всё поставит (15–30 минут, ~6 ГБ) и в конце покажет проверку:
@@ -97,6 +105,7 @@ npm install -g @anthropic-ai/claude-code
 | Страница не открывается | Проверьте, что окно `start.bat` открыто; откройте `http://localhost:8765` вручную |
 | `[!!] nvidia-smi не найден` | Всё работает на процессоре, просто медленнее. Обновите драйвер NVIDIA |
 | Агенты не работают | В PowerShell наберите `claude` и проверьте, что вы вошли в аккаунт |
+| `claude.exe ... is not a valid application for this OS platform` | Удалите npm-версию (`npm uninstall -g @anthropic-ai/claude-code`) и поставьте официальную: `irm https://claude.ai/install.ps1 \| iex`, затем переоткройте PowerShell |
 | Голос с ошибками в редких словах | Установите eSpeak-NG (см. установку) |
 
 ## 7. Настройки
