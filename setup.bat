@@ -14,10 +14,10 @@ py -3.12 -m venv .venv || (echo Нужен именно Python 3.12: winget inst
 .venv\Scripts\python -m pip install --upgrade pip
 
 echo [2/4] PyTorch (обычная версия, ~200 МБ; версия для видеокарты — потом через install_gpu.bat)...
-.venv\Scripts\pip install torch
+.venv\Scripts\pip install torch --resume-retries 100 --timeout 120
 
 echo [3/4] Озвучка, субтитры, веб-страница...
-.venv\Scripts\pip install -r requirements.txt
+.venv\Scripts\pip install -r requirements.txt --resume-retries 100 --timeout 120
 
 echo [4/4] Видео-движок Remotion...
 cd remotion

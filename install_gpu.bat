@@ -7,7 +7,7 @@ echo ============================================
 echo Скачает PyTorch с поддержкой CUDA (~2.8 ГБ). Можно запустить ночью.
 echo Без этого всё работает, просто озвучка и субтитры идут на процессоре.
 echo.
-.venv\Scripts\pip install --force-reinstall --no-deps torch --index-url https://download.pytorch.org/whl/cu128
+.venv\Scripts\pip install --force-reinstall --no-deps torch --index-url https://download.pytorch.org/whl/cu128 --resume-retries 100 --timeout 120
 .venv\Scripts\python scripts\check_env.py
 echo.
 echo Если в строке PyTorch написано "CUDA доступна: True" — видеокарта подключена.
