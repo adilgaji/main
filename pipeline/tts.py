@@ -19,8 +19,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import MODELS, Log, ffprobe_duration, gpu_available, run  # noqa: E402
 
-DEFAULT_VOICE = "am_michael"  # мужской американский голос Kokoro; лучший женский — af_heart
-SPEED = 1.0
+DEFAULT_VOICE = "am_fenrir"  # выбран пользователем; запасные: am_michael, af_heart, bf_emma
+SPEED = 0.85  # чуть медленнее обычного — легче успевать за субтитрами
+SENTENCE_PAUSE = 0.35  # пауза между предложениями, сек
 
 
 def clean_text(text: str) -> str:
@@ -37,9 +38,12 @@ def _kokoro(text: str, raw_wav: Path, voice: str, log: Log, device: str):
 
     pipe = KPipeline(lang_code="a" if voice.startswith("a") else "b", repo_id="hexgrad/Kokoro-82M", device=device)
     chunks = []
-    gap = np.zeros(int(24000 * 0.08), dtype=np.float32)  # короткая пауза между фразами
-    for _, _, audio in pipe(text, voice=voice, speed=SPEED, split_pattern=r"\n+"):
-        chunks.append(audio.numpy() if hasattr(audio, "numpy") else audio)
+    gap = np.zeros(int(24000 * SENTENCE_PAUSE), dtype=np.float32)
+    # каждое предложение отдельно, между ними — пауза: голос не «тараторит»
+    sentences = [s for s in re.split(r"(?<=[.!?])\s+", text) if s.strip()]
+    for sent in sentences:
+        for _, _, audio in pipe(sent, voice=voice, speed=SPEED, split_pattern=r"\n+"):
+            chunks.append(audio.numpy() if hasattr(audio, "numpy") else audio)
         chunks.append(gap)
     if not chunks:
         raise RuntimeError("Kokoro не вернул звук")

@@ -41,17 +41,17 @@ def ffprobe_duration(path: Path) -> float:
     return float(json.loads(out[out.index("{"):])["format"]["duration"])
 
 
-def retry(step_name: str, fn, log: Log, attempts: int = 3, **kwargs):
+def retry(step_name: str, fn, logger: Log, attempts: int = 3, **kwargs):
     """Выполнить шаг; при ошибке повторить до `attempts` раз."""
     last = None
     for i in range(1, attempts + 1):
         try:
             if i > 1:
-                log(f"Шаг «{step_name}»: попытка {i} из {attempts}")
+                logger(f"Шаг «{step_name}»: попытка {i} из {attempts}")
             return fn(**kwargs)
         except Exception as e:  # noqa: BLE001
             last = e
-            log(f"Шаг «{step_name}» не удался: {str(e)[:500]}")
+            logger(f"Шаг «{step_name}» не удался: {str(e)[:500]}")
             time.sleep(2 * i)
     raise RuntimeError(f"Шаг «{step_name}» не удался после {attempts} попыток: {last}")
 
