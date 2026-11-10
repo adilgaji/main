@@ -25,7 +25,18 @@ from common import OUTPUT, ROOT, Log, ffprobe_duration, retry  # noqa: E402
 MIN_SEC, MAX_SEC = 30, 55  # допустимая длина ролика (сек)
 import shutil  # noqa: E402
 
-CLAUDE = shutil.which("claude") or ("claude.cmd" if sys.platform == "win32" else "claude")
+def _find_claude() -> str:
+    """Найти Claude Code: в PATH или в папке официального установщика (~/.local/bin)."""
+    found = shutil.which("claude")
+    if found:
+        return found
+    for cand in (Path.home() / ".local" / "bin" / "claude.exe", Path.home() / ".local" / "bin" / "claude"):
+        if cand.exists():
+            return str(cand)
+    return "claude"
+
+
+CLAUDE = _find_claude()
 AGENT_TOOLS = {
     "idea-researcher": "WebSearch WebFetch Read Write",
     "scriptwriter": "WebSearch WebFetch Read Write",
