@@ -45,7 +45,13 @@ def script_tokens(script: str):
     return tokens
 
 
-def _transcribe(wav: Path, prompt: str, device: str, compute: str):
+def _hotwords(prompt: str) -> str:
+    """Редкие/длинные слова сценария — подсказка распознавателю (не весь текст!)."""
+    words = {re.sub(r"[^A-Za-z-]", "", w) for w in prompt.split()}
+    return " ".join(sorted(w for w in words if len(w) >= 8))[:300]
+
+
+def _transcribe(wav: Path, prompt: str, device: str, compute: str, vad: bool = False):
     from faster_whisper import WhisperModel
 
     import subprocess
@@ -59,8 +65,9 @@ def _transcribe(wav: Path, prompt: str, device: str, compute: str):
     ).stdout
     audio = np.frombuffer(pcm, dtype=np.float32)
     model = WhisperModel(WHISPER_MODEL, device=device, compute_type=compute, download_root=str(MODELS / "whisper"))
+    # ВАЖНО: весь текст как initial_prompt давать нельзя — Whisper тогда «пропускает» начало записи.
     segments, _ = model.transcribe(
-        audio, language="en", word_timestamps=True, initial_prompt=prompt[:400], vad_filter=False, beam_size=5,
+        audio, language="en", word_timestamps=True, hotwords=_hotwords(prompt), vad_filter=vad, beam_size=5,
         condition_on_previous_text=False,  # не «зацикливаться» на длинных записях
     )
     words = []
@@ -70,17 +77,17 @@ def _transcribe(wav: Path, prompt: str, device: str, compute: str):
     return words
 
 
-def transcribe(wav: Path, prompt: str, log: Log):
+def transcribe(wav: Path, prompt: str, log: Log, vad: bool = False):
     from common import gpu_available
 
     if gpu_available():
         try:
             log("Субтитры: faster-whisper на видеокарте")
-            return _transcribe(wav, prompt, "cuda", "float16")
+            return _transcribe(wav, prompt, "cuda", "float16", vad)
         except Exception as e:  # noqa: BLE001
             log(f"Видеокарта не сработала ({str(e)[:200]}) — переключаюсь на процессор")
     log("Субтитры: faster-whisper на процессоре")
-    return _transcribe(wav, prompt, "cpu", "int8")
+    return _transcribe(wav, prompt, "cpu", "int8", vad)
 
 
 def align(script: str, heard: list[dict], total: float):
@@ -145,8 +152,15 @@ def speech_onset(wav: Path) -> float:
 def make_captions(wav: Path, script: str, out_json: Path, log: Log | None = None) -> float:
     log = log or Log()
     plain = re.sub(r"\*", "", script)
+    total = ffprobe_duration(wav)
     heard = transcribe(wav, plain, log)
-    words, ratio = align(script, heard, ffprobe_duration(wav))
+    words, ratio = align(script, heard, total)
+    if ratio < 0.9:
+        log(f"Совпадение {ratio:.0%} — пробую второй режим распознавания (с фильтром тишины)")
+        heard2 = transcribe(wav, plain, log, vad=True)
+        words2, ratio2 = align(script, heard2, total)
+        if ratio2 > ratio:
+            words, ratio = words2, ratio2
     onset = round(speech_onset(wav) * 1000)
     if words and words[0]["startMs"] < onset:
         words[0]["startMs"] = min(onset, words[0]["endMs"] - 50)
