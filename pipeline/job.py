@@ -201,7 +201,8 @@ def step_storyboard(job: Path, remarks: str = "", log: Log | None = None):
             break
         log("Раскадровка требует правки: " + "; ".join(problems))
     sb = json.loads((job / "storyboard.json").read_text(encoding="utf-8"))
-    update_state(job, step="storyboard", status="review", duration=sb["total"], problems=problems)
+    # новая раскадровка ещё не подтверждена человеком
+    update_state(job, step="storyboard", status="review", duration=sb["total"], problems=problems, storyboard_hash=None)
     log(f"Раскадровка готова: {len(sb['shots'])} кадров, {sb['total']} с")
     return sb
 
