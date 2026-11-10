@@ -7,8 +7,8 @@
 [s7] Morrison M et al. Sleep, circadian biology and skeletal muscle interactions: Implications for metabolic health. Sleep Medicine Reviews 2022. https://pubmed.ncbi.nlm.nih.gov/36272396/
 
 УТВЕРЖДЕНИЯ И ИХ ИСТОЧНИКИ
-  [c1] (proven) Your muscles don't really grow while you lift. → s2, s3
-  [c2] (proven) They grow while you *rest*. → s2, s3
+  [c1] (proven) Training five days a week but not growing? → s2, s3
+  [c2] (proven) Here's what happens while you *rest*. → s2, s3
   [c3] (proven) Hard training can make tiny tears in muscle. → s1, s2
   [c4] (proven) Then a *repair crew* shows up. → s1, s2
   [c5] (proven) Among the first are *cleanup cells*. → s1
@@ -20,8 +20,9 @@
   [c11] (myth) Many think sore muscles the next day come from acid made during exercise. → s6
   [c12] (myth) That's mostly a *myth*. → s6
   [c13] (early) Early research suggests one night with no sleep slows muscle building. → s5, s7
-  [c14] (proven) So eat meals with *protein*, your body's building blocks. → s3
+  [c14] (proven) Eat meals with *protein*, your body's building blocks. → s3
   [c15] (proven) And *sleep* well. → s7
+  [c17] (proven) Training starts it. → s2, s3
   [c16] (proven) Your strength is built at rest. → s2, s3
 
 ЛИЦЕНЗИИ МАТЕРИАЛОВ

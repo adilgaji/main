@@ -6,17 +6,16 @@
     "originality": "ok",
     "templates": "ok",
     "licenses": "ok",
+    "hook": "ok",
     "packaging": "ok"
   },
   "fixes": [],
   "notes": [
-    "medical: All 16 claims have a source. s1, s2, s3, s6 and s7 are reviews on PMC/PubMed. s5 (Lamon 2021, N=13 trial) is a primary study, but c13 is also backed by the review s7 and is honestly voiced as 'Early research suggests'. The myth is called a myth. There are no doses, supplements, drugs or brands, and no forbidden words (cure/treat/guarantee/miracle/instantly/secret/hack/detox/boost). There is no diagnosis or treatment advice. Lifestyle advice covers only food protein and sleep. The disclaimer is in the description and on the outro shot (13).",
-    "medical (optional): c15 'sleep well' is labeled proven as a general habit. It comes right after the 'early research' sentence, so the hedge is close by. That is acceptable.",
-    "misinformation: Nothing contradicts NIH/WHO consensus. The description adds 'Talk to a doctor about your own health', so the video does not discourage medical care. 'Don't really grow while you lift' is hedged in the hook, and the description says 'mostly grow after'.",
-    "originality: The 'repair crew' story line (cleanup cells, then sleeping repair cells waking up, splitting and joining the muscle) explains a process instead of listing tips. It includes a myth correction and a data visual. The visuals are custom SVG and synced to words via first_word/last_word.",
-    "templates: 13 shots use 9 templates (hook, guide x3 not adjacent, zoom, fiber x2, flow, graph, myth, bars, tips, outro). The hook is topic-specific.",
-    "packaging: The titles are 38, 40 and 47 characters, all under 60, with no false promises. The description has 6 sources and the disclaimer.",
-    "optional nitpicks: (1) The metaphor 'sleeping repair cells' plus 'sleep well' could make a child think the cells wake up when the person sleeps. Consider 'resting repair cells' in a future video. (2) The tag 'science for kids' may lead YouTube to classify the video as Made for Kids, which turns off comments and personalized ads. Remove it if that is not intended. (3) Shot 10's on-screen fact 'Acid is gone long before' is not said in the narration. It is consistent with s6, but keep it in mind for reviews."
+    "Medical: all 17 claims map to allowed sources (PMC/PubMed reviews; s5 is a single small trial used only for the explicitly 'early' claim c13). The lactic-acid belief is named a myth. No doses, supplements, drugs, brands, or forbidden words. Protein advice is about food ('meals with protein'), with no amounts. Disclaimer is in the description, and the outro template always shows it.",
+    "Minor, non-blocking: c1 is a rhetorical question, so its 'proven' label is only formal. c15 'sleep well' is labeled proven, but direct human evidence on recovery speed is limited (the fact-check warning notes this). Optional: the myth shot's 'fact' text ('That's mostly a myth') repeats the MYTH label. A short sourced fact (e.g. 'Acid clears in hours', from s6) would add information, but only if the narration still matches.",
+    "Hook: 'Training five days a week but not growing?' has 8 words, names a relatable pain, and appears as an example formula in HOOKS.md. The 'you' comes in the second sentence. The video answers the hook (repair and building happen during rest; protein and sleep help) and promises no result.",
+    "Templates: 13 shots across 11 distinct templates (hook, zoom, fiber x3, organ, flow, graph, guide x2, myth, bars, outro). The visuals are custom diagrams synced to the narration. Graph and bars are qualitative and consistent with s3 (~48 h) and s5 (~18% lower).",
+    "Packaging: all titles are 60 characters or fewer and none are clickbait. The description lists sources and the disclaimer. Licenses: only the Montserrat font (OFL 1.1) is listed; there is no music, and all graphics are drawn in code."
   ],
-  "summary_ru": "Ролик готов к публикации: у каждого утверждения есть надёжный источник, честно помечены уровни доказательности (миф про кислоту назван мифом, данные про сон — «ранние»), нет дозировок, добавок и запрещённых слов, а дисклеймер есть и в описании, и на последнем кадре. Подача оригинальная («бригада ремонта» в мышце), шаблоны кадров разнообразные, названия короче 60 символов, лицензии в порядке. Мелкие пожелания на будущее: тег «science for kids» может пометить ролик как детский, а образ «спящие клетки-ремонтники» рядом с советом «спи хорошо» может немного запутать."
+  "summary_ru": "Ролик готов к публикации. У каждого утверждения есть надёжный источник, уровни доказанности честные, миф про молочную кислоту назван мифом, дозировок и добавок нет, дисклеймер есть и в описании, и на последнем кадре. Хук цепляет и честно раскрыт, шаблоны кадров разнообразны, заголовки без кликбейта. Мелкие необязательные замечания (подпись на кадре с мифом, формальная метка у вопроса-хука) публикации не мешают."
 }
