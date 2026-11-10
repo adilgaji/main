@@ -16,11 +16,13 @@ Check and score each item (ok / fix):
    visuals are custom diagrams synced to narration, title is not clickbait-misleading.
 4. Template fatigue: the storyboard varies shot templates; the hook is specific to this topic.
 5. Licenses: every non-code asset (fonts, music, images) is listed with a license in sources.txt.
-6. Packaging: titles ≤ 60 chars, no false promises; description has sources and "Educational, not medical advice".
+6. Hook (docs/HOOKS.md): the first sentence speaks to the viewer, is ≤ 10 words, hits a relatable pain/desire/surprise,
+   and the video honestly answers it. A weak/generic or misleading hook → fix (file script.json).
+7. Packaging: titles ≤ 60 chars, no false promises; description has sources and "Educational, not medical advice".
 
 Write <job>/review.json:
 {"verdict": "pass|revise", "scores": {"medical": "ok|fix", "misinformation": "ok|fix", "originality": "ok|fix",
- "templates": "ok|fix", "licenses": "ok|fix", "packaging": "ok|fix"},
+ "templates": "ok|fix", "licenses": "ok|fix", "hook": "ok|fix", "packaging": "ok|fix"},
  "fixes": [{"file": "script.json|storyboard.json|title.txt|description.txt|tags.txt", "problem": "...", "suggestion": "..."}],
  "summary_ru": "2–3 предложения по-русски для человека"}
 Reply with one line: DONE <verdict>.

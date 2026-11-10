@@ -53,6 +53,9 @@ def checks(job: Path, log: Log) -> list[str]:
     info = run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height,r_frame_rate", "-of", "csv=p=0", str(video)])
     if not info.strip().startswith("1080,1920"):
         problems.append(f"Формат видео {info.strip()} — нужен 1080x1920")
+    pix = run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=pix_fmt", "-of", "csv=p=0", str(video)]).strip()
+    if pix != "yuv420p":
+        problems.append(f"Формат цвета {pix} — плееры телефонов его не открывают (нужен yuv420p)")
     # 3. громкость и пики
     ld = loudness(video)
     log(f"Громкость: {ld['I']} LUFS, разброс {ld['LRA']} LU, пик {ld['peak']} dBFS")

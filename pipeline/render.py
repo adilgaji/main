@@ -33,6 +33,18 @@ def browser_env() -> dict:
     return env
 
 
+def finalize(mp4: Path):
+    """Сделать файл совместимым со всеми плеерами (телефоны, iPhone, браузеры, YouTube):
+    цвет yuv420p в стандартном диапазоне, H.264 High, быстрый старт (moov в начале)."""
+    tmp = mp4.with_suffix(".tmp.mp4")
+    run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(mp4),
+         "-vf", "scale=in_range=full:out_range=tv,format=yuv420p",
+         "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-profile:v", "high", "-level", "4.2",
+         "-color_range", "tv", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709",
+         "-c:a", "copy", "-movflags", "+faststart", str(tmp)])
+    tmp.replace(mp4)
+
+
 def render(composition: str, job_dir: Path, props: dict, out_mp4: Path, log: Log | None = None, gl_modes=None) -> Path:
     log = log or Log()
     job_id = job_dir.name
@@ -54,6 +66,7 @@ def render(composition: str, job_dir: Path, props: dict, out_mp4: Path, log: Log
                  "--audio-codec=aac", "--audio-bitrate=192k", "--pixel-format=yuv420p", "--log=error"],
                 cwd=REMOTION, env=browser_env(),
             )
+            finalize(out_mp4)
             log(f"Рендер готов: {out_mp4.name}")
             return out_mp4
         except Exception as e:  # noqa: BLE001

@@ -13,7 +13,8 @@ Make a storyboard:
 - Shots cover ALL words in order, no gaps, no overlaps: shot 1 starts at word 0, each next shot starts at
   the word after the previous shot's last word, the last shot ends at the last word.
 - Each shot lasts 2.5–4.5 s (calm pace; never shorter than 2.2 s). Cut at sentence or phrase boundaries.
-- Shot 1 is the hook: strong visual + headline. Use the signature zoom (body → organ → cell) once,
+- Shot 1 is the hook (docs/HOOKS.md): its headline is the hook question/phrase itself (short), the guide's
+  emotion fits it (worried/surprised for a pain point), the visual is about the viewer's situation. Strong and clear. Use the signature zoom (body → organ → cell) once,
   where the script goes "inside". Vary templates; don't use the same template more than twice in a row.
 - Anatomy must be correct (use only organs/regions listed in the schema). Visuals must show exactly
   what the words say at that moment.
