@@ -21,6 +21,16 @@ Make a storyboard:
 - Headlines ≤ 5 words, uppercase-friendly, may contain one *keyword*. On-screen text uses plain words
   (docs/PLAIN_LANGUAGE.md): prefer "CLEANUP CELLS" over "MACROPHAGES" unless the term is being introduced.
 
+Honesty rules for visuals (a quality reviewer checks them):
+- Charts must be proportional to the numbers in the sources (claims/notes in script.json); if there is no number,
+  keep the shape qualitative and modest. Never exaggerate an effect.
+- Evidence badges (tips.items[].evidence, labels) must match the claim's evidence level in script.json.
+- On-screen headlines must keep the narration's hedges ("can", "early research", "mostly") — a headline
+  alone must not state something false or stronger than the narration.
+- On-screen text must be grammatical, plain English, and every factual on-screen statement must be covered
+  by a claim in script.json.
+- Each visual must match the words spoken during that shot.
+
 Write <job>/storyboard.json:
 {"shots": [{"id": 1, "first_word": 0, "last_word": 8, "template": "hook", "params": {...},
             "description_ru": "что на экране и как анимируется (по-русски, для человека)",

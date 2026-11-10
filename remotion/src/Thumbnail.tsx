@@ -69,11 +69,11 @@ export const Thumbnail: React.FC<ThumbProps> = ({text, visual, visual_params, po
           ),
         )}
       </div>
-      <div style={{position: 'absolute', left: SAFE.left, width: VIDEO.width - SAFE.left - SAFE.right, top: 820, height: 560, display: 'flex', alignItems: 'center', justifyContent: 'center', filter: `drop-shadow(0 0 40px ${COLORS.accent}55)`}}>
+      <div style={{position: 'absolute', left: SAFE.left, width: VIDEO.width - SAFE.left - SAFE.right, top: 680, height: 560, display: 'flex', alignItems: 'center', justifyContent: 'center', filter: `drop-shadow(0 0 40px ${COLORS.accent}55)`}}>
         <Big visual={visual} vp={visual_params} />
       </div>
-      <div style={{position: 'absolute', left: SAFE.left - 10, top: 1180}}>
-        <Stickman pose={pose as PoseName} emotion={emotion as Emotion} size={300} alive={false} />
+      <div style={{position: 'absolute', left: SAFE.left - 10, top: 1080}}>
+        <Stickman pose={pose as PoseName} emotion={emotion as Emotion} size={390} alive={false} />
       </div>
     </AbsoluteFill>
   );

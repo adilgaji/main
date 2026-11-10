@@ -35,8 +35,8 @@ from job import (  # noqa: E402
     update_state,
     write_script_txt,
 )
-from package import package  # noqa: E402
-from produce import produce, storyboard_hash  # noqa: E402
+from package import full_production  # noqa: E402
+from produce import storyboard_hash  # noqa: E402
 
 app = FastAPI()
 _busy: dict[str, threading.Thread] = {}
@@ -230,13 +230,7 @@ def storyboard_confirm(job_id: str):
         raise HTTPException(400, "Раскадровка не покрывает текст: " + "; ".join(problems))
     update_state(job, storyboard_hash=storyboard_hash(job), storyboard_confirmed=True)
 
-    def work():
-        produce(job)
-        package(job)
-        st = load_state(job)
-        update_state(job, step="done", status="done" if not st.get("problems") else "checks_failed")
-
-    background(job_id, job, work)
+    background(job_id, job, full_production, job)
     return {"ok": True}
 
 

@@ -85,6 +85,10 @@ def package(job: Path, log: Log | None = None, review: bool = True) -> dict:
     update_state(job, step="packaging", status="working")
     rel = job.relative_to(ROOT).as_posix()
     base = f"Packaging task. Job folder: {rel}. Follow docs/PACKAGING.md exactly and write {rel}/packaging.json."
+    prev = json.loads((job / "review.json").read_text(encoding="utf-8")) if (job / "review.json").exists() else {}
+    pk_fixes = [f for f in prev.get("fixes", []) if f.get("file") in ("title.txt", "description.txt", "tags.txt")]
+    if pk_fixes:
+        base += "\nAlso fix these reviewer remarks: " + "; ".join(f"{f['problem']} → {f['suggestion']}" for f in pk_fixes)
     problems: list[str] = []
     for _ in range(3):
         prompt = base + ("\nFix: " + "; ".join(problems) if problems else "")
@@ -106,5 +110,55 @@ def package(job: Path, log: Log | None = None, review: bool = True) -> dict:
     return result
 
 
+def auto_fix(job: Path, review: dict, log: Log) -> bool:
+    """Исправить замечания контроля качества, которые можно исправить без человека.
+    Раскадровка: меняются только картинки/надписи кадров, текст и границы кадров — нет.
+    Возвращает True, если что-то изменили (тогда видео нужно перерендерить)."""
+    from job import compute_times
+    from produce import storyboard_hash
+
+    fixes = review.get("fixes", [])
+    sb_fixes = [f for f in fixes if f.get("file") == "storyboard.json"]
+    other = [f for f in fixes if f.get("file") not in ("storyboard.json", "title.txt", "description.txt", "tags.txt")]
+    for f in other:
+        log(f"Замечание требует вашего решения ({f.get('file')}): {f.get('problem')}")
+    if not sb_fixes:
+        return False
+    rel = job.relative_to(ROOT).as_posix()
+    backup = (job / "storyboard.json").read_text(encoding="utf-8")
+    ranges = [(s["first_word"], s["last_word"]) for s in json.loads(backup)["shots"]]
+    log(f"Исправляю замечания контроля качества в раскадровке ({len(sb_fixes)})")
+    prompt = (f"Job folder: {rel}\nApply these quality-review fixes to {rel}/storyboard.json. Change ONLY the listed shots' "
+              "params/description_ru. Do NOT change first_word/last_word of any shot, the number of shots or their order.\n- "
+              + "\n- ".join(f"{f['problem']} → {f['suggestion']}" for f in sb_fixes))
+    retry("правки раскадровки", run_agent, log, name="storyboard-agent", prompt=prompt, log=log)
+    new = json.loads((job / "storyboard.json").read_text(encoding="utf-8"))
+    if [(s["first_word"], s["last_word"]) for s in new["shots"]] != ranges or compute_times(job):
+        log("Агент изменил границы кадров — откатываю, нужны ручные правки")
+        (job / "storyboard.json").write_text(backup, encoding="utf-8")
+        return False
+    update_state(job, storyboard_hash=storyboard_hash(job), revised_by_review=[f["problem"] for f in sb_fixes])
+    return True
+
+
+def full_production(job: Path, log: Log | None = None):
+    """Шаг 4 целиком: видео → упаковка → контроль качества → (авто-правки → видео → упаковка)."""
+    from produce import produce
+
+    job = job.resolve()
+    log = log or Log(job / "log.txt")
+    produce(job, log)
+    res = package(job, log)
+    if res.get("review", {}).get("verdict") == "revise" and auto_fix(job, res["review"], log):
+        log("Перерисовываю видео с исправлениями")
+        produce(job, log)
+        res = package(job, log)
+    update_state(job, step="done", status="done")
+    return res
+
+
 if __name__ == "__main__":
-    package(Path(sys.argv[1]))
+    if len(sys.argv) > 2 and sys.argv[2] == "--full":
+        full_production(Path(sys.argv[1]))
+    else:
+        package(Path(sys.argv[1]))
