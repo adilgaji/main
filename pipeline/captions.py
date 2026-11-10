@@ -24,7 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import MODELS, Log, ffprobe_duration  # noqa: E402
 
-WHISPER_MODEL = "small.en"  # на RTX 4050 быстро; на процессоре ~10–30 с на ролик
+WHISPER_MODEL = "base.en"  # ~150 МБ; текст всё равно сверяется со сценарием, нужна только точность времени
 
 
 def norm(w: str) -> str:
