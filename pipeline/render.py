@@ -55,7 +55,8 @@ def render(composition: str, job_dir: Path, props: dict, out_mp4: Path, log: Log
     props_file = job_dir / "props.json"
     props_file.write_text(json.dumps(props, ensure_ascii=False), encoding="utf-8")
 
-    gl_modes = gl_modes or (["angle", "swangle"] if platform.system() == "Windows" else ["swangle"])
+    # angle — видеокарта (Windows); swiftshader/egl — быстрый программный режим (в 4 раза быстрее swangle)
+    gl_modes = gl_modes or (["angle", "swiftshader", "swangle"] if platform.system() == "Windows" else ["swiftshader", "egl", "swangle"])
     last = None
     for gl in gl_modes:
         try:

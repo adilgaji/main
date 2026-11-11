@@ -352,7 +352,7 @@ export const StyleLayer: React.FC<{
     case 'clay':
       scene = (
         <>
-          {layer(bg, {filter: 'blur(1px)', opacity: 0.8})}
+          {layer(bg, {opacity: 0.75})}
           {layer(fg, {filter: 'url(#st-clay) drop-shadow(0 16px 14px rgba(90,40,10,0.35))'})}
           {layer(actor, {filter: 'drop-shadow(0 10px 10px rgba(90,40,10,0.35))'})}
           <Grain opacity={0.08} />

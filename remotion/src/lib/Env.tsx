@@ -45,7 +45,7 @@ const Muscle: React.FC = () => {
         {y: 1300, s: 0.95, o: 0.42},
         {y: 1530, s: 1.0, o: 0.36},
       ].map((f, i) => (
-        <div key={i} style={{position: 'absolute', left: -120 + (i % 2) * 60 - drift * (i % 2 ? 1 : -1), top: f.y, opacity: f.o, filter: 'blur(2px)'}}>
+        <div key={i} style={{position: 'absolute', left: -120 + (i % 2) * 60 - drift * (i % 2 ? 1 : -1), top: f.y, opacity: f.o * 0.85}}>
           <MuscleFiber width={1320 * f.s} />
         </div>
       ))}
