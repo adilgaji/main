@@ -6,7 +6,7 @@
  * ui — заголовок и субтитры (всегда читаемые).
  */
 import React from 'react';
-import {AbsoluteFill, random} from 'remotion';
+import {AbsoluteFill, Img, random, staticFile} from 'remotion';
 import {Delaunay} from 'd3-delaunay';
 import {COLORS, VIDEO} from '../style';
 import {StyleId, THEMES, applyTheme} from './themes';
@@ -40,11 +40,11 @@ export const Filters: React.FC<{style: StyleId}> = ({style}) => (
       )}
       {style === 'watercolour' && (
         <filter id="st-wc" x="-5%" y="-5%" width="110%" height="110%" colorInterpolationFilters="sRGB">
-          <feTurbulence type="fractalNoise" baseFrequency={0.012} numOctaves={3} seed={3} result="n" />
+          <feImage href={NOISE} x={0} y={0} width={W} height={H} preserveAspectRatio="none" result="n" />
           <feDisplacementMap in="SourceGraphic" in2="n" scale={22} xChannelSelector="R" yChannelSelector="G" result="d" />
           <feGaussianBlur in="d" stdDeviation={1.6} result="b" />
-          <feTurbulence type="fractalNoise" baseFrequency={0.55} numOctaves={2} seed={8} result="grain" />
-          <feColorMatrix in="grain" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -0.9 1.35" result="ga" />
+          <feImage href={GRAIN} x={0} y={0} width={W} height={H} preserveAspectRatio="none" result="grain" />
+          <feColorMatrix in="grain" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -0.9 0 0 0 1.35" result="ga" />
           <feComposite in="b" in2="ga" operator="in" result="g" />
           <feMorphology in="b" operator="erode" radius={3} result="inner" />
           <feComposite in="b" in2="inner" operator="out" result="edge" />
@@ -73,7 +73,7 @@ export const Filters: React.FC<{style: StyleId}> = ({style}) => (
       )}
       {style === 'clay' && (
         <filter id="st-clay" x="-10%" y="-10%" width="120%" height="120%" colorInterpolationFilters="sRGB">
-          <feTurbulence type="fractalNoise" baseFrequency={0.05} numOctaves={2} seed={5} result="noise" />
+          <feImage href={NOISE} x={0} y={0} width={W} height={H} preserveAspectRatio="none" result="noise" />
           <feGaussianBlur in="SourceAlpha" stdDeviation={9} result="blurA" />
           <feComposite in="noise" in2="blurA" operator="arithmetic" k2={0.12} k3={1} result="height" />
           <feDiffuseLighting in="height" surfaceScale={10} diffuseConstant={1.15} lightingColor="#ffffff" result="diff">
@@ -88,19 +88,23 @@ export const Filters: React.FC<{style: StyleId}> = ({style}) => (
           <feComposite in="out" in2="SourceAlpha" operator="in" />
         </filter>
       )}
-      <filter id="st-grain">
-        <feTurbulence type="fractalNoise" baseFrequency={0.8} numOctaves={2} seed={2} />
-        <feColorMatrix type="saturate" values="0" />
-      </filter>
     </defs>
   </svg>
 );
 
 /* ------------------------------- наложения ------------------------------- */
 const Grain: React.FC<{opacity: number; blend?: React.CSSProperties['mixBlendMode']}> = ({opacity, blend = 'multiply'}) => (
-  <svg style={{position: 'absolute', inset: 0, opacity, mixBlendMode: blend, pointerEvents: 'none'}} width={W} height={H}>
-    <rect width={W} height={H} filter="url(#st-grain)" />
-  </svg>
+  <Img src={staticFile('textures/grain.png')} style={{position: 'absolute', inset: 0, width: W, height: H, opacity, mixBlendMode: blend, pointerEvents: 'none'}} />
+);
+
+/** Шумовая текстура для фильтров (готовая картинка — быстро; feTurbulence в каждом кадре — очень медленно). */
+const NOISE = staticFile('textures/noise.png');
+const GRAIN = staticFile('textures/grain.png');
+const Preload: React.FC = () => (
+  <>
+    <Img src={NOISE} style={{position: 'absolute', width: 1, height: 1, opacity: 0}} />
+    <Img src={GRAIN} style={{position: 'absolute', width: 1, height: 1, opacity: 0}} />
+  </>
 );
 
 const GlassShards: React.FC = () => {
@@ -369,6 +373,7 @@ export const StyleLayer: React.FC<{
     <AbsoluteFill className={cls} style={{background: COLORS.bg}}>
       <style>{styleCss(style)}</style>
       <Filters style={style} />
+      <Preload />
       {scene}
       {layer(ui)}
     </AbsoluteFill>
