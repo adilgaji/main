@@ -5,6 +5,7 @@ import {TestScene, calcTestScene} from './scenes/TestScene';
 import {Short, calcShort} from './Short';
 import {Thumbnail} from './Thumbnail';
 import {WordmarkSheet, WmCoral, WmSerif, WmPulse, WmLab, WmMolecule, WmMarker} from './brand/Wordmarks';
+import {BannerClassic, BannerDark, BannerOrgans, BannerSheet} from './brand/Banners';
 import {LogoGuide, LogoGuideCell, LogoHeart, LogoSheet, LogoWord, LogoZoom} from './brand/Logos';
 import {LibraryMotion, SheetAnatomy, SheetDiagrams, SheetGuide} from './sheets/Sheets';
 
@@ -15,6 +16,10 @@ export const RemotionRoot: React.FC = () => {
       <Still id="SheetAnatomy" component={SheetAnatomy} width={VIDEO.width} height={VIDEO.height} />
       <Still id="SheetDiagrams" component={SheetDiagrams} width={VIDEO.width} height={VIDEO.height} />
       <Composition id="LibraryMotion" component={LibraryMotion} durationInFrames={6 * VIDEO.fps} fps={VIDEO.fps} width={VIDEO.width} height={VIDEO.height} />
+      <Still id="BannerSheet" component={BannerSheet} width={1640} height={1440} />
+      <Still id="BannerClassic" component={BannerClassic} width={2560} height={1440} />
+      <Still id="BannerOrgans" component={BannerOrgans} width={2560} height={1440} />
+      <Still id="BannerDark" component={BannerDark} width={2560} height={1440} />
       <Still id="WordmarkSheet" component={WordmarkSheet} width={1500} height={1260} />
       <Still id="WmCoral" component={WmCoral} width={800} height={800} />
       <Still id="WmSerif" component={WmSerif} width={800} height={800} />
