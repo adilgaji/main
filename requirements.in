@@ -1,0 +1,14 @@
+# Главные библиотеки фабрики (Python 3.12).
+# Этот файл правит разработчик. Точный список версий для Windows — requirements.txt —
+# собирается из него командой:
+#   uv pip compile requirements.in -o requirements.txt --python-version 3.12 \
+#       --python-platform x86_64-pc-windows-msvc --no-header
+
+# --- Озвучка ---
+kokoro==0.9.4
+misaki[en]==0.9.4
+torch==2.15.0            # обычная версия (процессор, ≈130 МБ); для видеокарты — install_gpu.bat
+numpy
+soundfile
+# Языковая модель spaCy, нужна Kokoro для разбора английского текста (12 МБ)
+en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl

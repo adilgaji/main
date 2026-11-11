@@ -1,0 +1,116 @@
+{
+  "text": "In 480 BC, a small Greek force held the narrow pass of Thermopylae against the army of the Persian king Xerxes. About a thousand years earlier, in Egypt, a woman named Hatshepsut ruled as pharaoh — Egypt's king.\nAnd far across the ocean, the Aztec city of Tenochtitlan would one day rise on an island in a lake. Three places. Three stories. One question: how do we actually know what happened?",
+  "words": 70,
+  "speed": 1.0,
+  "engine": "kokoro==0.9.4",
+  "voices": [
+    {
+      "id": "am_fenrir",
+      "name": "Fenrir",
+      "label_ru": "мужской, американский",
+      "gender": "male",
+      "accent": "us",
+      "file": "am_fenrir.mp3",
+      "duration": 27.22,
+      "words_per_minute": 159,
+      "pitch_hz": 133,
+      "lufs": -14.9,
+      "true_peak_db": -2.4,
+      "pronunciations": [
+        "Xerxes",
+        "Tenochtitlan"
+      ],
+      "warnings": []
+    },
+    {
+      "id": "am_michael",
+      "name": "Michael",
+      "label_ru": "мужской, американский",
+      "gender": "male",
+      "accent": "us",
+      "file": "am_michael.mp3",
+      "duration": 29.86,
+      "words_per_minute": 144,
+      "pitch_hz": 120,
+      "lufs": -14.8,
+      "true_peak_db": -1.9,
+      "pronunciations": [
+        "Xerxes",
+        "Tenochtitlan"
+      ],
+      "warnings": []
+    },
+    {
+      "id": "bm_george",
+      "name": "George",
+      "label_ru": "мужской, британский",
+      "gender": "male",
+      "accent": "gb",
+      "file": "bm_george.mp3",
+      "duration": 29.02,
+      "words_per_minute": 149,
+      "pitch_hz": 140,
+      "lufs": -14.6,
+      "true_peak_db": -2.4,
+      "pronunciations": [
+        "Xerxes",
+        "Tenochtitlan"
+      ],
+      "warnings": []
+    },
+    {
+      "id": "bm_fable",
+      "name": "Fable",
+      "label_ru": "мужской, британский",
+      "gender": "male",
+      "accent": "gb",
+      "file": "bm_fable.mp3",
+      "duration": 24.89,
+      "words_per_minute": 175,
+      "pitch_hz": 118,
+      "lufs": -14.9,
+      "true_peak_db": -1.3,
+      "pronunciations": [
+        "Xerxes",
+        "Tenochtitlan"
+      ],
+      "warnings": []
+    },
+    {
+      "id": "af_heart",
+      "name": "Heart",
+      "label_ru": "женский, американский",
+      "gender": "female",
+      "accent": "us",
+      "file": "af_heart.mp3",
+      "duration": 27.53,
+      "words_per_minute": 157,
+      "pitch_hz": 200,
+      "lufs": -14.8,
+      "true_peak_db": -2.3,
+      "pronunciations": [
+        "Xerxes",
+        "Tenochtitlan"
+      ],
+      "warnings": []
+    },
+    {
+      "id": "bf_emma",
+      "name": "Emma",
+      "label_ru": "женский, британский",
+      "gender": "female",
+      "accent": "gb",
+      "file": "bf_emma.mp3",
+      "duration": 25.08,
+      "words_per_minute": 173,
+      "pitch_hz": 183,
+      "lufs": -14.7,
+      "true_peak_db": -2.2,
+      "pronunciations": [
+        "Xerxes",
+        "Tenochtitlan"
+      ],
+      "warnings": []
+    }
+  ]
+}

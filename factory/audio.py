@@ -80,30 +80,34 @@ def normalize_loudness(
     sample_rate: int = 48000,
     codec_args: list[str] | None = None,
 ) -> dict:
-    """Выравнивает громкость в два прохода и возвращает измерение результата.
+    """Выравнивает громкость и возвращает измерение результата.
 
-    Сначала пробует «линейный» режим (просто меняет общую громкость, звук не искажается).
-    Если после него цель не достигнута — повторяет в обычном режиме.
+    Способ: измерить → прибавить нужное усиление → мягкий ограничитель пиков.
+    Общая громкость меняется одинаково по всей записи, поэтому голос не «дышит»
+    и не искажается. Делается до трёх подходов, пока результат не попадёт в цель.
     """
     src, dst = Path(src), Path(dst)
     dst.parent.mkdir(parents=True, exist_ok=True)
-    s = _loudnorm_stats(src, target_i, target_tp)
-    measured = (
-        f":measured_I={s['input_i']}:measured_TP={s['input_tp']}:measured_LRA={s['input_lra']}"
-        f":measured_thresh={s['input_thresh']}:offset={s['target_offset']}"
-    )
     codec = codec_args or ["-c:a", "pcm_s16le"]
+    measured = measure_loudness(src)
+    gain = target_i - measured["lufs"]
+    limit = 10 ** ((target_tp - 1.0) / 20)  # запас 1 dB на «истинные» пики
     result: dict = {}
-    for linear in ("true", "false"):
-        flt = f"loudnorm=I={target_i}:TP={target_tp}:LRA=11{measured}:linear={linear}"
+    for attempt in range(3):
+        flt = (
+            f"aresample={sample_rate},volume={gain:.2f}dB,"
+            f"alimiter=limit={limit:.4f}:attack=3:release=60:level=disabled"
+        )
         _run([
             ffmpeg_bin(), "-hide_banner", "-nostats", "-y", "-i", str(src),
             "-af", flt, "-ar", str(sample_rate), "-ac", "1", *codec, str(dst),
         ])
         result = measure_loudness(dst)
-        result["mode"] = "linear" if linear == "true" else "dynamic"
-        if loudness_ok(result):
+        result["gain_db"] = round(gain, 2)
+        error = target_i - result["lufs"]
+        if abs(error) <= 0.3 and result["true_peak"] <= PEAK_MAX:
             break
+        gain += error
     return result
 
 

@@ -343,9 +343,11 @@ class KokoroEngine:
         tail: float = 0.45,
         max_chars: int = 280,
         dictionary: pron.Dictionary | None = None,
+        use_pronunciation: bool = True,
     ) -> Narration:
         """Озвучивает текст. Паузы (секунды): между кусками в абзаце, между абзацами,
-        тишина в начале и в конце."""
+        тишина в начале и в конце. use_pronunciation=False — читать «как есть», без словаря
+        и без правил для римских цифр (нужно только для сравнения «до / после»)."""
         lang, accent = lang_of(voice), accent_of(voice)
         clean = normalize(text)
         chunks: list[Chunk] = make_chunks(clean, max_chars=max_chars)
@@ -364,7 +366,10 @@ class KokoroEngine:
         pad_in, pad_out = 0.05, 0.10
 
         for ci, chunk in enumerate(chunks):
-            applied = pron.apply(chunk.text, accent, dictionary, g2p)
+            if use_pronunciation:
+                applied = pron.apply(chunk.text, accent, dictionary, g2p)
+            else:
+                applied = pron.Applied(chunk.text, [])
             used.extend(applied.used)
             audio, tokens = self._run(lang, applied.text, voice, speed)
             total = len(audio) / SAMPLE_RATE
