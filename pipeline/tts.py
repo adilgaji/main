@@ -104,16 +104,18 @@ def edge(text: str, raw_wav: Path, voice: str, log: Log):
 ENGINES = [("kokoro", kokoro), ("piper", piper), ("edge-tts", edge)]
 
 
-LEAD_SEC = 0.25  # тишина перед первым словом (сдвиг всех таймингов)
+LEAD_SEC = 0.08  # короткая тишина перед первым словом — ролик-петля без «дыры» при повторе
+TAIL_SEC = 0.15  # тишина после последнего слова
 
 
-def postprocess(raw_wav: Path, out_wav: Path):
+def postprocess(raw_wav: Path, out_wav: Path, trim: float = 0.0):
     """Срезать тишину в конце, добавить 0.25 с в начале и 0.5 с в конце,
     выровнять громкость (EBU R128, −16 LUFS, пики ≤ −1.5 dB).
     Начало НЕ обрезается — иначе сдвинулось бы время слов."""
     flt = (
+        f"atrim=start={trim:.3f},asetpts=PTS-STARTPTS,"
         "areverse,silenceremove=start_periods=1:start_threshold=-50dB:start_silence=0.05,areverse,"
-        f"adelay={int(LEAD_SEC * 1000)}:all=1,apad=pad_dur=0.5,"
+        f"adelay={int(LEAD_SEC * 1000)}:all=1,apad=pad_dur={TAIL_SEC},"
         "loudnorm=I=-16:TP=-1.5:LRA=7"
     )
     run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(raw_wav), "-af", flt, "-ar", "48000", "-ac", "1", str(out_wav)])
@@ -132,12 +134,14 @@ def synthesize(text: str, out_wav: Path, voice: str = DEFAULT_VOICE, log: Log | 
             timings = out_wav.with_name(out_wav.stem + ".timings.json")
             try:
                 words = fn(text, raw, voice, log)
-                postprocess(raw, out_wav)
+                # тишину до первого слова срезаем точно (время слов известно) — для петли
+                trim = max(0.0, words[0]["start"] - 0.03) if words else 0.0
+                postprocess(raw, out_wav, trim)
                 timings.unlink(missing_ok=True)
                 if words:
                     for w in words:
-                        w["start"] = round(w["start"] + LEAD_SEC, 3)
-                        w["end"] = round(w["end"] + LEAD_SEC, 3)
+                        w["start"] = round(w["start"] - trim + LEAD_SEC, 3)
+                        w["end"] = round(w["end"] - trim + LEAD_SEC, 3)
                     timings.write_text(json.dumps(words, ensure_ascii=False), encoding="utf-8")
                 log(f"Озвучка готова: {out_wav.name}, {ffprobe_duration(out_wav):.1f} с (движок: {name})")
                 return name

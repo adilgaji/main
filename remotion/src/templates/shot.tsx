@@ -20,7 +20,7 @@ export type Shot = {
   text?: string;
 };
 
-type Ctx = {shot: Shot; words: Word[]; style?: StyleId};
+type Ctx = {shot: Shot; words: Word[]; style?: StyleId; env?: string};
 export const ShotCtx = createContext<Ctx | null>(null);
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -49,7 +49,7 @@ export const useShot = () => {
     }
     return dur * fallback;
   };
-  return {t, dur, fps, shot: ctx.shot, words: local, at, p: ctx.shot.params, style: (ctx.style ?? 'classic') as StyleId};
+  return {t, dur, fps, shot: ctx.shot, words: local, at, p: ctx.shot.params, style: (ctx.style ?? 'classic') as StyleId, env: ctx.env};
 };
 
 const easeOpts = {extrapolateLeft: 'clamp' as const, extrapolateRight: 'clamp' as const, easing: Easing.bezier(0.16, 1, 0.3, 1)};

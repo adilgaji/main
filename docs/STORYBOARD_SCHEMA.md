@@ -5,6 +5,7 @@
 `*слово*` в headline выделяется жёлтой плашкой.
 
 Общие допустимые значения:
+- **background** (необязательно, в params любого кадра): muscle | blood | neural | cells | molecules | bone | air | dna | skin | night | grid | abstract | soft
 - **pose**: stand | point | wave | think | shrug | run | flex | present
 - **emotion**: neutral | happy | surprised | worried | excited
 - **organ** (на контуре тела): brain | hypothalamus | pituitary | thyroid | lungs | heart | liver | stomach | kidneys | adrenals | testes | muscles | vessels
@@ -95,7 +96,7 @@ satellite (клетки-сателлиты сливаются с волокно�
 ```
 Тексты ≤ 26 символов.
 
-### outro — последний кадр
+### outro — (устарело для петли) последний кадр
 ```json
 {"headline": "Rest is *training*", "pose": "wave", "emotion": "happy"}
 ```

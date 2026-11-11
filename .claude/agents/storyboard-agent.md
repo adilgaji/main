@@ -18,7 +18,14 @@ Make a storyboard:
   where the script goes "inside". Vary templates; don't use the same template more than twice in a row.
 - Anatomy must be correct (use only organs/regions listed in the schema). Visuals must show exactly
   what the words say at that moment.
-- The final shot uses template "outro" (it shows "Educational, not medical advice").
+- ENDLESS LOOP: the final shot leads visually back to shot 1 (same object/visual as shot 1 where possible);
+  do NOT use the "outro" template; the program crossfades the last 0.5 s into shot 1 and adds the disclaimer.
+- Follow the script's structure (script.json "structure"): a countdown gets numbered shots, a timeline gets
+  time stamps in headlines, a pov keeps the speaking organ on screen, a versus uses bars/side-by-side, etc.
+  Do not reuse the same sequence of templates as a typical video — make this one look different.
+- Backgrounds: the program picks a different background for every shot by its meaning. You may set
+  params.background to one of: muscle, blood, neural, cells, molecules, bone, air, dna, skin, night, grid, abstract, soft
+  (never the same as the previous shot).
 - Headlines ≤ 5 words, uppercase-friendly, may contain one *keyword*. On-screen text uses plain words
   (docs/PLAIN_LANGUAGE.md): prefer "CLEANUP CELLS" over "MACROPHAGES" unless the term is being introduced.
 

@@ -105,11 +105,29 @@ def write_script_txt(job: Path):
     return sj
 
 
+HISTORY = OUTPUT / "_history.json"
+
+
+def recent_structures(n: int = 4) -> list[str]:
+    try:
+        return [h["structure"] for h in json.loads(HISTORY.read_text(encoding="utf-8"))[-n:] if h.get("structure")]
+    except Exception:  # noqa: BLE001
+        return []
+
+
+def remember_structure(job: Path, structure: str):
+    hist = json.loads(HISTORY.read_text(encoding="utf-8")) if HISTORY.exists() else []
+    hist = [h for h in hist if h.get("job") != job.name] + [{"job": job.name, "structure": structure}]
+    HISTORY.write_text(json.dumps(hist, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
 def step_script(job: Path, remarks: str = "", log: Log | None = None) -> dict:
     log = log or Log(job / "log.txt")
     st = update_state(job, step="script", status="working")
     rel = job.relative_to(ROOT).as_posix()
     prompt = f"Topic: {st['topic']}\nJob folder: {rel}\n"
+    avoid = [x for x in recent_structures() if x]
+    prompt += f"Avoid structures (used in the latest videos): {', '.join(avoid) or 'none yet'}\n"
     if st.get("angle"):
         prompt += f"Angle: {st['angle']}\n"
     if remarks:
@@ -138,7 +156,9 @@ def step_script(job: Path, remarks: str = "", log: Log | None = None) -> dict:
     sj["readability"] = analyze(sj["script"])
     (job / "script.json").write_text(json.dumps(sj, ensure_ascii=False, indent=2), encoding="utf-8")
     words = len(re.sub(r"[*]", "", sj["script"]).split())
-    update_state(job, step="script", status="review", word_count=words)
+    if sj.get("structure"):
+        remember_structure(job, sj["structure"])
+    update_state(job, step="script", status="review", word_count=words, structure=sj.get("structure"))
     log(f"Текст готов: {words} слов, источников: {len(sj['sources'])}, проверка: {sj.get('fact_check', {}).get('verdict')}")
     return sj
 

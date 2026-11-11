@@ -9,7 +9,8 @@ import {AbsoluteFill, random, useCurrentFrame, useVideoConfig} from 'remotion';
 import {COLORS, VIDEO} from '../style';
 import {MuscleFiber} from './MuscleFiber';
 
-export type EnvKind = 'muscle' | 'blood' | 'neural' | 'cells' | 'soft';
+export type EnvKind = 'muscle' | 'blood' | 'neural' | 'cells' | 'soft' | 'molecules' | 'bone' | 'air' | 'dna' | 'skin' | 'night' | 'grid' | 'abstract';
+export const ENV_KINDS: EnvKind[] = ['muscle', 'blood', 'neural', 'cells', 'molecules', 'bone', 'air', 'dna', 'skin', 'night', 'grid', 'abstract', 'soft'];
 const W = VIDEO.width;
 const H = VIDEO.height;
 
@@ -144,16 +145,182 @@ const Cells: React.FC = () => {
   );
 };
 
-export const Env: React.FC<{kind?: EnvKind}> = ({kind = 'soft'}) => (
-  <AbsoluteFill>
-    <Glow />
-    {kind === 'muscle' && <Muscle />}
-    {kind === 'blood' && <Blood />}
-    {kind === 'neural' && <Neural />}
-    {kind === 'cells' && <Cells />}
-    <Particles n={kind === 'soft' ? 50 : 30} />
-  </AbsoluteFill>
+/* ---------- новые среды ---------- */
+const Molecules: React.FC<{seed: string}> = ({seed}) => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const t = frame / fps;
+  return (
+    <svg style={{position: 'absolute', inset: 0}} width={W} height={H}>
+      {Array.from({length: 16}, (_, i) => {
+        const x = random(`${seed}mx${i}`) * W;
+        const y = random(`${seed}my${i}`) * H;
+        const s = 40 + random(`${seed}ms${i}`) * 50;
+        const rot = random(`${seed}mr${i}`) * 360 + t * (i % 2 ? 6 : -6);
+        const hex = Array.from({length: 6}, (_, k) => `${Math.cos((k * Math.PI) / 3) * s},${Math.sin((k * Math.PI) / 3) * s}`).join(' ');
+        return (
+          <g key={i} transform={`translate(${x} ${y}) rotate(${rot})`} opacity={0.3}>
+            <polygon points={hex} fill="none" stroke={i % 2 ? COLORS.hormone : COLORS.hormoneAlt} strokeWidth={7} />
+            <line x1={s} y1={0} x2={s * 1.9} y2={-s * 0.5} stroke={COLORS.hormone} strokeWidth={7} />
+            <circle cx={s * 2.05} cy={-s * 0.58} r={s * 0.22} fill={COLORS.blood} />
+          </g>
+        );
+      })}
+    </svg>
+  );
+};
+
+const Bone: React.FC<{seed: string}> = ({seed}) => (
+  <svg style={{position: 'absolute', inset: 0}} width={W} height={H}>
+    <rect width={W} height={H} fill={COLORS.tendon} opacity={0.08} />
+    {Array.from({length: 46}, (_, i) => {
+      const x = random(`${seed}bx${i}`) * W;
+      const y = random(`${seed}by${i}`) * H;
+      const r = 30 + random(`${seed}br${i}`) * 70;
+      return <ellipse key={i} cx={x} cy={y} rx={r} ry={r * (0.6 + random(`${seed}be${i}`) * 0.5)} fill="none" stroke={COLORS.tendon} strokeOpacity={0.28} strokeWidth={10 + random(`${seed}bw${i}`) * 10} />;
+    })}
+  </svg>
 );
+
+const Air: React.FC<{seed: string}> = ({seed}) => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const breathe = 1 + Math.sin((frame / fps) * 1.4) * 0.05;
+  return (
+    <svg style={{position: 'absolute', inset: 0}} width={W} height={H}>
+      {Array.from({length: 12}, (_, c) => {
+        const cx = random(`${seed}ax${c}`) * W;
+        const cy = random(`${seed}ay${c}`) * H;
+        return (
+          <g key={c} transform={`translate(${cx} ${cy}) scale(${breathe})`} opacity={0.3}>
+            <path d={`M 0 0 L ${-60 + c * 3} ${-140}`} stroke={COLORS.lung} strokeWidth={10} />
+            {Array.from({length: 7}, (_, k) => {
+              const a = (k / 7) * Math.PI * 2;
+              return <circle key={k} cx={Math.cos(a) * 52} cy={Math.sin(a) * 52} r={34} fill={COLORS.lung} fillOpacity={0.25} stroke={COLORS.lung} strokeWidth={5} />;
+            })}
+          </g>
+        );
+      })}
+    </svg>
+  );
+};
+
+const Dna: React.FC<{seed: string}> = ({seed}) => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const t = frame / fps;
+  const strands = [0, 1, 2].map((k) => ({x0: -200 + k * 520 + random(`${seed}dx${k}`) * 120}));
+  return (
+    <svg style={{position: 'absolute', inset: 0}} width={W} height={H}>
+      {strands.map((st, k) => (
+        <g key={k} opacity={0.3} transform={`rotate(-25 ${st.x0} 960)`}>
+          {Array.from({length: 40}, (_, i) => {
+            const y = i * 52 - 100;
+            const ph = i * 0.45 + t * 1.2 + k;
+            const a = Math.sin(ph) * 90;
+            return (
+              <g key={i}>
+                <line x1={st.x0 + a} y1={y} x2={st.x0 - a} y2={y} stroke={i % 2 ? COLORS.gland : COLORS.hormone} strokeWidth={8} />
+                <circle cx={st.x0 + a} cy={y} r={10} fill={COLORS.cell} />
+                <circle cx={st.x0 - a} cy={y} r={10} fill={COLORS.accent} />
+              </g>
+            );
+          })}
+        </g>
+      ))}
+    </svg>
+  );
+};
+
+const Skin: React.FC<{seed: string}> = ({seed}) => (
+  <svg style={{position: 'absolute', inset: 0}} width={W} height={H}>
+    {[0, 1, 2, 3, 4].map((k) => {
+      const y0 = 200 + k * 360;
+      let d = `M 0 ${y0}`;
+      for (let x = 0; x <= W; x += 40) d += ` L ${x} ${y0 + Math.sin(x / 120 + k + random(`${seed}sk${k}`) * 3) * 40}`;
+      d += ` L ${W} ${H} L 0 ${H} Z`;
+      return <path key={k} d={d} fill={k % 2 ? COLORS.lung : COLORS.muscle} opacity={0.08 + k * 0.03} />;
+    })}
+  </svg>
+);
+
+const Night: React.FC<{seed: string}> = ({seed}) => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const t = frame / fps;
+  return (
+    <svg style={{position: 'absolute', inset: 0}} width={W} height={H}>
+      <rect width={W} height={H} fill="#000000" opacity={0.25} />
+      {Array.from({length: 90}, (_, i) => (
+        <circle key={i} cx={random(`${seed}sx${i}`) * W} cy={random(`${seed}sy${i}`) * H} r={2 + random(`${seed}sr${i}`) * 4} fill={COLORS.ink} opacity={0.25 + 0.35 * Math.abs(Math.sin(t * 1.5 + i))} />
+      ))}
+      <circle cx={820} cy={300} r={110} fill={COLORS.accent} opacity={0.25} />
+      <circle cx={870} cy={270} r={100} fill={COLORS.bg} opacity={0.6} />
+    </svg>
+  );
+};
+
+const Grid: React.FC<{seed: string}> = ({seed}) => (
+  <svg style={{position: 'absolute', inset: 0}} width={W} height={H}>
+    {Array.from({length: 28}, (_, i) => (
+      <line key={`v${i}`} x1={i * 40} x2={i * 40} y1={0} y2={H} stroke={COLORS.ink} strokeOpacity={i % 5 ? 0.04 : 0.1} strokeWidth={2} />
+    ))}
+    {Array.from({length: 49}, (_, i) => (
+      <line key={`h${i}`} y1={i * 40} y2={i * 40} x1={0} x2={W} stroke={COLORS.ink} strokeOpacity={i % 5 ? 0.04 : 0.1} strokeWidth={2} />
+    ))}
+    {Array.from({length: 5}, (_, i) => {
+      const x = random(`${seed}gx${i}`) * W;
+      const y = random(`${seed}gy${i}`) * H;
+      return <text key={i} x={x} y={y} fill={COLORS.ink} opacity={0.12} fontSize={36} fontFamily="Space Mono">{['n=13', 'p<0.05', '48h', 'Δ −18%', 'r=0.6'][i]}</text>;
+    })}
+  </svg>
+);
+
+const Abstract: React.FC<{seed: string}> = ({seed}) => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const t = frame / fps;
+  const cols = [COLORS.blood, COLORS.cell, COLORS.gland, COLORS.hormone, COLORS.accent];
+  return (
+    <svg style={{position: 'absolute', inset: 0}} width={W} height={H}>
+      {Array.from({length: 7}, (_, i) => {
+        const x = random(`${seed}ox${i}`) * W + Math.sin(t * 0.4 + i) * 30;
+        const y = random(`${seed}oy${i}`) * H + Math.cos(t * 0.3 + i) * 30;
+        const r = 120 + random(`${seed}or${i}`) * 220;
+        return <circle key={i} cx={x} cy={y} r={r} fill={cols[i % cols.length]} opacity={0.12} />;
+      })}
+      {Array.from({length: 6}, (_, i) => (
+        <path key={`l${i}`} d={`M ${-50} ${300 + i * 260} C 300 ${200 + i * 260 + Math.sin(t + i) * 60}, 700 ${420 + i * 260}, ${W + 50} ${300 + i * 260}`} stroke={cols[(i + 2) % cols.length]} strokeOpacity={0.18} strokeWidth={6} fill="none" />
+      ))}
+    </svg>
+  );
+};
+
+export const Env: React.FC<{kind?: EnvKind; seed?: string | number}> = ({kind = 'soft', seed: seedRaw = 0}) => {
+  const seed = `s${seedRaw}`;
+  // вариант раскладки: зеркало и сдвиг — один и тот же вид среды выглядит по-разному в разных кадрах
+  const mirror = random(`${seed}mirror`) < 0.5 ? -1 : 1;
+  return (
+    <AbsoluteFill>
+      <Glow />
+      <AbsoluteFill style={{scale: `${mirror} 1`}}>
+        {kind === 'muscle' && <Muscle />}
+        {kind === 'blood' && <Blood />}
+        {kind === 'neural' && <Neural />}
+        {kind === 'cells' && <Cells />}
+        {kind === 'molecules' && <Molecules seed={seed} />}
+        {kind === 'bone' && <Bone seed={seed} />}
+        {kind === 'air' && <Air seed={seed} />}
+        {kind === 'dna' && <Dna seed={seed} />}
+        {kind === 'skin' && <Skin seed={seed} />}
+        {kind === 'night' && <Night seed={seed} />}
+        {kind === 'grid' && <Grid seed={seed} />}
+        {kind === 'abstract' && <Abstract seed={seed} />}
+      </AbsoluteFill>
+      <Particles n={kind === 'soft' ? 50 : 26} seed={seed} />
+    </AbsoluteFill>
+  );
+};
 
 /** Какая среда подходит органу/визуалу. */
 export const envFor = (thing?: string): EnvKind => {
@@ -163,4 +330,38 @@ export const envFor = (thing?: string): EnvKind => {
   if (/brain|nerve|hypothal|pituit/.test(thing)) return 'neural';
   if (/cell|molecule|hormone/.test(thing)) return 'cells';
   return 'soft';
+};
+
+/** Подходящие среды по словам кадра (по порядку предпочтения). */
+const KEYWORDS: [RegExp, EnvKind][] = [
+  [/muscl|fiber|lift|train|workout|gym|tear/, 'muscle'],
+  [/heart|blood|vessel|pulse|pump|oxygen.?rich/, 'blood'],
+  [/brain|nerve|neuron|think|stress|signal|mind|focus|mood/, 'neural'],
+  [/hormone|adrenal|cortisol|testosterone|insulin|protein|molecule|chemical/, 'molecules'],
+  [/cell|repair|crew|clean|immune/, 'cells'],
+  [/bone|skeleton|calcium|joint/, 'bone'],
+  [/breath|lung|air|oxygen/, 'air'],
+  [/gene|dna|inherit/, 'dna'],
+  [/skin|sun|sweat|heat|cold/, 'skin'],
+  [/sleep|night|rest|dream|tired/, 'night'],
+  [/research|study|data|science|percent|graph|myth|fact/, 'grid'],
+];
+
+/** Выбрать фон для каждого кадра: по смыслу кадра, соседние кадры — никогда одинаковые. */
+export const pickEnvs = (shots: {id: number; template: string; text?: string; params?: any}[]): EnvKind[] => {
+  const out: EnvKind[] = [];
+  const pool: EnvKind[] = ['abstract', 'cells', 'molecules', 'grid', 'neural', 'soft', 'dna', 'blood'];
+  const used = new Map<EnvKind, number>();
+  shots.forEach((s, i) => {
+    const prev = out[i - 1];
+    const forced = s.params?.background as EnvKind | undefined;
+    const text = `${s.text ?? ''} ${JSON.stringify(s.params ?? {})}`.toLowerCase();
+    const cands = [...(forced ? [forced] : []), ...KEYWORDS.filter(([re]) => re.test(text)).map(([, k]) => k), ...pool];
+    // меньше всего использованная из подходящих и не такая, как в соседнем кадре
+    const ok = cands.filter((k) => k !== prev);
+    const best = ok.slice(0, 4).sort((a, b) => (used.get(a) ?? 0) - (used.get(b) ?? 0))[0] ?? ok[0] ?? 'soft';
+    out.push(best);
+    used.set(best, (used.get(best) ?? 0) + 1);
+  });
+  return out;
 };

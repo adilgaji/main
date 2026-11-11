@@ -64,9 +64,9 @@ def checks(job: Path, log: Log) -> list[str]:
     if ld["peak"] > -0.5:
         problems.append(f"Пики {ld['peak']} dBFS — риск искажений")
     # 4. субтитры: каждое слово внутри звука, без «обрезанных» слов
-    if words[0]["startMs"] < 100:
+    if words[0]["startMs"] < 40:
         problems.append("Первое слово начинается слишком близко к началу (может быть обрезано)")
-    if words[-1]["endMs"] / 1000 > adur - 0.15:
+    if words[-1]["endMs"] / 1000 > adur - 0.05:
         problems.append("Последнее слово слишком близко к концу (может быть обрезано)")
     # 5. видео соответствует подтверждённой раскадровке
     st = load_state(job)

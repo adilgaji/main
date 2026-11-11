@@ -344,7 +344,6 @@ export const StyleLayer: React.FC<{
             {filter: 'url(#st-thermal)'},
           )}
           <Grain opacity={0.1} blend="screen" />
-          <ThermalHud />
           {fgText}
         </>
       );
