@@ -107,13 +107,13 @@ const Preload: React.FC = () => (
   </>
 );
 
-const GlassShards: React.FC = () => {
-  const pts: [number, number][] = Array.from({length: 150}, (_, i) => [random(`gx${i}`) * W, random(`gy${i}`) * H]);
+const GlassShards: React.FC<{seed: string}> = ({seed}) => {
+  const pts: [number, number][] = Array.from({length: 150}, (_, i) => [random(`${seed}gx${i}`) * W, random(`${seed}gy${i}`) * H]);
   const vor = Delaunay.from(pts).voronoi([0, 0, W, H]);
   return (
     <svg style={{position: 'absolute', inset: 0, pointerEvents: 'none'}} width={W} height={H}>
       {pts.map((_, i) => {
-        const r = random(`gs${i}`);
+        const r = random(`${seed}gs${i}`);
         return (
           <path
             key={i}
@@ -188,20 +188,24 @@ const IsoGrid: React.FC = () => {
   );
 };
 
-const PaperStrips: React.FC = () => (
-  <svg style={{position: 'absolute', inset: 0}} width={W} height={H}>
-    {[
-      {y: 260, c: COLORS.bgSoft},
-      {y: 1320, c: COLORS.bgGlow},
-      {y: 1560, c: COLORS.bgSoft},
-    ].map((s, i) => {
-      let d = `M 0 ${s.y}`;
-      for (let x = 0; x <= W; x += 60) d += ` L ${x} ${s.y + Math.sin(x / 90 + i) * 26 + (random(`ps${i}${x}`) - 0.5) * 14}`;
-      d += ` L ${W} ${H} L 0 ${H} Z`;
-      return <path key={i} d={d} fill={s.c} style={{filter: 'drop-shadow(0 -8px 10px rgba(80,50,20,0.18))'}} />;
-    })}
-  </svg>
-);
+const PaperStrips: React.FC<{seed: string}> = ({seed}) => {
+  const n = 2 + Math.floor(random(`${seed}pn`) * 2);
+  const strips = Array.from({length: n}, (_, i) => ({
+    y: 1240 + random(`${seed}py${i}`) * 520 + i * 60,
+    c: [COLORS.bgSoft, COLORS.bgGlow, COLORS.lung, COLORS.gland][Math.floor(random(`${seed}pc${i}`) * 4)],
+    o: 0.55 + random(`${seed}po${i}`) * 0.35,
+  })).sort((a, b) => a.y - b.y);
+  return (
+    <svg style={{position: 'absolute', inset: 0}} width={W} height={H}>
+      {strips.map((s, i) => {
+        let d = `M 0 ${s.y}`;
+        for (let x = 0; x <= W; x += 60) d += ` L ${x} ${s.y + Math.sin(x / (70 + i * 30) + random(`${seed}ph${i}`) * 6) * 26 + (random(`${seed}ps${i}${x}`) - 0.5) * 14}`;
+        d += ` L ${W} ${H} L 0 ${H} Z`;
+        return <path key={i} d={d} fill={s.c} opacity={s.o} style={{filter: 'drop-shadow(0 -8px 10px rgba(80,50,20,0.18))'}} />;
+      })}
+    </svg>
+  );
+};
 
 /* ------------------------------- слой ------------------------------- */
 /** CSS стиля: шрифт + «два прохода» текста (схема без букв / буквы без схемы). */
@@ -236,7 +240,9 @@ export const StyleLayer: React.FC<{
   fg: React.ReactNode;
   actor?: React.ReactNode;
   ui?: React.ReactNode;
-}> = ({style, bg, fg: fgRaw, actor, ui}) => {
+  seed?: string | number;
+}> = ({style, bg, fg: fgRaw, actor, ui, seed: seedRaw = 0}) => {
+  const seed = `k${seedRaw}`;
   applyTheme(style);
   const cls = `st-${style}`;
   const layer = (children: React.ReactNode, css: React.CSSProperties = {}) => <AbsoluteFill style={css}>{children}</AbsoluteFill>;
@@ -252,7 +258,7 @@ export const StyleLayer: React.FC<{
           {layer(bg, {filter: 'saturate(1.3)'})}
           {layer(fg, {filter: 'url(#st-lead)'})}
           {layer(actor, {filter: 'url(#st-lead)'})}
-          <GlassShards />
+          <GlassShards seed={seed} />
           {fgText}
         </>
       );
@@ -275,8 +281,8 @@ export const StyleLayer: React.FC<{
     case 'paper':
       scene = (
         <>
-          {layer(bg, {opacity: 0.55})}
-          <PaperStrips />
+          {layer(bg, {opacity: 0.85})}
+          <PaperStrips seed={seed} />
           {layer(fg, {filter: 'drop-shadow(0 6px 0 rgba(70,40,20,0.22)) drop-shadow(0 16px 18px rgba(70,40,20,0.22))'})}
           {layer(actor, {filter: 'drop-shadow(0 6px 0 rgba(70,40,20,0.25))'})}
           <Grain opacity={0.12} />

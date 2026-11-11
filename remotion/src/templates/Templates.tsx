@@ -26,7 +26,7 @@ const abs = (left: number, top: number, extra: React.CSSProperties = {}): React.
 const Frame: React.FC<{env: EnvKind; fg: React.ReactNode; actor?: React.ReactNode; ui?: React.ReactNode}> = ({env, fg, actor, ui}) => {
   const {style, env: picked, shot} = useShot();
   // фон выбирается для каждого кадра заранее (соседние кадры — разные фоны); env шаблона — запасной вариант
-  return <StyleLayer style={style} bg={<Env kind={(picked as EnvKind) ?? env} seed={shot.id} />} fg={fg} actor={actor} ui={ui} />;
+  return <StyleLayer style={style} seed={shot.id} bg={<Env kind={(picked as EnvKind) ?? env} seed={shot.id} />} fg={fg} actor={actor} ui={ui} />;
 };
 
 const Guide: React.FC<{left: number; top: number; size: number; pose?: string; emotion?: string; toPose?: string; poseT?: number}> = ({left, top, size, pose = 'point', emotion = 'happy', toPose, poseT}) => (

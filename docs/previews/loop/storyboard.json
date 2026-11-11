@@ -1,0 +1,376 @@
+{
+  "shots": [
+    {
+      "id": 1,
+      "first_word": 0,
+      "last_word": 5,
+      "template": "hook",
+      "params": {
+        "headline": "Heart *pounding* before a test?",
+        "pose": "think",
+        "emotion": "worried",
+        "visual": "heart",
+        "visual_params": {
+          "bpm": 120
+        },
+        "background": "blood"
+      },
+      "description_ru": "Хук: крупное сердце быстро колотится (сильные пульсации), рядом встревоженный гид держится за грудь в позе «думает». Сверху крупно вопрос, слово POUNDING на жёлтой плашке.",
+      "transition": "cut",
+      "start": 0.0,
+      "end": 2.48,
+      "duration": 2.48,
+      "text": "Heart pounding before a big test?"
+    },
+    {
+      "id": 2,
+      "first_word": 6,
+      "last_word": 11,
+      "template": "zoom",
+      "params": {
+        "organ": "brain",
+        "label": "NERVE CELL",
+        "end": "cell",
+        "receptors": "membrane",
+        "background": "neural"
+      },
+      "description_ru": "Фирменный зум «идём внутрь»: контур тела → мозг → нервная клетка с рецепторами на мембране. Сверху навигация BODY › BRAIN › CELL, подпись NERVE CELL.",
+      "transition": "zoom",
+      "start": 2.48,
+      "end": 5.05,
+      "duration": 2.57,
+      "text": "Let's follow the signal inside you."
+    },
+    {
+      "id": 3,
+      "first_word": 12,
+      "last_word": 16,
+      "template": "guide",
+      "params": {
+        "headline": "Your brain senses *danger*",
+        "pose": "think",
+        "emotion": "worried",
+        "icons": [
+          "stress"
+        ],
+        "background": "soft"
+      },
+      "description_ru": "Гид настороженно думает, рядом всплывает иконка стресса (опасность = предстоящая контрольная). Слово DANGER выделено.",
+      "transition": "cut",
+      "start": 5.05,
+      "end": 7.55,
+      "duration": 2.5,
+      "text": "First, your brain senses danger."
+    },
+    {
+      "id": 4,
+      "first_word": 17,
+      "last_word": 25,
+      "template": "organ",
+      "params": {
+        "organ": "brain",
+        "headline": "A tiny *fear alarm*",
+        "from": {
+          "highlight": []
+        },
+        "to": {
+          "highlight": [
+            "amygdala"
+          ]
+        },
+        "labels": [
+          "FEAR ALARM (AMYGDALA)"
+        ],
+        "background": "night"
+      },
+      "description_ru": "Крупный план мозга сбоку; глубоко внутри загорается маленькая миндалина — «сигнализация страха», пульсирует как тревожная лампочка. Подпись FEAR ALARM (AMYGDALA).",
+      "transition": "slide",
+      "start": 7.55,
+      "end": 10.51,
+      "duration": 2.96,
+      "text": "A tiny fear alarm in your brain goes off."
+    },
+    {
+      "id": 5,
+      "first_word": 26,
+      "last_word": 31,
+      "template": "organ",
+      "params": {
+        "organ": "brain",
+        "headline": "It pings the *control center*",
+        "from": {
+          "highlight": [
+            "amygdala"
+          ]
+        },
+        "to": {
+          "highlight": [
+            "amygdala",
+            "hypothalamus"
+          ]
+        },
+        "labels": [
+          "CONTROL CENTER (HYPOTHALAMUS)"
+        ],
+        "background": "abstract"
+      },
+      "description_ru": "Тот же мозг: от миндалины сигнал перескакивает к гипоталамусу, он загорается вторым. Подпись CONTROL CENTER (HYPOTHALAMUS).",
+      "transition": "cut",
+      "start": 10.51,
+      "end": 13.03,
+      "duration": 2.52,
+      "text": "It pings your brain's control center."
+    },
+    {
+      "id": 6,
+      "first_word": 32,
+      "last_word": 40,
+      "template": "body",
+      "params": {
+        "highlight": [
+          "brain",
+          "adrenals"
+        ],
+        "labels": [
+          {
+            "organ": "adrenals",
+            "text": "ADRENAL GLANDS"
+          }
+        ],
+        "arrows": [
+          {
+            "from": "brain",
+            "to": "adrenals"
+          }
+        ],
+        "pose": "point",
+        "background": "neural"
+      },
+      "description_ru": "Схема тела спереди: светится мозг, по стрелке-нерву сигнал бежит вниз к надпочечникам, они вспыхивают. Подпись ADRENAL GLANDS.",
+      "transition": "slide",
+      "start": 13.03,
+      "end": 16.76,
+      "duration": 3.73,
+      "text": "The signal races down nerves to your adrenal glands."
+    },
+    {
+      "id": 7,
+      "first_word": 41,
+      "last_word": 47,
+      "template": "body",
+      "params": {
+        "highlight": [
+          "kidneys",
+          "adrenals"
+        ],
+        "labels": [
+          {
+            "organ": "kidneys",
+            "text": "KIDNEYS"
+          },
+          {
+            "organ": "adrenals",
+            "text": "ADRENAL GLANDS"
+          }
+        ],
+        "pose": "point",
+        "background": "soft"
+      },
+      "description_ru": "Та же схема тела: сначала подсвечиваются обе почки, затем маленькие «шапочки» надпочечников сверху на них. Подписи KIDNEYS и ADRENAL GLANDS.",
+      "transition": "cut",
+      "start": 16.76,
+      "end": 19.13,
+      "duration": 2.37,
+      "text": "They sit on top of your kidneys."
+    },
+    {
+      "id": 8,
+      "first_word": 48,
+      "last_word": 58,
+      "template": "flow",
+      "params": {
+        "steps": [
+          {
+            "label": "Adrenal glands",
+            "color": "gland"
+          },
+          {
+            "label": "Hormone",
+            "color": "hormone"
+          },
+          {
+            "label": "Into blood",
+            "color": "blood"
+          }
+        ],
+        "background": "molecules"
+      },
+      "description_ru": "Цепочка из трёх шагов появляется по очереди под слова: надпочечники → гормон (быстрое сообщение тела) → в кровь.",
+      "transition": "slide",
+      "start": 19.13,
+      "end": 23.13,
+      "duration": 4.0,
+      "text": "They pour a hormone, a fast body message, into your blood."
+    },
+    {
+      "id": 9,
+      "first_word": 59,
+      "last_word": 66,
+      "template": "body",
+      "params": {
+        "highlight": [
+          "heart",
+          "lungs"
+        ],
+        "labels": [
+          {
+            "organ": "heart",
+            "text": "BEATS FASTER"
+          },
+          {
+            "organ": "lungs",
+            "text": "AIRWAYS OPEN"
+          }
+        ],
+        "molecules": {
+          "kind": "amine",
+          "from": "adrenals",
+          "to": "heart"
+        },
+        "pose": "present",
+        "background": "blood"
+      },
+      "description_ru": "Молекулы гормона плывут от надпочечников к сердцу; сердце загорается (BEATS FASTER), затем лёгкие (AIRWAYS OPEN).",
+      "transition": "cut",
+      "start": 23.13,
+      "end": 26.56,
+      "duration": 3.43,
+      "text": "Your heart beats faster. Your airways open wider,"
+    },
+    {
+      "id": 10,
+      "first_word": 67,
+      "last_word": 76,
+      "template": "body",
+      "params": {
+        "highlight": [
+          "lungs",
+          "muscles"
+        ],
+        "labels": [
+          {
+            "organ": "lungs",
+            "text": "MORE AIR IN"
+          },
+          {
+            "organ": "muscles",
+            "text": "MORE BLOOD"
+          }
+        ],
+        "arrows": [
+          {
+            "from": "heart",
+            "to": "muscles"
+          }
+        ],
+        "pose": "run",
+        "background": "muscle"
+      },
+      "description_ru": "Лёгкие светятся (MORE AIR IN), затем стрелка от сердца к мышцам рук и ног — кровь приливает к мышцам (MORE BLOOD).",
+      "transition": "cut",
+      "start": 26.56,
+      "end": 30.76,
+      "duration": 4.2,
+      "text": "so more air gets in. Blood rushes to your muscles."
+    },
+    {
+      "id": 11,
+      "first_word": 77,
+      "last_word": 88,
+      "template": "guide",
+      "params": {
+        "headline": "Stomach rests, skin *sweats*",
+        "pose": "present",
+        "emotion": "surprised",
+        "icons": [
+          "food",
+          "water"
+        ],
+        "background": "skin"
+      },
+      "description_ru": "Гид показывает на две иконки: еда (желудок «на паузе», иконка тускнеет) и капли воды (пот по коже в целом, чтобы охладить тело — не акцент на ладонях).",
+      "transition": "slide",
+      "start": 30.76,
+      "end": 35.36,
+      "duration": 4.6,
+      "text": "Your stomach takes a break. Your skin sweats to cool you down."
+    },
+    {
+      "id": 12,
+      "first_word": 89,
+      "last_word": 96,
+      "template": "tips",
+      "params": {
+        "headline": "Early research: *slow breathing*",
+        "items": [
+          {
+            "icon": "clock",
+            "text": "Slow breathing",
+            "evidence": "early"
+          }
+        ],
+        "background": "air"
+      },
+      "description_ru": "Один пункт-совет: иконка часов «медленно» + Slow breathing, с жёлтой меткой EARLY (ранние исследования). Без чисел и счёта вдохов.",
+      "transition": "fade",
+      "start": 35.36,
+      "end": 37.94,
+      "duration": 2.58,
+      "text": "Early research suggests slow breathing can help you"
+    },
+    {
+      "id": 13,
+      "first_word": 97,
+      "last_word": 102,
+      "template": "guide",
+      "params": {
+        "headline": "You're not *failing*",
+        "pose": "shrug",
+        "emotion": "happy",
+        "icons": [],
+        "background": "soft"
+      },
+      "description_ru": "Гид спокойно выдыхает и дружелюбно пожимает плечами: «ты не проваливаешься». Мягкий, ободряющий кадр.",
+      "transition": "cut",
+      "start": 37.94,
+      "end": 41.41,
+      "duration": 3.47,
+      "text": "feel calmer. It's not you failing."
+    },
+    {
+      "id": 14,
+      "first_word": 103,
+      "last_word": 112,
+      "template": "organ",
+      "params": {
+        "organ": "heart",
+        "headline": "Your body is getting *ready*",
+        "from": {
+          "bpm": 80
+        },
+        "to": {
+          "bpm": 120
+        },
+        "background": "blood"
+      },
+      "description_ru": "Петля: крупное сердце, как в первом кадре, пульс постепенно ускоряется до того же быстрого ритма, что в хуке; последние 0.5 с плавно переходят в кадр 1 («…the story behind a / heart pounding before a big test?»).",
+      "transition": "fade",
+      "start": 41.41,
+      "end": 45.31,
+      "duration": 3.9,
+      "text": "It's your body getting ready. That's the story behind a"
+    }
+  ],
+  "total": 45.31,
+  "sum_of_shots": 45.31
+}
