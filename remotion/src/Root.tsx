@@ -3,6 +3,7 @@ import {Composition, Still} from 'remotion';
 import {VIDEO} from './style';
 import {TestScene, calcTestScene} from './scenes/TestScene';
 import {Short, calcShort} from './Short';
+import {StyleSample, StyleSampleSheet} from './scenes/StyleSample';
 import {Thumbnail} from './Thumbnail';
 import {WmPulseNavy, WmPulseNavy2, WordmarkSheet, WmCoral, WmSerif, WmPulse, WmLab, WmMolecule, WmMarker} from './brand/Wordmarks';
 import {BlueprintPairSheet, Banner2Sheet, BannerBlueprint, BannerMicroscope, BannerNeurons, BannerSoft} from './brand/Banners2';
@@ -17,6 +18,8 @@ export const RemotionRoot: React.FC = () => {
       <Still id="SheetAnatomy" component={SheetAnatomy} width={VIDEO.width} height={VIDEO.height} />
       <Still id="SheetDiagrams" component={SheetDiagrams} width={VIDEO.width} height={VIDEO.height} />
       <Composition id="LibraryMotion" component={LibraryMotion} durationInFrames={6 * VIDEO.fps} fps={VIDEO.fps} width={VIDEO.width} height={VIDEO.height} />
+      <Composition id="StyleSample" component={StyleSample} durationInFrames={60} fps={VIDEO.fps} width={VIDEO.width} height={VIDEO.height} defaultProps={{style: 'classic' as const}} />
+      <Composition id="StyleSampleSheet" component={StyleSampleSheet} durationInFrames={60} fps={VIDEO.fps} width={1090} height={2080} />
       <Still id="BlueprintPairSheet" component={BlueprintPairSheet} width={1620} height={1250} />
       <Still id="WmPulseNavy" component={WmPulseNavy} width={800} height={800} />
       <Still id="WmPulseNavy2" component={WmPulseNavy2} width={800} height={800} />

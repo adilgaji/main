@@ -8,21 +8,28 @@
   "dependencies": {
     "@fontsource/anton": "^5.2.6",
     "@fontsource/archivo-black": "^5.2.6",
+    "@fontsource/caveat": "^5.2.6",
+    "@fontsource/cinzel": "^5.2.6",
     "@fontsource/dm-serif-display": "^5.2.6",
+    "@fontsource/fredoka": "^5.2.6",
     "@fontsource/montserrat": "^5.2.6",
     "@fontsource/permanent-marker": "^5.2.6",
+    "@fontsource/press-start-2p": "^5.2.6",
     "@fontsource/space-mono": "^5.2.6",
+    "@fontsource/vt323": "^5.2.6",
     "@remotion/captions": "4.0.542",
     "@remotion/cli": "^4.0.542",
     "@remotion/fonts": "4.0.542",
     "@remotion/media": "4.0.542",
     "@remotion/paths": "4.0.542",
     "@remotion/transitions": "4.0.542",
+    "d3-delaunay": "^6.0.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "remotion": "^4.0.542"
   },
   "devDependencies": {
+    "@types/d3-delaunay": "^6.0.4",
     "@types/react": "^19.1.8",
     "typescript": "^5.8.3"
   }

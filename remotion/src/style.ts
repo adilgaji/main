@@ -79,8 +79,13 @@ export const STROKE = {
 
 /** Подсветка ключевого слова: жёлтая «плашка». */
 export const keywordStyle: React.CSSProperties = {
-  background: COLORS.accent,
-  color: COLORS.accentInk,
+  // геттеры: цвет берётся в момент отрисовки (стиль видео может сменить палитру)
+  get background() {
+    return COLORS.accent;
+  },
+  get color() {
+    return COLORS.accentInk;
+  },
   borderRadius: 14,
   padding: '0 14px',
 };

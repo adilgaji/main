@@ -26,6 +26,7 @@ export const Headline: React.FC<{text: string; top?: number; size?: number; dela
   const parts = text.split(/(\*[^*]+\*)/).filter(Boolean);
   return (
     <div
+      className="hl"
       style={{
         position: 'absolute',
         top,
