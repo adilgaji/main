@@ -62,6 +62,21 @@ export const WmPulse: React.FC = () => (
   </Fill>
 );
 
+/* C2. Pulse на тёмно-синем: белый текст, ярко-красная линия пульса (пара к фону-чертежу). */
+const PulseOn: React.FC<{bg: string}> = ({bg}) => (
+  <Fill bg={bg}>
+    <div style={{position: 'relative', fontFamily: 'Archivo Black', color: '#FFFFFF', textTransform: 'uppercase', textAlign: 'center', lineHeight: 0.95}}>
+      <div style={{fontSize: 112}}>ALL THAT</div>
+      <div style={{fontSize: 124, marginTop: 70}}>MATTERS</div>
+      <svg style={{position: 'absolute', left: -60, top: 96}} width={760} height={90} viewBox="0 0 760 90">
+        <path d="M 0 45 L 250 45 L 285 45 L 310 8 L 340 84 L 370 20 L 392 45 L 760 45" fill="none" stroke="#FF2B2B" strokeWidth={12} strokeLinejoin="round" strokeLinecap="round" />
+      </svg>
+    </div>
+  </Fill>
+);
+export const WmPulseNavy: React.FC = () => <PulseOn bg="#0B1C45" />;
+export const WmPulseNavy2: React.FC = () => <PulseOn bg="#12307A" />;
+
 /* D. Лабораторная этикетка: «образец под микроскопом», моноширинный шрифт. */
 export const WmLab: React.FC = () => (
   <Fill bg="#E9F0EC">

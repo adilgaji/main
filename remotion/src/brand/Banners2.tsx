@@ -6,7 +6,7 @@
 import React from 'react';
 import {AbsoluteFill, random} from 'remotion';
 import './Wordmarks'; // шрифты
-import {WmPulse} from './Wordmarks';
+import {WmPulse, WmPulseNavy, WmPulseNavy2} from './Wordmarks';
 
 const W = 2560;
 const H = 1440;
@@ -113,8 +113,8 @@ export const BannerBlueprint: React.FC = () => (
       ))}
       <Draw kind="brain" x={230} y={640} s={1.5} label="FIG. 01 — BRAIN" />
       <Draw kind="heart" x={2310} y={640} s={1.5} label="FIG. 02 — HEART" />
-      <Draw kind="lungs" x={330} y={1150} s={1.4} label="FIG. 03 — LUNGS" />
-      <Draw kind="body" x={2200} y={1150} s={1.5} label="FIG. 04 — YOU" />
+      <Draw kind="lungs" x={330} y={1220} s={1.4} label="FIG. 03 — LUNGS" />
+      <Draw kind="body" x={2200} y={1220} s={1.5} label="FIG. 04 — YOU" />
     </svg>
     <Text
       name="ALL THAT MATTERS"
@@ -253,6 +253,51 @@ export const Banner2Sheet: React.FC = () => (
             <div style={{display: 'flex', flexDirection: 'column'}}>
               <span style={{fontFamily: 'system-ui', fontWeight: 700, fontSize: 26, color: '#fff'}}>All That Matters</span>
               <span style={{fontFamily: 'system-ui', fontSize: 16, color: '#aaa'}}>@allthatmatters · Shorts about your body</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    ))}
+  </AbsoluteFill>
+);
+
+/* ---------- пара: фон-чертёж + тёмно-синий логотип (два оттенка) ---------- */
+const LogoOf: React.FC<{C: React.FC; d: number}> = ({C, d}) => (
+  <div style={{width: d, height: d, borderRadius: '50%', overflow: 'hidden', flexShrink: 0}}>
+    <div style={{width: 800, height: 800, transform: `scale(${d / 800})`, transformOrigin: '0 0', position: 'relative'}}>
+      <C />
+    </div>
+  </div>
+);
+
+export const BlueprintPairSheet: React.FC = () => (
+  <AbsoluteFill style={{background: '#0F0F0F', padding: 40, display: 'flex', flexDirection: 'column', gap: 44}}>
+    {([['A · тёмно-синий', WmPulseNavy], ['B · синий посветлее', WmPulseNavy2]] as [string, React.FC][]).map(([name, L]) => (
+      <div key={name} style={{display: 'flex', gap: 40, alignItems: 'flex-start'}}>
+        <div style={{display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', width: 330}}>
+          <div style={{fontFamily: 'Archivo Black', fontSize: 30, color: '#fff'}}>{name}</div>
+          <LogoOf C={L} d={300} />
+          <div style={{display: 'flex', gap: 16, alignItems: 'center'}}>
+            <LogoOf C={L} d={98} />
+            <LogoOf C={L} d={40} />
+          </div>
+        </div>
+        <div style={{display: 'flex', flexDirection: 'column'}}>
+          <div style={{fontFamily: 'system-ui', fontSize: 16, color: '#888', marginBottom: 8}}>страница канала на компьютере</div>
+          <Crop C={BannerBlueprint} cw={W} ch={423} scale={0.44} />
+          <div style={{display: 'flex', alignItems: 'center', gap: 18, marginTop: 14}}>
+            <LogoOf C={L} d={84} />
+            <div style={{display: 'flex', flexDirection: 'column'}}>
+              <span style={{fontFamily: 'system-ui', fontWeight: 700, fontSize: 26, color: '#fff'}}>All That Matters</span>
+              <span style={{fontFamily: 'system-ui', fontSize: 16, color: '#aaa'}}>@allthatmatters · Shorts about your body</span>
+            </div>
+          </div>
+          <div style={{fontFamily: 'system-ui', fontSize: 16, color: '#888', margin: '22px 0 8px'}}>телефон</div>
+          <div style={{display: 'flex', flexDirection: 'column', width: 1546 * 0.3, background: '#0F0F0F'}}>
+            <Crop C={BannerBlueprint} cw={1546} ch={423} scale={0.3} />
+            <div style={{display: 'flex', alignItems: 'center', gap: 12, marginTop: 10}}>
+              <LogoOf C={L} d={64} />
+              <span style={{fontFamily: 'system-ui', fontWeight: 700, fontSize: 20, color: '#fff'}}>All That Matters</span>
             </div>
           </div>
         </div>
