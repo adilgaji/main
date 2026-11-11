@@ -6,7 +6,12 @@
     "sheet": "remotion still src/index.ts Sheet ../output/_dev/sheet.png"
   },
   "dependencies": {
+    "@fontsource/anton": "^5.2.6",
+    "@fontsource/archivo-black": "^5.2.6",
+    "@fontsource/dm-serif-display": "^5.2.6",
     "@fontsource/montserrat": "^5.2.6",
+    "@fontsource/permanent-marker": "^5.2.6",
+    "@fontsource/space-mono": "^5.2.6",
     "@remotion/captions": "4.0.542",
     "@remotion/cli": "^4.0.542",
     "@remotion/fonts": "4.0.542",
