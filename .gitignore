@@ -1,0 +1,24 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node / Remotion
+node_modules/
+video/out/
+video/.remotion/
+*.tsbuildinfo
+
+# Скачанное и созданное на этом компьютере (не хранится в git)
+/cache/
+/models/
+/logs/
+/output/
+/tmp/
+
+# Системный мусор
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log

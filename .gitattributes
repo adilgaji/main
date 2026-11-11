@@ -1,0 +1,30 @@
+# Файлы Windows (.bat) обязаны иметь окончания строк CRLF, иначе cmd ломается.
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+*.ps1   text eol=crlf
+
+# Всё остальное текстовое — LF (одинаково на Windows и Linux).
+*.py    text eol=lf
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.js    text eol=lf
+*.mjs   text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.html  text eol=lf
+*.css   text eol=lf
+*.txt   text eol=lf
+*.srt   text eol=lf
+*.sh    text eol=lf
+
+# Двоичные файлы — не трогать.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.wav   binary
+*.mp3   binary
+*.mp4   binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
