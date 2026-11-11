@@ -81,7 +81,7 @@ export const FlowChain: React.FC<{
               />
             )}
             <rect x={x - bw / 2} y={y - 50} width={bw} height={100} rx={50} fill={COLORS.bgSoft} stroke={col} strokeWidth={6} />
-            <text x={x} y={y + 16} textAnchor="middle" fontFamily={FONT_FAMILY} fontWeight={800} fontSize={46} fill={COLORS.ink}>
+            <text className="txt" x={x} y={y + 16} textAnchor="middle" fontFamily={FONT_FAMILY} fontWeight={800} fontSize={46} fill={COLORS.ink}>
               {s.label}
             </text>
           </g>
@@ -103,7 +103,7 @@ export const LineGraph: React.FC<{
   color?: string;
 }> = ({data, xLabels = [], yLabel, title, progress = 1, width = 800, height = 500, color = COLORS.accent}) => {
   const clipId = useSvgId('graph');
-  const pad = {l: 70, r: 30, t: title ? 70 : 20, b: 70};
+  const pad = {l: 70, r: 60, t: title ? 70 : 20, b: 70};
   const W = width - pad.l - pad.r;
   const H = height - pad.t - pad.b;
   const pts = data.map((v, i) => [pad.l + (i / (data.length - 1)) * W, pad.t + (1 - v) * H] as const);
@@ -128,7 +128,7 @@ export const LineGraph: React.FC<{
         </clipPath>
       </defs>
       {title && (
-        <text x={width / 2} y={46} textAnchor="middle" fontFamily={FONT_FAMILY} fontWeight={800} fontSize={40} fill={COLORS.ink}>
+        <text className="txt" x={width / 2} y={46} textAnchor="middle" fontFamily={FONT_FAMILY} fontWeight={800} fontSize={40} fill={COLORS.ink}>
           {title}
         </text>
       )}
@@ -140,7 +140,7 @@ export const LineGraph: React.FC<{
       <path d={area} fill={color} opacity={0.15} clipPath={`url(#${clipId})`} />
       <path d={d} stroke={color} strokeWidth={9} fill="none" strokeLinecap="round" strokeDasharray={evo.strokeDasharray} strokeDashoffset={evo.strokeDashoffset} />
       {xLabels.map((l, i) => (
-        <text
+        <text className="txt"
           key={i}
           x={pad.l + (i / Math.max(1, xLabels.length - 1)) * W}
           y={pad.t + H + 50}
@@ -154,7 +154,7 @@ export const LineGraph: React.FC<{
         </text>
       ))}
       {yLabel && (
-        <text x={24} y={pad.t + H / 2} textAnchor="middle" fontFamily={FONT_FAMILY} fontWeight={600} fontSize={30} fill={COLORS.muted} transform={`rotate(-90 24 ${pad.t + H / 2})`}>
+        <text className="txt" x={24} y={pad.t + H / 2} textAnchor="middle" fontFamily={FONT_FAMILY} fontWeight={600} fontSize={30} fill={COLORS.muted} transform={`rotate(-90 24 ${pad.t + H / 2})`}>
           {yLabel}
         </text>
       )}
@@ -179,7 +179,7 @@ export const BarChart: React.FC<{
         return (
           <g key={i}>
             <rect x={x} y={base - h} width={bw * 0.64} height={h} rx={14} fill={b.color ?? COLORS.cell} />
-            <text x={x + bw * 0.32} y={base + 50} textAnchor="middle" fontFamily={FONT_FAMILY} fontWeight={700} fontSize={32} fill={COLORS.ink}>
+            <text className="txt" x={x + bw * 0.32} y={base + 50} textAnchor="middle" fontFamily={FONT_FAMILY} fontWeight={700} fontSize={32} fill={COLORS.ink}>
               {b.label}
             </text>
           </g>
@@ -200,6 +200,7 @@ export const EvidenceBadge: React.FC<{kind: Evidence; scale?: number}> = ({kind,
   const e = EV[kind];
   return (
     <div
+      className="txt"
       style={{
         display: 'inline-flex',
         alignItems: 'center',

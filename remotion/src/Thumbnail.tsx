@@ -3,7 +3,6 @@
  * и внутри безопасной зоны: крупный текст 2–5 слов, крупный визуал, гид.
  */
 import React from 'react';
-import {AbsoluteFill} from 'remotion';
 import {COLORS, FONT_FAMILY, SAFE, VIDEO, keywordStyle, loadFonts} from './style';
 import {Stickman, PoseName, Emotion} from './lib/Stickman';
 import {Heart, Brain, Muscle} from './lib/Organs';
@@ -11,10 +10,13 @@ import {Cell, Molecule} from './lib/CellAndMolecules';
 import {BodyOutline} from './lib/BodyOutline';
 import {MuscleFiber} from './lib/MuscleFiber';
 import {Icon} from './lib/Diagram';
+import {Env, envFor} from './lib/Env';
+import {StyleLayer} from './styles/StyleLayer';
+import {StyleId, applyTheme} from './styles/themes';
 
 loadFonts();
 
-export type ThumbProps = {text: string; visual: string; visual_params?: any; pose?: string; emotion?: string};
+export type ThumbProps = {text: string; visual: string; visual_params?: any; pose?: string; emotion?: string; style?: StyleId};
 
 const Big: React.FC<{visual: string; vp: any}> = ({visual, vp = {}}) => {
   switch (visual) {
@@ -39,42 +41,52 @@ const Big: React.FC<{visual: string; vp: any}> = ({visual, vp = {}}) => {
   }
 };
 
-export const Thumbnail: React.FC<ThumbProps> = ({text, visual, visual_params, pose = 'point', emotion = 'surprised'}) => {
+export const Thumbnail: React.FC<ThumbProps> = ({text, visual, visual_params, pose = 'point', emotion = 'surprised', style = 'classic'}) => {
+  applyTheme(style);
   const parts = text.split(/(\*[^*]+\*)/).filter(Boolean);
   return (
-    <AbsoluteFill style={{background: `radial-gradient(circle at 50% 55%, #2E4C7A 0%, ${COLORS.bg} 70%)`}}>
-      <div
-        style={{
-          position: 'absolute',
-          top: SAFE.top + 40,
-          left: SAFE.left,
-          width: VIDEO.width - SAFE.left - SAFE.right,
-          textAlign: 'center',
-          fontFamily: FONT_FAMILY,
-          fontWeight: 900,
-          fontSize: 118,
-          lineHeight: 1.08,
-          color: COLORS.ink,
-          textTransform: 'uppercase',
-          textShadow: `0 8px 0 ${COLORS.bg}`,
-        }}
-      >
-        {parts.map((p, i) =>
-          p.startsWith('*') ? (
-            <span key={i} style={{...keywordStyle, borderRadius: 20, padding: '0 18px', textShadow: 'none'}}>
-              {p.slice(1, -1)}
-            </span>
-          ) : (
-            <span key={i}>{p}</span>
-          ),
-        )}
-      </div>
-      <div style={{position: 'absolute', left: SAFE.left, width: VIDEO.width - SAFE.left - SAFE.right, top: 680, height: 560, display: 'flex', alignItems: 'center', justifyContent: 'center', filter: `drop-shadow(0 0 40px ${COLORS.accent}55)`}}>
-        <Big visual={visual} vp={visual_params} />
-      </div>
-      <div style={{position: 'absolute', left: SAFE.left - 10, top: 1080}}>
-        <Stickman pose={pose as PoseName} emotion={emotion as Emotion} size={390} alive={false} />
-      </div>
-    </AbsoluteFill>
+    <StyleLayer
+      style={style}
+      bg={<Env kind={envFor(visual)} />}
+      fg={
+        <div style={{position: 'absolute', left: SAFE.left, width: VIDEO.width - SAFE.left - SAFE.right, top: 680, height: 560, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+          <Big visual={visual} vp={visual_params} />
+        </div>
+      }
+      actor={
+        <div style={{position: 'absolute', left: SAFE.left - 10, top: 1080}}>
+          <Stickman pose={pose as PoseName} emotion={emotion as Emotion} size={390} alive={false} />
+        </div>
+      }
+      ui={
+        <div
+          className="hl"
+          style={{
+            position: 'absolute',
+            top: SAFE.top + 40,
+            left: SAFE.left,
+            width: VIDEO.width - SAFE.left - SAFE.right,
+            textAlign: 'center',
+            fontFamily: FONT_FAMILY,
+            fontWeight: 900,
+            fontSize: 118,
+            lineHeight: 1.08,
+            color: COLORS.ink,
+            textTransform: 'uppercase',
+            textShadow: `0 8px 0 ${COLORS.bg}`,
+          }}
+        >
+          {parts.map((p, i) =>
+            p.startsWith('*') ? (
+              <span key={i} style={{...keywordStyle, borderRadius: 20, padding: '0 18px', textShadow: 'none'}}>
+                {p.slice(1, -1)}
+              </span>
+            ) : (
+              <span key={i}>{p}</span>
+            ),
+          )}
+        </div>
+      }
+    />
   );
 };

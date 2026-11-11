@@ -89,7 +89,7 @@ def produce(job: Path, log: Log | None = None) -> Path:
         raise RuntimeError("Раскадровка не покрывает озвучку: " + "; ".join(problems))
     sb = json.loads((job / "storyboard.json").read_text(encoding="utf-8"))
     words = json.loads((job / "words.json").read_text(encoding="utf-8"))
-    props = {"words": words, "shots": sb["shots"], "total": sb["total"], "music": None}
+    props = {"words": words, "shots": sb["shots"], "total": sb["total"], "music": None, "style": load_state(job).get("style", "classic")}
     retry("рендер", render, log, composition="Short", job_dir=job, props=props, out_mp4=job / "video.mp4", log=log)
     problems = checks(job, log)
     if problems:

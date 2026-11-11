@@ -173,7 +173,7 @@ export const Molecule: React.FC<{
     <svg viewBox="-110 -110 220 220" width={size} height={size} style={{overflow: 'visible', ...style}}>
       <g transform={`rotate(${rot})`}>{content}</g>
       {label && (
-        <text x={0} y={100} textAnchor="middle" fontFamily="Montserrat" fontWeight={800} fontSize={26} fill={COLORS.ink}>
+        <text className="txt" x={0} y={100} textAnchor="middle" fontFamily="Montserrat" fontWeight={800} fontSize={26} fill={COLORS.ink}>
           {label}
         </text>
       )}

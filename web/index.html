@@ -45,13 +45,21 @@
   .progress li { margin: 4px 0; list-style: none; }
   pre { white-space: pre-wrap; margin: 0; font: inherit; }
   .hidden { display: none; }
+  .styles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin: 16px 0 22px; }
+  .style-card { background: var(--panel2); border: 3px solid transparent; border-radius: 14px; padding: 8px; cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 6px; color: var(--ink); }
+  .style-card img { width: 100%; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 10px; display: block; }
+  .style-card b { font-size: 15px; }
+  .style-card span { font-size: 12px; color: var(--muted); line-height: 1.3; }
+  .style-card.on { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,200,69,.25); }
+  .style-chip { display: inline-flex; align-items: center; gap: 8px; background: var(--panel2); border-radius: 999px; padding: 4px 12px 4px 4px; font-size: 14px; }
+  .style-chip img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
 </style>
 </head>
 <body>
 <header>
   <h1>🧬 Фабрика Shorts · биология тела</h1>
   <button onclick="go('#/')">Мои ролики</button>
-  <button class="primary" onclick="go('#/new')">▶ Запустить</button>
+  <button class="primary" onclick="go('#/')">＋ Новый ролик</button>
 </header>
 <main id="app"></main>
 
@@ -75,13 +83,26 @@ const STEPS = ['1. Тема', '2. Текст', '3. Раскадровка', '4. 
 const stepIndex = (st) => ({script: 1, storyboard: 2, production: 3, packaging: 3, done: 4}[st.step] ?? 0);
 const stepsBar = (i) => `<div class="steps">${STEPS.map((s, k) => `<span class="step ${k === i ? 'on' : k < i ? 'done' : ''}">${k < i ? '✓ ' : ''}${s}</span>`).join('')}</div>`;
 
+/* ---------------- стиль видео ---------------- */
+let STYLES = [];
+const getStyle = () => { try { return localStorage.getItem('style') || 'classic'; } catch (e) { return window._style || 'classic'; } };
+const setStyle = (id) => { window._style = id; try { localStorage.setItem('style', id); } catch (e) {} document.querySelectorAll('.style-card').forEach((c) => c.classList.toggle('on', c.dataset.id === id)); const n = $('#styleName'); if (n) n.textContent = (STYLES.find((x) => x.id === id) || {}).name || id; };
+const styleById = (id) => STYLES.find((x) => x.id === id) || {id, name: id, ru: ''};
+const stylePicker = () => `<div class="styles">${STYLES.map((st) => `
+    <button class="style-card ${st.id === getStyle() ? 'on' : ''}" data-id="${st.id}" onclick="setStyle('${st.id}')">
+      <img src="/static/styles/${st.id}.jpg" alt="${esc(st.name)}" loading="lazy"><b>${esc(st.name)}</b><span>${esc(st.ru)}</span></button>`).join('')}</div>`;
+
 /* ---------------- список роликов ---------------- */
 async function home() {
   const jobs = await api('/api/jobs');
+  if (!STYLES.length) STYLES = await api('/api/styles');
   $('#app').innerHTML = `
-    <div class="card" style="text-align:center;padding:40px">
-      <p class="muted">Новый ролик: тема → текст → раскадровка → видео. Каждый шаг ждёт вашего решения.</p>
-      <button class="primary big" onclick="go('#/new')">▶ Запустить</button>
+    <div class="card">
+      <h2 style="margin-top:0">1. Выберите стиль видео</h2>
+      <p class="muted">Нажмите на картинку — так будет выглядеть ролик.</p>
+      ${stylePicker()}
+      <div class="row"><button class="primary big" onclick="go('#/new')">▶ Запустить</button>
+      <span class="muted">Стиль: <b id="styleName">${esc(styleById(getStyle()).name)}</b></span></div>
     </div>
     <div class="card jobs"><h3>Мои ролики</h3>
       ${jobs.length ? jobs.map((j) => `<a href="#/job/${j.id}">${esc(j.topic)} <span class="muted">· ${esc(j.id.slice(0, 10))} · ${esc(statusText(j))}</span></a>`).join('') : '<p class="muted">Пока нет роликов.</p>'}
@@ -90,9 +111,13 @@ async function home() {
 const statusText = (j) => j.status === 'error' ? 'ошибка' : j.step === 'done' ? 'готово' : j.status === 'review' ? 'ждёт вашего решения' : 'в работе';
 
 /* ---------------- шаг 1: тема ---------------- */
-function newVideo() {
+async function newVideo() {
+  if (!STYLES.length) STYLES = await api('/api/styles');
+  const st = styleById(getStyle());
   $('#app').innerHTML = `${stepsBar(0)}
     <div class="card"><h2>Шаг 1. Выберите тему</h2>
+      <p><span class="style-chip"><img src="/static/styles/${st.id}.jpg" alt="">Стиль: <b>${esc(st.name)}</b></span>
+      <a href="#/" style="color:var(--accent);margin-left:10px">изменить</a></p>
       <div class="row">
         <button class="big" onclick="manualTopic()">✍️ Ввести тему сам</button>
         <button class="big" onclick="autoTopic()">🔎 Найти тему автоматически</button>
@@ -132,7 +157,7 @@ async function ideaPoll() {
 }
 const confirmIdea = () => confirmTopic(window._idea.topic, window._idea.angle || '');
 async function confirmTopic(topic, angle = '') {
-  try { const r = await post('/api/jobs', {topic, angle}); go('#/job/' + r.id); } catch (e) { fail(e); }
+  try { const r = await post('/api/jobs', {topic, angle, style: getStyle()}); go('#/job/' + r.id); } catch (e) { fail(e); }
 }
 
 /* ---------------- ролик ---------------- */
@@ -141,7 +166,9 @@ async function job(id) {
   try { d = await api('/api/jobs/' + id); } catch (e) { $('#app').innerHTML = `<div class="card err">${esc(e.message)}</div>`; return; }
   const st = d.state;
   const i = stepIndex(st);
-  let html = `${stepsBar(i)}<h2>${esc(st.topic)}</h2>`;
+  if (!STYLES.length) STYLES = await api('/api/styles');
+  const sty = styleById(st.style || 'classic');
+  let html = `${stepsBar(i)}<h2>${esc(st.topic)}</h2><p><span class="style-chip"><img src="/static/styles/${sty.id}.jpg" alt="">Стиль: <b>${esc(sty.name)}</b></span></p>`;
   if (st.status === 'error' && !st.running) {
     html += `<div class="card err"><h3>Шаг не удался (после 3 попыток)</h3><pre>${esc(st.error)}</pre>
       <p><button class="primary" onclick="act('${id}','retry')">Повторить</button></p></div>${logBox(d)}`;

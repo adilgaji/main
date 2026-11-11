@@ -63,7 +63,8 @@ def render(composition: str, job_dir: Path, props: dict, out_mp4: Path, log: Log
             run(
                 [NPX, "remotion", "render", "src/index.ts", composition, str(out_mp4.resolve()),
                  f"--props={props_file.resolve()}", f"--gl={gl}", "--codec=h264", "--crf=18",
-                 "--audio-codec=aac", "--audio-bitrate=192k", "--pixel-format=yuv420p", "--log=error"],
+                 "--audio-codec=aac", "--audio-bitrate=192k", "--pixel-format=yuv420p", "--log=error",
+                 *([f"--concurrency={os.environ['RENDER_CONCURRENCY']}"] if os.environ.get("RENDER_CONCURRENCY") else [])],
                 cwd=REMOTION, env=browser_env(),
             )
             finalize(out_mp4)

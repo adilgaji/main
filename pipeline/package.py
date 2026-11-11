@@ -74,7 +74,7 @@ def build_files(job: Path, pk: dict):
 
 
 def render_thumbnail(job: Path, pk: dict, log: Log):
-    th = pk["thumbnail"]
+    th = {**pk["thumbnail"], "style": json.loads((job / "state.json").read_text(encoding="utf-8")).get("style", "classic")}
     props = job / "thumb_props.json"
     props.write_text(json.dumps(th, ensure_ascii=False), encoding="utf-8")
     run([NPX, "remotion", "still", "src/index.ts", "Thumbnail", str((job / "thumbnail.png").resolve()), f"--props={props.resolve()}", "--log=error"],

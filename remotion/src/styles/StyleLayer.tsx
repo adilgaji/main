@@ -9,13 +9,13 @@ import React from 'react';
 import {AbsoluteFill, random} from 'remotion';
 import {Delaunay} from 'd3-delaunay';
 import {COLORS, VIDEO} from '../style';
-import {StyleId, applyTheme} from './themes';
+import {StyleId, THEMES, applyTheme} from './themes';
 
 const W = VIDEO.width;
 const H = VIDEO.height;
 
 /* ------------------------------- фильтры ------------------------------- */
-const Filters: React.FC<{style: StyleId}> = ({style}) => (
+export const Filters: React.FC<{style: StyleId}> = ({style}) => (
   <svg width={0} height={0} style={{position: 'absolute'}}>
     <defs>
       {style === 'glass' && (
@@ -31,11 +31,11 @@ const Filters: React.FC<{style: StyleId}> = ({style}) => (
       )}
       {style === 'pixel' && (
         <filter id="st-pixel" x="0" y="0" width="100%" height="100%">
-          <feFlood x={6} y={6} height={2} width={2} />
+          <feFlood x={5} y={5} height={4} width={4} />
           <feComposite width={14} height={14} />
           <feTile result="a" />
           <feComposite in="SourceGraphic" in2="a" operator="in" />
-          <feMorphology operator="dilate" radius={7} />
+          <feMorphology operator="dilate" radius={5} />
         </filter>
       )}
       {style === 'watercolour' && (
@@ -200,19 +200,45 @@ const PaperStrips: React.FC = () => (
 );
 
 /* ------------------------------- слой ------------------------------- */
+/** CSS стиля: шрифт + «два прохода» текста (схема без букв / буквы без схемы). */
+export const styleCss = (style: StyleId) => {
+  const cls = `st-${style}`;
+  const font = THEMES[style].font;
+  return (
+    (style === 'classic' ? '' : `.${cls}, .${cls} * { font-family: '${font}', sans-serif !important; }`) +
+    (style === 'pixel'
+      ? ` .${cls} .lbl { font-size: 24px !important; } .${cls} .hl { font-size: 62px !important; line-height: 1.35 !important; }` +
+        ` .${cls} svg text.txt { font-size: 22px !important; } .${cls} .mt { font-size: 26px !important; } .${cls} .mx { font-size: 32px !important; line-height: 1.4 !important; } .${cls} .tx { font-size: 34px !important; }`
+      : '') +
+    ' .pass-shape .txt { visibility: hidden !important; } .pass-text .txt { visibility: visible !important; }'
+  );
+};
+
+/** Обёртка для слоёв вне кадра (субтитры): шрифт и цвет стиля. */
+export const StyleOverlay: React.FC<{style: StyleId; children: React.ReactNode}> = ({style, children}) => {
+  applyTheme(style);
+  return (
+    <AbsoluteFill className={`st-${style}`} style={style === 'terminal' ? {filter: 'url(#st-term) drop-shadow(0 0 6px #33FF77)'} : {}}>
+      <style>{styleCss(style)}</style>
+      <Filters style={style} />
+      {children}
+    </AbsoluteFill>
+  );
+};
+
 export const StyleLayer: React.FC<{
   style: StyleId;
   bg: React.ReactNode;
   fg: React.ReactNode;
   actor?: React.ReactNode;
   ui?: React.ReactNode;
-}> = ({style, bg, fg, actor, ui}) => {
-  const theme = applyTheme(style);
+}> = ({style, bg, fg: fgRaw, actor, ui}) => {
+  applyTheme(style);
   const cls = `st-${style}`;
-  const fontCss =
-    (style === 'classic' ? '' : `.${cls}, .${cls} * { font-family: '${theme.font}', sans-serif !important; }`) +
-    (style === 'pixel' ? ` .${cls} .lbl { font-size: 24px !important; } .${cls} .hl { font-size: 62px !important; line-height: 1.35 !important; }` : '');
   const layer = (children: React.ReactNode, css: React.CSSProperties = {}) => <AbsoluteFill style={css}>{children}</AbsoluteFill>;
+  // схема рисуется дважды: формы (под обработкой стиля) и буквы (чёткие, поверх)
+  const fg = <AbsoluteFill className="pass-shape">{fgRaw}</AbsoluteFill>;
+  const fgText = <AbsoluteFill className="pass-text" style={{visibility: 'hidden'}}>{fgRaw}</AbsoluteFill>;
 
   let scene: React.ReactNode;
   switch (style) {
@@ -223,17 +249,23 @@ export const StyleLayer: React.FC<{
           {layer(fg, {filter: 'url(#st-lead)'})}
           {layer(actor, {filter: 'url(#st-lead)'})}
           <GlassShards />
+          {fgText}
         </>
       );
       break;
     case 'pixel':
-      scene = layer(
+      scene = (
         <>
-          {layer(bg)}
-          {layer(fg)}
-          {layer(actor)}
-        </>,
-        {filter: 'url(#st-pixel)'},
+          {layer(
+            <>
+              {layer(bg)}
+              {layer(fg)}
+              {layer(actor)}
+            </>,
+            {filter: 'url(#st-pixel)'},
+          )}
+          {fgText}
+        </>
       );
       break;
     case 'paper':
@@ -244,6 +276,7 @@ export const StyleLayer: React.FC<{
           {layer(fg, {filter: 'drop-shadow(0 6px 0 rgba(70,40,20,0.22)) drop-shadow(0 16px 18px rgba(70,40,20,0.22))'})}
           {layer(actor, {filter: 'drop-shadow(0 6px 0 rgba(70,40,20,0.25))'})}
           <Grain opacity={0.12} />
+          {fgText}
         </>
       );
       break;
@@ -254,25 +287,26 @@ export const StyleLayer: React.FC<{
           {layer(fg, {filter: 'url(#st-wc)', mixBlendMode: 'multiply'})}
           {layer(actor, {filter: 'url(#st-wc)'})}
           <Grain opacity={0.18} />
+          {fgText}
         </>
       );
       break;
     case 'terminal':
-      scene = layer(
-        <>
-          {layer(bg, {opacity: 0.6})}
-          {layer(fg)}
-          {layer(actor)}
-          {layer(ui)}
-          <div style={{position: 'absolute', left: 80, top: 150, fontSize: 44, color: '#FFFFFF', letterSpacing: 2}}>{'> ALL_THAT_MATTERS.EXE  —  BIO.SCAN'}</div>
-        </>,
-        {filter: 'url(#st-term) drop-shadow(0 0 6px #33FF77) drop-shadow(0 0 16px #19A64A)'},
-      );
       return (
         <AbsoluteFill className={cls} style={{background: '#020804'}}>
-          <style>{fontCss}</style>
+          <style>{styleCss(style)}</style>
           <Filters style={style} />
-          {scene}
+          {layer(
+            <>
+              {layer(bg, {opacity: 0.6})}
+              {layer(fg)}
+              {fgText}
+              {layer(actor)}
+              {layer(ui)}
+              <div style={{position: 'absolute', left: 80, top: 150, fontSize: 44, color: '#FFFFFF', letterSpacing: 2}}>{'> ALL_THAT_MATTERS.EXE  —  BIO.SCAN'}</div>
+            </>,
+            {filter: 'url(#st-term) drop-shadow(0 0 6px #33FF77) drop-shadow(0 0 16px #19A64A)'},
+          )}
           <Scanlines />
         </AbsoluteFill>
       );
@@ -288,6 +322,7 @@ export const StyleLayer: React.FC<{
               </AbsoluteFill>
             ))}
             <AbsoluteFill style={{filter: 'drop-shadow(-14px 14px 16px rgba(40,50,90,0.25))'}}>{fg}</AbsoluteFill>
+            {fgText}
           </AbsoluteFill>
           {layer(actor)}
         </>
@@ -306,6 +341,7 @@ export const StyleLayer: React.FC<{
           )}
           <Grain opacity={0.1} blend="screen" />
           <ThermalHud />
+          {fgText}
         </>
       );
       break;
@@ -316,6 +352,7 @@ export const StyleLayer: React.FC<{
           {layer(fg, {filter: 'url(#st-clay) drop-shadow(0 16px 14px rgba(90,40,10,0.35))'})}
           {layer(actor, {filter: 'drop-shadow(0 10px 10px rgba(90,40,10,0.35))'})}
           <Grain opacity={0.08} />
+          {fgText}
         </>
       );
       break;
@@ -323,14 +360,14 @@ export const StyleLayer: React.FC<{
       scene = (
         <>
           {layer(bg)}
-          {layer(fg)}
+          {layer(fgRaw)}
           {layer(actor)}
         </>
       );
   }
   return (
     <AbsoluteFill className={cls} style={{background: COLORS.bg}}>
-      <style>{fontCss}</style>
+      <style>{styleCss(style)}</style>
       <Filters style={style} />
       {scene}
       {layer(ui)}

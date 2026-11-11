@@ -52,10 +52,14 @@ def slugify(s: str) -> str:
     return s[:48].rstrip("-") or "video"
 
 
-def new_job(topic: str) -> Path:
+STYLES = ["classic", "glass", "pixel", "paper", "watercolour", "terminal", "isometric", "thermal", "clay"]
+
+
+def new_job(topic: str, style: str = "classic") -> Path:
     job = OUTPUT / f"{dt.date.today():%Y-%m-%d}_{slugify(topic)}"
     job.mkdir(parents=True, exist_ok=True)
-    save_state(job, {"topic": topic, "step": "script", "status": "new", "created": dt.datetime.now().isoformat(timespec="seconds"), "history": []})
+    style = style if style in STYLES else "classic"
+    save_state(job, {"topic": topic, "style": style, "step": "script", "status": "new", "created": dt.datetime.now().isoformat(timespec="seconds"), "history": []})
     return job
 
 
@@ -225,9 +229,10 @@ if __name__ == "__main__":
     ap.add_argument("cmd", choices=["new", "script", "storyboard"])
     ap.add_argument("arg")
     ap.add_argument("--remarks", default="")
+    ap.add_argument("--style", default="classic")
     a = ap.parse_args()
     if a.cmd == "new":
-        print(new_job(a.arg))
+        print(new_job(a.arg, a.style))
     elif a.cmd == "script":
         step_script(Path(a.arg).resolve(), a.remarks)
     else:

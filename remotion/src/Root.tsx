@@ -54,7 +54,7 @@ export const RemotionRoot: React.FC = () => {
         fps={VIDEO.fps}
         width={VIDEO.width}
         height={VIDEO.height}
-        defaultProps={{audio: 'jobs/test/voice.wav', words: [], shots: [], total: 10, music: null}}
+        defaultProps={{audio: 'jobs/test/voice.wav', words: [], shots: [], total: 10, music: null, style: 'classic' as const}}
       />
       <Composition
         id="TestScene"
