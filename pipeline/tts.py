@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import re
 import sys
 import tempfile
@@ -38,19 +39,30 @@ def _kokoro(text: str, raw_wav: Path, voice: str, log: Log, device: str):
 
     pipe = KPipeline(lang_code="a" if voice.startswith("a") else "b", repo_id="hexgrad/Kokoro-82M", device=device)
     chunks = []
+    words = []  # время каждого слова прямо от Kokoro (для субтитров — без распознавания речи)
+    pos = 0  # сколько сэмплов уже записано
     gap = np.zeros(int(24000 * SENTENCE_PAUSE), dtype=np.float32)
-    # каждое предложение отдельно, между ними — пауза: голос не «тараторит»
     sentences = [s for s in re.split(r"(?<=[.!?])\s+", text) if s.strip()]
     for sent in sentences:
-        for _, _, audio in pipe(sent, voice=voice, speed=SPEED, split_pattern=r"\n+"):
-            chunks.append(audio.numpy() if hasattr(audio, "numpy") else audio)
+        for result in pipe(sent, voice=voice, speed=SPEED, split_pattern=r"\n+"):
+            audio = result.audio
+            audio = audio.numpy() if hasattr(audio, "numpy") else audio
+            off = pos / 24000
+            for t in result.tokens or []:
+                if t.start_ts is not None and t.end_ts is not None and re.search(r"[A-Za-z0-9]", t.text):
+                    words.append({"text": t.text, "start": off + t.start_ts, "end": off + t.end_ts, "p": 1.0})
+            chunks.append(audio)
+            pos += len(audio)
         chunks.append(gap)
+        pos += len(gap)
     if not chunks:
         raise RuntimeError("Kokoro не вернул звук")
     sf.write(raw_wav, np.concatenate(chunks), 24000)
+    return words
 
 
 def kokoro(text: str, raw_wav: Path, voice: str, log: Log):
+    """Возвращает время каждого слова (список), чтобы субтитры не зависели от распознавания речи."""
     if gpu_available():
         try:
             log("Озвучка: Kokoro на видеокарте (CUDA)")
@@ -92,13 +104,16 @@ def edge(text: str, raw_wav: Path, voice: str, log: Log):
 ENGINES = [("kokoro", kokoro), ("piper", piper), ("edge-tts", edge)]
 
 
+LEAD_SEC = 0.25  # тишина перед первым словом (сдвиг всех таймингов)
+
+
 def postprocess(raw_wav: Path, out_wav: Path):
-    """Срезать длинную тишину по краям, добавить 0.25 с в начале и 0.5 с в конце,
-    выровнять громкость (EBU R128, −16 LUFS, пики ≤ −1.5 dB)."""
+    """Срезать тишину в конце, добавить 0.25 с в начале и 0.5 с в конце,
+    выровнять громкость (EBU R128, −16 LUFS, пики ≤ −1.5 dB).
+    Начало НЕ обрезается — иначе сдвинулось бы время слов."""
     flt = (
-        "silenceremove=start_periods=1:start_threshold=-50dB:start_silence=0.05,"
         "areverse,silenceremove=start_periods=1:start_threshold=-50dB:start_silence=0.05,areverse,"
-        "adelay=250:all=1,apad=pad_dur=0.5,"
+        f"adelay={int(LEAD_SEC * 1000)}:all=1,apad=pad_dur=0.5,"
         "loudnorm=I=-16:TP=-1.5:LRA=7"
     )
     run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(raw_wav), "-af", flt, "-ar", "48000", "-ac", "1", str(out_wav)])
@@ -114,9 +129,16 @@ def synthesize(text: str, out_wav: Path, voice: str = DEFAULT_VOICE, log: Log | 
             continue
         with tempfile.TemporaryDirectory() as td:
             raw = Path(td) / "raw.wav"
+            timings = out_wav.with_name(out_wav.stem + ".timings.json")
             try:
-                fn(text, raw, voice, log)
+                words = fn(text, raw, voice, log)
                 postprocess(raw, out_wav)
+                timings.unlink(missing_ok=True)
+                if words:
+                    for w in words:
+                        w["start"] = round(w["start"] + LEAD_SEC, 3)
+                        w["end"] = round(w["end"] + LEAD_SEC, 3)
+                    timings.write_text(json.dumps(words, ensure_ascii=False), encoding="utf-8")
                 log(f"Озвучка готова: {out_wav.name}, {ffprobe_duration(out_wav):.1f} с (движок: {name})")
                 return name
             except Exception as e:  # noqa: BLE001

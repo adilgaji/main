@@ -172,9 +172,21 @@ def make_captions(wav: Path, script: str, out_json: Path, log: Log | None = None
     log = log or Log()
     plain = re.sub(r"\*", "", script)
     total = ffprobe_duration(wav)
-    heard = transcribe(wav, plain, log)
+    timings = wav.with_name(wav.stem + ".timings.json")
+    if timings.exists() and timings.stat().st_mtime >= wav.stat().st_mtime - 5:
+        # время слов уже известно от голосового движка Kokoro — распознавание речи не нужно
+        log("Субтитры: время каждого слова взято из озвучки (Kokoro)")
+        heard = json.loads(timings.read_text(encoding="utf-8"))
+    else:
+        try:
+            heard = transcribe(wav, plain, log)
+        except OSError as e:
+            raise RuntimeError(
+                "Распознавание речи не запустилось (Windows могла заблокировать файл библиотеки). "
+                "Используйте голос Kokoro — с ним распознавание не нужно. Подробно: " + str(e)[:300]
+            ) from e
     words, ratio = align(script, heard, total)
-    if ratio < 0.9:
+    if ratio < 0.9 and not timings.exists():
         log(f"Совпадение {ratio:.0%} — пробую второй режим распознавания (с фильтром тишины)")
         heard2 = transcribe(wav, plain, log, vad=True)
         words2, ratio2 = align(script, heard2, total)
