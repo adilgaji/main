@@ -1,7 +1,7 @@
 {
   "voice": "am_fenrir",
   "voice_speed": 1.0,
-  "style": null,
+  "style": "museum",
   "tts": {
     "device": "auto",
     "sentence_gap": 0.45,
