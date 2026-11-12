@@ -1,0 +1,4 @@
+# Изображения для тестовых кадров. Только public domain / CC0.
+# файл | название | автор | дата | лицензия | страница объекта | прямая ссылка
+
+met_248299.jpg | Terracotta column-krater (bowl for mixing wine and water) | Attributed to the Mannerist Group (Greek, Attic) | ca. 460 BCE | CC0 1.0 (The Met Open Access, isPublicDomain=true) | https://www.metmuseum.org/art/collection/search/248299 | https://images.metmuseum.org/CRDImages/gr/original/DP-18445-002.jpg
