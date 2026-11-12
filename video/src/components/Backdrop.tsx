@@ -1,33 +1,18 @@
 // Фоны-«среда». У каждого кадра свой фон; соседние кадры не должны совпадать,
 // поэтому есть несколько видов, а зерно (seed) делает даже одинаковые виды разными.
 import React from 'react';
-import {AbsoluteFill, staticFile} from 'remotion';
+import {AbsoluteFill} from 'remotion';
 import {alpha, mix, rng} from '../lib/anim';
 import {useStyle} from '../style';
+import {Tiled} from './Tiled';
 
 export type BackdropKind = 'ink' | 'parchment' | 'stone' | 'dusk' | 'vault';
 
 export const BACKDROP_KINDS: BackdropKind[] = ['ink', 'parchment', 'stone', 'dusk', 'vault'];
 
-const Texture: React.FC<{file: string; size: number; opacity: number; blend: string; seed: number}> = ({
-  file,
-  size,
-  opacity,
-  blend,
-  seed,
-}) => {
+const Texture: React.FC<{file: string; size: number; opacity: number; blend: string; seed: number}> = ({file, size, opacity, blend, seed}) => {
   const r = rng(seed);
-  return (
-    <AbsoluteFill
-      style={{
-        backgroundImage: `url(${staticFile(file)})`,
-        backgroundSize: `${size}px ${size}px`,
-        backgroundPosition: `${Math.round(r() * size)}px ${Math.round(r() * size)}px`,
-        mixBlendMode: blend as React.CSSProperties['mixBlendMode'],
-        opacity,
-      }}
-    />
-  );
+  return <Tiled file={file} size={size} offsetX={Math.round(r() * size)} offsetY={Math.round(r() * size)} opacity={opacity} blend={blend as React.CSSProperties['mixBlendMode']} />;
 };
 
 export const Backdrop: React.FC<{kind: BackdropKind; seed?: number}> = ({kind, seed = 1}) => {

@@ -3,10 +3,11 @@
 import {evolvePath, getLength, getPointAtLength, getTangentAtLength} from '@remotion/paths';
 import {geoGraticule, geoPath, type GeoPermissibleObjects, type GeoProjection} from 'd3-geo';
 import React, {useId, useMemo} from 'react';
-import {AbsoluteFill, interpolate, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import {feature, mesh} from 'topojson-client';
 import type {GeometryCollection, Topology} from 'topojson-specification';
 import {ShotFrame} from '../components/ShotFrame';
+import {Tiled} from '../components/Tiled';
 import {TitlePlate} from '../components/TextBits';
 import {alpha, CLAMP, EASE, mix, ramp} from '../lib/anim';
 import {useStaticJson} from '../lib/assets';
@@ -578,14 +579,7 @@ const MapArt: React.FC<MapShotProps & {geo: Geo}> = ({geo, frames, regions = [],
           <RegionShapes geo={geo} regions={regions} palette={p} stroke={stroke} clipId={clipId} />
         </g>
       </svg>
-      <AbsoluteFill
-        style={{
-          backgroundImage: `url(${staticFile('textures/paper.png')})`,
-          backgroundSize: '1024px 1024px',
-          mixBlendMode: 'multiply',
-          opacity: treatment.paperOpacity * 0.9,
-        }}
-      />
+      <Tiled file="textures/paper.png" size={1024} opacity={treatment.paperOpacity * 0.9} blend="multiply" />
       <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{position: 'absolute', inset: 0}}>
         <Routes geo={geo} frames={frames} routes={routes} palette={p} stroke={stroke} />
         <Places geo={geo} frames={frames} places={places} palette={p} />

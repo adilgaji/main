@@ -29,7 +29,7 @@ export type TimelineShotProps = {
 
 const X0 = SAFE.left + 60;
 const X1 = FRAME.width - SAFE.right - 60;
-const TRACK_Y = 560;
+const TRACK_Y = 508; // выше середины: нижние карточки не должны заходить в полосу субтитров
 const STEPS = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000];
 
 const usePlayhead = (p: TimelineShotProps): number => {
@@ -84,7 +84,7 @@ const TimelineArt: React.FC<TimelineShotProps> = (props) => {
           const x = xOf(props, e.year);
           const k = ramp(frame, 0, 1, EASE.out) * (year >= e.year - range * 0.004 ? ramp(year, e.year - range * 0.004, range * 0.03) : 0);
           const up = i % 2 === 0;
-          const len = 96;
+          const len = 84;
           return (
             <g key={e.label} opacity={k}>
               <line x1={x} y1={TRACK_Y} x2={x} y2={TRACK_Y + (up ? -len : len) * k} stroke={e.highlight ? p.accent : alpha(p.light, 0.8)} strokeWidth={stroke} />
@@ -194,7 +194,7 @@ const TimelineText: React.FC<TimelineShotProps> = (props) => {
               position: 'absolute',
               left,
               width: cardW,
-              ...(up ? {bottom: FRAME.height - (TRACK_Y - 104)} : {top: TRACK_Y + 104}),
+              ...(up ? {bottom: FRAME.height - (TRACK_Y - 92)} : {top: TRACK_Y + 92}),
               opacity: k,
               translate: `0px ${(1 - k) * (up ? 18 : -18)}px`,
               padding: '14px 20px 16px',

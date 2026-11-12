@@ -1,5 +1,5 @@
 import React from 'react';
-import {AbsoluteFill, Composition, Folder, Sequence, Still} from 'remotion';
+import {AbsoluteFill, Composition, Folder, Sequence} from 'remotion';
 import {calculateChapterMetadata, Chapter, Stage, type ChapterProps} from './Chapter';
 import {EMOTIONS, Narrator, POSES} from './character/Narrator';
 import {Backdrop} from './components/Backdrop';
@@ -66,7 +66,7 @@ type Cell = {label: string; spec?: ShotSpec; frame: number; narration?: string; 
 
 const CELLS: Cell[] = [
   {label: 'Карта: маршрут, границы, подписи', spec: byId('map').shot, frame: 196, narration: byId('map').narration},
-  {label: 'Таймлайн', spec: byId('timeline').shot, frame: 168, narration: byId('timeline').narration},
+  {label: 'Таймлайн', spec: byId('timeline').shot, frame: 184, narration: byId('timeline').narration},
   {label: 'Архивное изображение (Ken Burns)', spec: byId('kenburns').shot, frame: 150, narration: byId('kenburns').narration},
   {label: 'Цитата из первоисточника', spec: byId('quote').shot, frame: 200, narration: byId('quote').narration},
   {label: 'Инфографика: сравнение чисел', spec: byId('infographic').shot, frame: 200, narration: byId('infographic').narration},
@@ -132,8 +132,10 @@ export const RemotionRoot: React.FC = () => {
         defaultProps={defaultChapter}
       />
       <Folder name="Library">
-        <Still id="Library-Sheet" component={LibrarySheet} width={FRAME.width} height={FRAME.height} />
-        <Still id="Character-Sheet" component={CharacterSheet} width={FRAME.width} height={FRAME.height} />
+        {/* Листы — обычные композиции в один кадр: у <Still> частота кадров равна 1,
+            и всё время внутри кадров считалось бы неверно. */}
+        <Composition id="Library-Sheet" component={LibrarySheet} durationInFrames={1} fps={FRAME.fps} width={FRAME.width} height={FRAME.height} />
+        <Composition id="Character-Sheet" component={CharacterSheet} durationInFrames={1} fps={FRAME.fps} width={FRAME.width} height={FRAME.height} />
         {[...SHOTS.map((s) => [s.id, s.shot] as const), ...Object.entries(EXTRA)].map(([id, spec]) => (
           <Composition
             key={id}

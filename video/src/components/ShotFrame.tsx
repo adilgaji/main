@@ -3,10 +3,10 @@
 //   2. зерно и затемнение краёв;
 //   3. текст (заголовки, подписи, субтитры) — всегда чёткий, обработка его не касается.
 import React from 'react';
-import {AbsoluteFill, interpolate, staticFile, useCurrentFrame} from 'remotion';
+import {AbsoluteFill, interpolate, useCurrentFrame} from 'remotion';
 import {CLAMP, EASE} from '../lib/anim';
-import {useImagesReady} from '../lib/assets';
 import {useStyle} from '../style';
+import {Tiled} from './Tiled';
 
 export type Drift = {
   /** Масштаб в начале и в конце кадра (1 = без увеличения) */
@@ -46,20 +46,7 @@ const Grain: React.FC = () => {
   // Зерно «пляшет»: раз в несколько кадров текстура сдвигается на случайное место.
   // Чем реже — тем меньше весит готовый файл (шум плохо сжимается).
   const step = Math.floor(frame / Math.max(1, treatment.grainEvery));
-  const x = (step * 173) % 512;
-  const y = (step * 311) % 512;
-  return (
-    <AbsoluteFill
-      style={{
-        backgroundImage: `url(${staticFile(treatment.grainTexture)})`,
-        backgroundSize: '512px 512px',
-        backgroundPosition: `${x}px ${y}px`,
-        mixBlendMode: 'overlay',
-        opacity: treatment.grainOpacity,
-        pointerEvents: 'none',
-      }}
-    />
-  );
+  return <Tiled file={treatment.grainTexture} size={512} offsetX={(step * 173) % 512} offsetY={(step * 311) % 512} opacity={treatment.grainOpacity} blend="overlay" />;
 };
 
 const Vignette: React.FC = () => {
@@ -84,10 +71,6 @@ export const ShotFrame: React.FC<{
   drift?: Drift | null;
 }> = ({frames, art, text, drift}) => {
   const style = useStyle();
-  const ready = useImagesReady([style.treatment.grainTexture, 'textures/paper.png', 'textures/linen.png']);
-  if (!ready) {
-    return <AbsoluteFill style={{backgroundColor: style.palette.bg}} />;
-  }
   return (
     <AbsoluteFill style={{backgroundColor: style.palette.bg, overflow: 'hidden'}}>
       <AbsoluteFill style={{filter: style.treatment.filter}}>

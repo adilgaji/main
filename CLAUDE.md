@@ -83,8 +83,16 @@
   (`buildPages` в `components/Captions.tsx`).
 - Вес файла: «живое» зерно плохо сжимается. Зерно меняется раз в 3 кадра (`grainEvery`),
   рендер с `--crf=22` — около 5,5 Мбит/с, то есть ≈350 МБ на 8,5 минуты.
-- Скорость рендера в облаке (4 ядра, без видеокарты): около 3 кадров/с; режимы
-  `swiftshader`, `egl` и `angle-egl` дают одинаковую скорость.
+- Скорость рендера в облаке (4 ядра, без видеокарты): 6–10 кадров/с в зависимости от
+  кадра (карта и рассказчик медленнее, цитата быстрее) — то есть 8,5 минуты видео ≈ 25–40
+  минут. Режимы `swiftshader`, `egl` и `angle-egl` дают одинаковую скорость.
+- Картинки и текстуры ставить тегом `<Img>` (текстуры — через `components/Tiled.tsx`),
+  а не CSS `background-image`: так требует правило Remotion, и кадр ждёт загрузки файла.
+- У композиции `<Still>` частота кадров равна 1 — всё, что считается через `fps`, в ней
+  ломается. Листы-образцы регистрировать как `<Composition durationInFrames={1}>`.
+- При склейке картинки и звука не использовать `-shortest` (теряются кадры): звук
+  дополняется тишиной (`-af apad -t <длина>`), затем проверка «кадров столько, сколько
+  ожидалось, и звук = картинка».
 - Браузер для рендера Remotion скачивает с `remotion.media`. В облаке Node не видит прокси
   сам: `NODE_USE_ENV_PROXY=1 npx remotion browser ensure`.
 - Remotion-скиллы лежат в `.claude/skills/` (установлены через `npx skills add
@@ -210,8 +218,9 @@
   и просить владельца запустить их у себя.
 - Проверка окружения: `python scripts/check_env.py` (на Windows — `check_env.bat`).
 - Автотесты: `pytest` (с озвучкой: `pytest -m slow`; без неё: `pytest -m "not slow"`).
-- Проверка кода видео: `cd video && npx tsc --noEmit`. Один кадр для просмотра:
-  `npx remotion still <id> out/x.png --frame=N`. Тестовый лист — `Library-Sheet`.
+- Проверка кода видео: `cd video && npm run check` (TypeScript + правила Remotion).
+  Один кадр для просмотра: `npx remotion still <id> out/x.png --frame=N`.
+  Тестовый лист — `Library-Sheet`, демо-ролик — `python scripts/make_library_demo.py`.
 - В облаке PyTorch ставится с PyPI (`uv pip install torch`): файловый сервер pytorch.org
   (download-r2.pytorch.org) в окружении закрыт.
 - Папка `headroom/` (git-подмодуль) к фабрике не относится — не трогать.

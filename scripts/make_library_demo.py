@@ -110,18 +110,47 @@ def render(props: dict, gl: str, concurrency: int | None) -> Path:
     print(f"Рендер: {frames} кадров за {took:.0f} с — {frames / took:.1f} кадров/с (в {took / (frames / FPS):.1f} раза дольше самого ролика)")
 
     # Склейка картинки и звука. yuv420p + faststart — чтобы открывалось на телефонах.
+    # Звук дополняется тишиной ровно до длины картинки: видео = звук = сумма кадров.
+    video_seconds = frames / FPS
     subprocess.run(
         [
             audio.ffmpeg_bin(), "-hide_banner", "-loglevel", "error", "-y",
             "-i", str(silent), "-i", str(JOB / "narration.wav"),
             "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy",
-            "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
-            "-movflags", "+faststart", "-shortest", str(final),
+            "-af", "apad", "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
+            "-t", f"{video_seconds:.6f}", "-movflags", "+faststart", str(final),
         ],
         check=True,
     )
     silent.unlink()
+    check_av(final, frames)
     return final
+
+
+def check_av(path: Path, expected_frames: int) -> None:
+    """Проверка «видео = звук = сумма кадров» на готовом файле."""
+    def probe(stream: str, entry: str) -> str:
+        out = subprocess.run(
+            [audio.ffprobe_bin(), "-v", "error", "-select_streams", stream, "-show_entries", f"stream={entry}",
+             "-of", "default=nw=1:nk=1", str(path)],
+            stdout=subprocess.PIPE, text=True, check=True,
+        ).stdout.strip()
+        return out.splitlines()[0] if out else ""
+
+    got_frames = int(probe("v:0", "nb_frames") or 0)
+    pix = probe("v:0", "pix_fmt")
+    v_dur = float(probe("v:0", "duration") or 0)
+    a_dur = float(probe("a:0", "duration") or 0)
+    problems = []
+    if got_frames != expected_frames:
+        problems.append(f"кадров {got_frames}, а должно быть {expected_frames}")
+    if abs(v_dur - a_dur) > 1 / FPS:
+        problems.append(f"картинка {v_dur:.3f} с и звук {a_dur:.3f} с расходятся больше чем на кадр")
+    if pix != "yuv420p":
+        problems.append(f"формат пикселей {pix}, а нужен yuv420p")
+    if problems:
+        raise SystemExit("Проверка готового файла не пройдена: " + "; ".join(problems))
+    print(f"Проверка файла: {got_frames} кадров, картинка {v_dur:.2f} с, звук {a_dur:.2f} с, {pix} — в порядке")
 
 
 def main() -> int:

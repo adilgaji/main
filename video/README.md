@@ -1,54 +1,20 @@
-# Remotion video
+# video — проект Remotion
 
-<p align="center">
-  <a href="https://github.com/remotion-dev/logo">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-dark.apng">
-      <img alt="Animated Remotion Logo" src="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-light.gif">
-    </picture>
-  </a>
-</p>
+Здесь лежит «камера» фабрики: все типы кадров, стили, субтитры.
+Содержимое видео приходит снаружи в виде данных (раскадровка, слова со временем, озвучка).
 
-Welcome to your Remotion project!
+- `src/Chapter.tsx` — глава: кадры по порядку + озвучка + субтитры
+- `src/shots/` — типы кадров (карта, таймлайн, архивное изображение, цитата, инфографика, рассказчик)
+- `src/style.ts` — палитры, шрифты, обработка картинки
+- `public/geo` — карты Natural Earth (public domain)
+- `public/fonts` — шрифты (лицензия SIL OFL)
+- `public/textures` — зерно и бумага (делает `scripts/make_textures.py` в корне проекта)
+- `public/demo` — изображение для тестовых кадров и запись о его источнике
 
-## Commands
+Команды (из этой папки):
 
-**Install Dependencies**
-
-```console
-npm i --loglevel=error
 ```
-
-**Start Preview**
-
-```console
-npm run dev
+npm run check                                   проверка кода
+npx remotion still Library-Sheet out/sheet.png  тестовый лист
+npx remotion studio                             предпросмотр в браузере
 ```
-
-**Render video**
-
-```console
-npx remotion render
-```
-
-**Upgrade Remotion**
-
-```console
-npx remotion upgrade
-```
-
-## Docs
-
-Get started with Remotion by reading the [fundamentals page](https://www.remotion.dev/docs/the-fundamentals).
-
-## Help
-
-We provide help on our [Discord server](https://discord.gg/6VzzNDwUwV).
-
-## Issues
-
-Found an issue with Remotion? [File an issue here](https://github.com/remotion-dev/remotion/issues/new).
-
-## License
-
-Note that for some entities a company license is needed. [Read the terms here](https://github.com/remotion-dev/remotion/blob/main/LICENSE.md).
