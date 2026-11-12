@@ -131,9 +131,13 @@
 - Листы «один кадр в 8 стилях»: композиции `Styles-Image` / `Styles-Map` / `Styles-Quote`
   (`python scripts/styles.py sheets`, рендер со `--scale=2`). Любую композицию можно нарисовать в
   другом стиле: `--props='{"styleId":"newsreel"}'` (`Library-Sheet`, `Character-Sheet`, `Chapter`).
-- Выбор владельца: `python scripts/styles.py set <номер|id|название>` → `config/settings.json`
-  (`style`); для одного видео — переопределение в `state.json`. Пока не выбран — `documentary`.
-  `factory.styles.style_of(settings)` возвращает id для рендера.
+- Основной стиль владельца — `config/settings.json` (`style`; сейчас `museum`). Менять: `python scripts/styles.py
+  set <номер|id|название>`. Пока не выбран — `documentary`. `factory.styles.style_of(settings)` → id для рендера.
+- **Выбор стиля — первый шаг каждого видео, до запуска производства.** Список из 8 стилей показывается
+  владельцу (в чате: списком текстом, «Enter/оставить» = основной стиль; в терминале —
+  `python scripts/styles.py pick --video <папка>`; на веб-странице — экран выбора). Ответ пишется в
+  `state.json` видео (`overrides.style`, `factory.styles.choose_for_video`). Производство вызывает
+  `require_style_chosen(video_dir)` и без выбора не стартует. Агент сам стиль не выбирает и не пропускает шаг.
 
 ## Изображения и источники (строго)
 

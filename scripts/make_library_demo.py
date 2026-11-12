@@ -28,7 +28,7 @@ sys.path.insert(0, str(ROOT))
 from factory import audio  # noqa: E402
 from factory.console import setup_console  # noqa: E402
 from factory.settings import load_settings, voice_of  # noqa: E402
-from factory.styles import resolve_style, style_of  # noqa: E402
+from factory.styles import ask_style, resolve_style, style_of  # noqa: E402
 from factory.tts import narrate, save_narration  # noqa: E402
 
 VIDEO = ROOT / "video"
@@ -159,7 +159,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Демо-ролик библиотеки кадров")
     ap.add_argument("--voice")
     ap.add_argument("--speed", type=float, default=1.0)
-    ap.add_argument("--style", help="номер с листа стилей, id или название; по умолчанию — из config/settings.json")
+    ap.add_argument("--style", help="номер с листа стилей, id или название. Без него в терминале сначала покажется список для выбора")
     ap.add_argument("--gl", default="swiftshader" if sys.platform.startswith("linux") else "angle")
     ap.add_argument("--concurrency", type=int)
     ap.add_argument("--no-render", action="store_true", help="только озвучка и раскладка кадров")
@@ -167,7 +167,12 @@ def main() -> int:
 
     settings = load_settings()
     voice = args.voice or voice_of(settings)
-    style = resolve_style(args.style) if args.style else style_of(settings)
+    if args.style:
+        style = resolve_style(args.style)
+    elif sys.stdin.isatty():
+        style = ask_style(style_of(settings))  # шаг «выбор стиля» перед запуском; Enter — оставить основной
+    else:
+        style = style_of(settings)
     props, duration = build_props(voice, args.speed, style)
     if args.no_render:
         return 0

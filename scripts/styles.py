@@ -4,6 +4,8 @@
 
   python scripts/styles.py sheets          # нарисовать листы «один кадр в 8 стилях» → video/out/styles-*.png
   python scripts/styles.py list            # показать 8 стилей и текущий выбор
+  python scripts/styles.py pick            # выбрать стиль из списка (Enter — оставить текущий) и записать как основной
+  python scripts/styles.py pick --video output/2025-01-01_thermopylae   # то же, только для одного видео
   python scripts/styles.py set 3           # выбрать стиль по номеру с листа (или id / названию)
   python scripts/styles.py set 3 --video output/2025-01-01_thermopylae   # только для одного видео
   python scripts/styles.py check           # проверка стилей: контраст текста, шрифты, различимость
@@ -11,7 +13,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import shutil
 import subprocess
 import sys
@@ -22,7 +23,7 @@ sys.path.insert(0, str(ROOT))
 
 from factory.console import setup_console  # noqa: E402
 from factory.settings import load_settings, update_settings  # noqa: E402
-from factory.styles import list_styles, resolve_style, style_of  # noqa: E402
+from factory.styles import ask_style, choose_for_video, chosen_for_video, list_styles, resolve_style, style_of  # noqa: E402
 
 VIDEO = ROOT / "video"
 OUT = VIDEO / "out"
@@ -57,20 +58,31 @@ def cmd_list(_: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_set(args: argparse.Namespace) -> int:
-    style = resolve_style(args.style)
-    name = next(s.name_ru for s in list_styles() if s.id == style)
-    if args.video:
-        # Переопределение для одного видео хранится в state.json этого видео (блок C создаёт его целиком).
-        state_path = Path(args.video) / "state.json"
-        state = json.loads(state_path.read_text(encoding="utf-8")) if state_path.exists() else {}
-        state.setdefault("overrides", {})["style"] = style
-        state_path.parent.mkdir(parents=True, exist_ok=True)
-        state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        print(f"Для видео {args.video} выбран стиль «{name}».")
+def _name(style: str) -> str:
+    return next(s.name_ru for s in list_styles() if s.id == style)
+
+
+def _save(style: str, video: str | None) -> None:
+    if video:
+        # Выбор для одного видео хранится в state.json этого видео (блок C дополняет файл, а не заменяет).
+        choose_for_video(video, style)
+        print(f"Для видео {video} выбран стиль «{_name(style)}». Можно запускать.")
     else:
         update_settings({"style": style})
-        print(f"Стиль по умолчанию: «{name}» ({style}). Записано в config/settings.json.")
+        print(f"Стиль по умолчанию: «{_name(style)}» ({style}). Записано в config/settings.json.")
+
+
+def cmd_set(args: argparse.Namespace) -> int:
+    _save(resolve_style(args.style), args.video)
+    return 0
+
+
+def cmd_pick(args: argparse.Namespace) -> int:
+    """Шаг «выбор стиля» перед запуском: список → номер → запись."""
+    current = style_of(load_settings())
+    if args.video:
+        current = chosen_for_video(args.video) or current
+    _save(ask_style(current), args.video)
     return 0
 
 
@@ -90,6 +102,9 @@ def main() -> int:
     p.add_argument("style", help="номер с листа, id или название")
     p.add_argument("--video", help="папка видео: выбрать стиль только для него")
     p.set_defaults(fn=cmd_set)
+    p = sub.add_parser("pick", help="выбрать стиль из списка (шаг перед запуском)")
+    p.add_argument("--video", help="папка видео: выбрать стиль только для него")
+    p.set_defaults(fn=cmd_pick)
     sub.add_parser("check", help="проверка стилей").set_defaults(fn=cmd_check)
     args = ap.parse_args()
     try:

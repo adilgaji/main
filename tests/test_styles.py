@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from factory import settings as st
-from factory.styles import default_style, list_styles, resolve_style, style_ids, style_of
+from factory.styles import ask_style, choose_for_video, chosen_for_video, default_style, list_styles, menu_text, require_style_chosen, resolve_style, style_ids, style_of
 
 ROOT = Path(__file__).resolve().parent.parent
 VIDEO = ROOT / "video"
@@ -68,3 +68,44 @@ def test_style_check_script_passes():
     p = subprocess.run([shutil.which("node"), "scripts/check-styles.mjs"], cwd=VIDEO, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     assert p.returncode == 0, p.stdout[-2500:]
     assert "Все проверки стилей пройдены" in p.stdout
+
+
+def _answers(*items):
+    it = iter(items)
+    return lambda _prompt: next(it)
+
+
+def test_style_menu_lists_all_eight_and_marks_the_current_one():
+    text = menu_text("museum")
+    assert text.count("\n") == 7
+    assert "8. Музей ночью" in text and "← сейчас" in text.splitlines()[7]
+    assert "← сейчас" not in "".join(text.splitlines()[:7])
+
+
+def test_asking_for_a_style_enter_keeps_number_picks_garbage_is_asked_again():
+    quiet = lambda _m: None  # noqa: E731
+    assert ask_style("museum", ask=_answers(""), say=quiet) == "museum"
+    assert ask_style("museum", ask=_answers("  "), say=quiet) == "museum"
+    assert ask_style("museum", ask=_answers("3"), say=quiet) == "illustrated"
+    said = []
+    assert ask_style("museum", ask=_answers("pink", "9", "5"), say=said.append) == "newsreel"
+    assert sum("Не понял" in m for m in said) == 2
+    with pytest.raises(ValueError, match="не выбран"):
+        ask_style("museum", ask=_answers(*["???"] * 5), say=quiet, tries=5)
+
+
+def test_generation_does_not_start_until_a_style_is_chosen_for_the_video(tmp_path):
+    video = tmp_path / "output" / "2025-01-01_thermopylae"
+    assert chosen_for_video(video) is None
+    with pytest.raises(ValueError, match="выбрать стиль"):
+        require_style_chosen(video)
+    # в state.json уже есть другие данные — выбор их не трогает
+    video.mkdir(parents=True)
+    (video / "state.json").write_text(json.dumps({"topic": "Thermopylae", "step": 2}), encoding="utf-8")
+    assert choose_for_video(video, "8") == "museum"
+    assert require_style_chosen(video) == "museum"
+    state = json.loads((video / "state.json").read_text(encoding="utf-8"))
+    assert state["topic"] == "Thermopylae" and state["step"] == 2 and state["overrides"] == {"style": "museum"}
+    assert st.effective({"style": "newsreel"}, state["overrides"])["style"] == "museum"
+    assert choose_for_video(video, "newsreel") == "newsreel"  # передумал — перезаписывается
+    assert require_style_chosen(video) == "newsreel"
