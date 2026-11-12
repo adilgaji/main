@@ -6,7 +6,7 @@ import {AbsoluteFill, Sequence, staticFile, type CalculateMetadataFunction} from
 import {Captions, type CaptionWord} from './components/Captions';
 import {useFontsReady} from './fonts';
 import {Shot, type ShotSpec} from './shots';
-import {FRAME, getStyle, StyleContext} from './style';
+import {FONT, FRAME, getStyle, StyleContext, type StyleDef} from './style';
 
 export type TimedShot = {
   /** Первый кадр и длительность в кадрах (от начала главы) */
@@ -26,13 +26,23 @@ export type ChapterProps = {
   totalFrames?: number;
 };
 
-/** Общая обёртка: стиль + ожидание шрифтов. */
-export const Stage: React.FC<{styleId?: string | null; children: React.ReactNode}> = ({styleId, children}) => {
-  const ready = useFontsReady();
+const StageInner: React.FC<{style: StyleDef; families: string[]; children: React.ReactNode}> = ({style, families, children}) => {
+  const ready = useFontsReady(families);
+  return <AbsoluteFill style={{backgroundColor: style.palette.bg}}>{ready ? children : null}</AbsoluteFill>;
+};
+
+/**
+ * Общая обёртка: стиль + ожидание шрифтов (только нужных стилю; служебный Inter — всегда).
+ * extraFamilies — когда на одном кадре рисуется несколько стилей сразу (листы-образцы).
+ */
+export const Stage: React.FC<{styleId?: string | null; extraFamilies?: string[]; children: React.ReactNode}> = ({styleId, extraFamilies = [], children}) => {
   const style = getStyle(styleId);
+  const families = [...new Set([...style.families, ...extraFamilies, FONT.inter])];
   return (
     <StyleContext.Provider value={style}>
-      <AbsoluteFill style={{backgroundColor: style.palette.bg}}>{ready ? children : null}</AbsoluteFill>
+      <StageInner key={style.id} style={style} families={families}>
+        {children}
+      </StageInner>
     </StyleContext.Provider>
   );
 };

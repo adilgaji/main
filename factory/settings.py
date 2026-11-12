@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 
 from factory.paths import CONFIG_DIR
+from factory.styles import resolve_style
 from factory.tts.voices import FALLBACK_VOICE
 
 SETTINGS_PATH = CONFIG_DIR / "settings.json"
@@ -17,7 +18,7 @@ SETTINGS_PATH = CONFIG_DIR / "settings.json"
 DEFAULTS: dict = {
     "voice": None,  # код голоса Kokoro; null — владелец ещё не выбрал
     "voice_speed": 1.0,  # 1.0 — обычная скорость речи
-    "style": None,  # визуальный стиль; выбирается на этапе 3
+    "style": None,  # id стиля из video/src/styles.json; null — владелец ещё не выбрал (работает «documentary»)
     "tts": {
         "device": "auto",  # auto — видеокарта, если есть; иначе процессор
         "sentence_gap": 0.45,  # пауза между кусками текста внутри абзаца, секунды
@@ -51,6 +52,8 @@ def save_settings(settings: dict, path: Path | None = None) -> None:
 
 
 def update_settings(changes: dict, path: Path | None = None) -> dict:
+    if changes.get("style") is not None:
+        changes = {**changes, "style": resolve_style(changes["style"])}  # проверка: стиль должен существовать
     s = _merge(load_settings(path), changes)
     save_settings(s, path)
     return s

@@ -24,9 +24,18 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
+    "@fontsource-variable/cormorant": "^5.3.0",
+    "@fontsource-variable/eb-garamond": "^5.3.0",
+    "@fontsource-variable/fredoka": "^5.3.0",
     "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/nunito": "^5.3.0",
+    "@fontsource-variable/oswald": "^5.3.0",
     "@fontsource-variable/playfair-display": "^5.3.0",
+    "@fontsource-variable/sora": "^5.3.0",
     "@fontsource-variable/source-sans-3": "^5.3.1",
+    "@fontsource-variable/space-grotesk": "^5.3.0",
+    "@fontsource/courier-prime": "^5.3.0",
     "@remotion/eslint-config-flat": "4.0.543",
     "@types/d3-geo": "^3.1.1",
     "@types/geojson": "^7946.0.16",
@@ -42,8 +51,9 @@
     "build": "remotion bundle",
     "upgrade": "remotion upgrade",
     "lint": "eslint src && tsc",
-    "check": "tsc --noEmit && eslint src",
-    "geo": "node scripts/build-geo.mjs"
+    "check": "tsc --noEmit && eslint src && node scripts/check-styles.mjs",
+    "geo": "node scripts/build-geo.mjs",
+    "styles": "node scripts/check-styles.mjs"
   },
   "allowScripts": {
     "esbuild": false

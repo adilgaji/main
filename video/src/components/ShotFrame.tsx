@@ -1,11 +1,12 @@
 // Каркас любого кадра. Слои снизу вверх:
 //   1. картинка (фон + содержимое) — к ней применяется обработка стиля и движение камеры;
-//   2. зерно и затемнение краёв;
+//   2. вуаль, рисунок стиля (сетка, полутона, царапины), мерцание, затемнение краёв и зерно;
 //   3. текст (заголовки, подписи, субтитры) — всегда чёткий, обработка его не касается.
 import React from 'react';
 import {AbsoluteFill, interpolate, useCurrentFrame} from 'remotion';
 import {CLAMP, EASE} from '../lib/anim';
 import {useStyle} from '../style';
+import {Flicker, PatternLayer, Tint} from './Overlays';
 import {Tiled} from './Tiled';
 
 export type Drift = {
@@ -82,6 +83,9 @@ export const ShotFrame: React.FC<{
           art
         )}
       </AbsoluteFill>
+      <Tint />
+      <PatternLayer />
+      <Flicker />
       <Vignette />
       <Grain />
       <AbsoluteFill>{text}</AbsoluteFill>

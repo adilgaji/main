@@ -28,6 +28,7 @@ sys.path.insert(0, str(ROOT))
 from factory import audio  # noqa: E402
 from factory.console import setup_console  # noqa: E402
 from factory.settings import load_settings, voice_of  # noqa: E402
+from factory.styles import resolve_style, style_of  # noqa: E402
 from factory.tts import narrate, save_narration  # noqa: E402
 
 VIDEO = ROOT / "video"
@@ -36,7 +37,7 @@ OUT = VIDEO / "out"
 FPS = 30
 
 
-def build_props(voice: str, speed: float) -> tuple[dict, float]:
+def build_props(voice: str, speed: float, style: str) -> tuple[dict, float]:
     lib = json.loads((VIDEO / "src" / "demo" / "library.json").read_text(encoding="utf-8"))
     shots = lib["shots"]
     text = "\n".join(s["narration"] for s in shots)
@@ -72,7 +73,7 @@ def build_props(voice: str, speed: float) -> tuple[dict, float]:
         timed.append({"start": a, "frames": b - a, "shot": shot})
 
     props = {
-        "styleId": s.get("style"),
+        "styleId": style,
         "audio": "job/library-demo/narration.wav",
         "words": [{"text": w.text, "start": round(w.start, 3), "end": round(w.end, 3)} for w in n.words],
         "shots": timed,
@@ -158,13 +159,16 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Демо-ролик библиотеки кадров")
     ap.add_argument("--voice")
     ap.add_argument("--speed", type=float, default=1.0)
+    ap.add_argument("--style", help="номер с листа стилей, id или название; по умолчанию — из config/settings.json")
     ap.add_argument("--gl", default="swiftshader" if sys.platform.startswith("linux") else "angle")
     ap.add_argument("--concurrency", type=int)
     ap.add_argument("--no-render", action="store_true", help="только озвучка и раскладка кадров")
     args = ap.parse_args()
 
-    voice = args.voice or voice_of(load_settings())
-    props, duration = build_props(voice, args.speed)
+    settings = load_settings()
+    voice = args.voice or voice_of(settings)
+    style = resolve_style(args.style) if args.style else style_of(settings)
+    props, duration = build_props(voice, args.speed, style)
     if args.no_render:
         return 0
     final = render(props, args.gl, args.concurrency)

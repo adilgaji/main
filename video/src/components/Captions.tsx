@@ -99,7 +99,7 @@ export const Captions: React.FC<{words: CaptionWord[]; maxChars?: number; fontSi
 }) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const {palette: p, fonts} = useStyle();
+  const {captions: look, fonts} = useStyle();
   const pages = useMemo(() => buildPages(words, maxChars), [words, maxChars]);
   const t = frame / fps;
   const page = pages.find((pg) => t >= pg.start - 0.08 && t < pg.end);
@@ -125,7 +125,7 @@ export const Captions: React.FC<{words: CaptionWord[]; maxChars?: number; fontSi
           style={{
             padding: '6px 26px 10px',
             borderRadius: 12,
-            backgroundColor: alpha('#0A0C10', 0.78),
+            backgroundColor: alpha(look.plate, look.plateOpacity),
             fontFamily: fonts.caption,
             fontWeight: 800,
             fontSize,
@@ -137,7 +137,7 @@ export const Captions: React.FC<{words: CaptionWord[]; maxChars?: number; fontSi
             const w = words[i];
             const active = t >= w.start - 0.03 && t < w.end;
             return (
-              <span key={i} style={{color: active ? p.accent : '#FFFFFF'}}>
+              <span key={i} style={{color: active ? look.active : look.text}}>
                 {k > 0 ? ' ' : ''}
                 {w.text}
               </span>
