@@ -43,8 +43,9 @@ const Grain: React.FC = () => {
   if (treatment.grainOpacity <= 0) {
     return null;
   }
-  // Зерно «пляшет»: каждые два кадра текстура сдвигается на случайное место.
-  const step = Math.floor(frame / 2);
+  // Зерно «пляшет»: раз в несколько кадров текстура сдвигается на случайное место.
+  // Чем реже — тем меньше весит готовый файл (шум плохо сжимается).
+  const step = Math.floor(frame / Math.max(1, treatment.grainEvery));
   const x = (step * 173) % 512;
   const y = (step * 311) % 512;
   return (

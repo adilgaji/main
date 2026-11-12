@@ -22,3 +22,6 @@ video/.remotion/
 Thumbs.db
 desktop.ini
 *.log
+
+# Временные файлы одного видео (звук, картинки, параметры рендера)
+/video/public/job/

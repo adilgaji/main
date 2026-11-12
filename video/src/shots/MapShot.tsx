@@ -29,7 +29,7 @@ import {
   type Detail,
   type LonLat,
 } from '../lib/geo';
-import {clampBox, insideArea, LABEL_AREA, textWidth, type Box} from '../lib/labels';
+import {insideArea, LABEL_AREA, textWidth, type Box} from '../lib/labels';
 import {FRAME, useStyle, type Palette} from '../style';
 
 export type MapRegion = {
@@ -351,9 +351,20 @@ const halo = (color: string, width = 8): React.CSSProperties => ({
   paintOrder: 'stroke fill',
 });
 
-const MapText: React.FC<{geo: Geo; frames: number} & Pick<MapShotProps, 'regions' | 'places' | 'labels' | 'routes'>> = ({
+type Slot = {dx: number; dy: number; w: number; h: number; show: boolean};
+
+const overlaps = (a: Box, b: Box, gap = 6): boolean => a.x < b.x + b.w + gap && a.x + a.w + gap > b.x && a.y < b.y + b.h + gap && a.y + a.h + gap > b.y;
+
+/** Насколько надпись видна: 1 — целиком в безопасной зоне, 0 — вышла за неё на 80 px и больше. */
+const visibility = (b: Box): number => {
+  const out = Math.max(0, LABEL_AREA.left - b.x, b.x + b.w - LABEL_AREA.right, LABEL_AREA.top - b.y, b.y + b.h - LABEL_AREA.bottom);
+  return Math.max(0, 1 - out / 80);
+};
+
+const MapText: React.FC<{geo: Geo; frames: number; hasTitle: boolean} & Pick<MapShotProps, 'regions' | 'places' | 'labels' | 'routes'>> = ({
   geo,
   frames,
+  hasTitle,
   regions = [],
   places = [],
   labels = [],
@@ -365,22 +376,87 @@ const MapText: React.FC<{geo: Geo; frames: number} & Pick<MapShotProps, 'regions
   const cam = useCamera(geo, frames);
   const centroids = useMemo(() => {
     const path = geoPath(geo.proj);
-    return regions.map((r) => (r.labelAt ? (geo.proj(r.labelAt) ?? [0, 0]) : path.centroid({type: 'Polygon', coordinates: [fixWinding(r.polygon)]})));
+    return regions.map((r) => (r.labelAt ? (geo.proj(r.labelAt) ?? [0, 0]) : path.centroid({type: 'Polygon', coordinates: [fixWinding(r.polygon)]})) as [number, number]);
   }, [geo, regions]);
+
+  // Раскладка считается один раз — для конечного положения камеры, чтобы надписи
+  // не «прыгали» во время движения. Важные надписи (города) занимают место первыми.
+  const layout = useMemo(() => {
+    const end = geo.camB;
+    const taken: Box[] = hasTitle ? [{x: 0, y: 0, w: 1250, h: 262}] : [];
+    const free = (b: Box) => insideArea(b) && !taken.some((t) => overlaps(b, t));
+    const pick = (x: number, y: number, w: number, h: number, offsets: [number, number][]): Slot => {
+      for (const [dx, dy] of offsets) {
+        const b = {x: x + dx, y: y + dy, w, h};
+        if (free(b)) {
+          taken.push(b);
+          return {dx, dy, w, h, show: true};
+        }
+      }
+      return {dx: offsets[0][0], dy: offsets[0][1], w, h, show: false};
+    };
+
+    // Сначала место занимают сами значки, потом к ним подбираются подписи.
+    for (const pl of places) {
+      const [x, y] = applyCamera(end, geo.proj(pl.at) ?? [0, 0]);
+      const r = (pl.kind === 'battle' ? 42 : 24) - 8;
+      taken.push({x: x - r, y: y - r, w: r * 2, h: r * 2});
+    }
+    const placeSlots = places.map((pl) => {
+      const [x, y] = applyCamera(end, geo.proj(pl.at) ?? [0, 0]);
+      const battle = pl.kind === 'battle';
+      const size = battle ? 46 : 38;
+      const w = textWidth(pl.name, fonts.body, size, battle ? 800 : 700) + 16;
+      const h = size * 1.3;
+      const off = battle ? 42 : 24;
+      const sides: Record<string, [number, number]> = {
+        right: [off, -h / 2],
+        left: [-off - w, -h / 2],
+        top: [-w / 2, -off - h],
+        bottom: [-w / 2, off],
+      };
+      const first = pl.label ?? 'right';
+      const opposite = first === 'right' ? 'left' : first === 'left' ? 'right' : first === 'top' ? 'bottom' : 'top';
+      const order = [first, opposite, 'top', 'bottom', 'right', 'left'];
+      return pick(x, y, w, h, order.map((sd) => sides[sd]));
+    });
+
+    const regionSlots = regions.map((r, i) => {
+      const [x, y] = applyCamera(end, centroids[i]);
+      const w = Math.max(textWidth(r.label.toUpperCase(), fonts.body, 46, 800, 7), 330) + 30;
+      const h = r.approximate === false ? 64 : 104;
+      const base: [number, number] = [-w / 2, -h / 2];
+      const tries: [number, number][] = [[0, 0], [0, -110], [0, 110], [160, 0], [-160, 0], [0, -220], [0, 220], [160, -110], [-160, 110]];
+      return pick(x, y, w, h, tries.map(([dx, dy]) => [base[0] + dx, base[1] + dy]));
+    });
+
+    const labelSlots = labels.map((l) => {
+      const [x, y] = applyCamera(end, geo.proj(l.at) ?? [0, 0]);
+      const size = l.size ?? 44;
+      const sea = (l.kind ?? 'sea') === 'sea';
+      const w = textWidth(l.text, fonts.display, size, 500, sea ? 10 : 6) + 24;
+      const h = size * 1.4;
+      const base: [number, number] = [-w / 2, -h / 2];
+      const tries: [number, number][] = [[0, 0], [0, 80], [0, -80], [0, 160], [180, 0], [-180, 0], [0, -160], [180, 80], [-180, 80]];
+      return pick(x, y, w, h, tries.map(([dx, dy]) => [base[0] + dx, base[1] + dy]));
+    });
+
+    return {placeSlots, regionSlots, labelSlots};
+  }, [geo, hasTitle, places, regions, labels, centroids, fonts]);
+
   const boxStyle = (b: Box): React.CSSProperties => ({position: 'absolute', left: b.x, top: b.y, width: b.w, height: b.h, display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap'});
+  const slotBox = (slot: Slot, x: number, y: number): Box => ({x: x + slot.dx, y: y + slot.dy, w: slot.w, h: slot.h});
 
   return (
     <AbsoluteFill>
-      {labels.map((l) => {
-        const [x, y] = toScreen(geo, cam, l.at);
-        const sea = (l.kind ?? 'sea') === 'sea';
-        const size = l.size ?? 44;
-        const spacing = sea ? 10 : 6;
-        const w = textWidth(l.text, fonts.display, size, 500, spacing) + 20;
-        const box = clampBox({x: x - w / 2, y: y - size * 0.7, w, h: size * 1.4}, 260);
-        if (!box) {
+      {labels.map((l, i) => {
+        const slot = layout.labelSlots[i];
+        if (!slot.show) {
           return null;
         }
+        const [x, y] = toScreen(geo, cam, l.at);
+        const box = slotBox(slot, x, y);
+        const sea = (l.kind ?? 'sea') === 'sea';
         return (
           <div
             key={l.text}
@@ -389,10 +465,10 @@ const MapText: React.FC<{geo: Geo; frames: number} & Pick<MapShotProps, 'regions
               fontFamily: fonts.display,
               fontStyle: 'italic',
               fontWeight: 500,
-              fontSize: size,
-              letterSpacing: spacing,
-              color: sea ? alpha(p.light, 0.62) : alpha(p.ink, 0.6),
-              opacity: ramp(frame, 0.2 * fps, 0.8 * fps),
+              fontSize: l.size ?? 44,
+              letterSpacing: sea ? 10 : 6,
+              color: sea ? alpha(p.light, 0.62) : alpha(p.ink, 0.72),
+              opacity: ramp(frame, 0.2 * fps, 0.8 * fps) * visibility(box),
             }}
           >
             {l.text}
@@ -401,24 +477,22 @@ const MapText: React.FC<{geo: Geo; frames: number} & Pick<MapShotProps, 'regions
       })}
 
       {regions.map((r, i) => {
-        const [x, y] = applyCamera(cam, centroids[i] as [number, number]);
-        const text = r.label.toUpperCase();
-        const w = Math.max(textWidth(text, fonts.body, 46, 800, 7), 330) + 30;
-        const h = r.approximate === false ? 64 : 104;
-        const box = clampBox({x: x - w / 2, y: y - h / 2, w, h}, 520);
-        if (!box) {
+        const slot = layout.regionSlots[i];
+        if (!slot.show) {
           return null;
         }
+        const [x, y] = applyCamera(cam, centroids[i]);
+        const box = slotBox(slot, x, y);
         return (
           <div
             key={r.label}
             style={{
               ...boxStyle(box),
               flexDirection: 'column',
-              opacity: ramp(frame, ((r.appearAt ?? 0.4) + 0.3) * fps, 0.7 * fps),
+              opacity: ramp(frame, ((r.appearAt ?? 0.4) + 0.3) * fps, 0.7 * fps) * visibility(box),
             }}
           >
-            <div style={{fontFamily: fonts.body, fontWeight: 800, fontSize: 46, letterSpacing: 7, lineHeight: 1.15, color: p.ink, ...halo(alpha(p.paper, 0.9), 8)}}>{text}</div>
+            <div style={{fontFamily: fonts.body, fontWeight: 800, fontSize: 46, letterSpacing: 7, lineHeight: 1.15, color: p.ink, ...halo(alpha(p.paper, 0.9), 8)}}>{r.label.toUpperCase()}</div>
             {r.approximate === false ? null : (
               <div style={{fontFamily: fonts.display, fontStyle: 'italic', fontWeight: 600, fontSize: 30, lineHeight: 1.2, color: alpha(p.ink, 0.9), ...halo(alpha(p.paper, 0.9), 6)}}>
                 borders approximate
@@ -428,41 +502,25 @@ const MapText: React.FC<{geo: Geo; frames: number} & Pick<MapShotProps, 'regions
         );
       })}
 
-      {places.map((pl) => {
+      {places.map((pl, i) => {
+        const slot = layout.placeSlots[i];
+        if (!slot.show) {
+          return null;
+        }
         const [x, y] = toScreen(geo, cam, pl.at);
-        if (x < 0 || x > W || y < 0 || y > H) {
-          return null;
-        }
+        const box = slotBox(slot, x, y);
         const battle = pl.kind === 'battle';
-        const size = battle ? 46 : 38;
-        const weight = battle ? 800 : 700;
-        const w = textWidth(pl.name, fonts.body, size, weight) + 16;
-        const h = size * 1.3;
-        const off = battle ? 42 : 24;
-        const boxes: Record<string, Box> = {
-          right: {x: x + off, y: y - h / 2, w, h},
-          left: {x: x - off - w, y: y - h / 2, w, h},
-          top: {x: x - w / 2, y: y - off - h, w, h},
-          bottom: {x: x - w / 2, y: y + off, w, h},
-        };
-        const preferred = pl.label ?? 'right';
-        const order = [preferred, preferred === 'right' ? 'left' : preferred === 'left' ? 'right' : preferred === 'top' ? 'bottom' : 'top', 'top', 'bottom', 'right', 'left'];
-        const side = order.find((sd) => insideArea(boxes[sd]));
-        const box = side ? boxes[side] : clampBox(boxes[preferred], 90);
-        if (!box) {
-          return null;
-        }
         return (
           <div
             key={pl.name}
             style={{
               ...boxStyle(box),
               fontFamily: fonts.body,
-              fontWeight: weight,
-              fontSize: size,
+              fontWeight: battle ? 800 : 700,
+              fontSize: battle ? 46 : 38,
               color: battle ? p.light : p.ink,
               ...halo(battle ? p.accent2 : p.paper, battle ? 10 : 9),
-              opacity: ramp(frame, ((pl.appearAt ?? 0.5) + 0.15) * fps, 0.5 * fps),
+              opacity: ramp(frame, ((pl.appearAt ?? 0.5) + 0.15) * fps, 0.5 * fps) * visibility(box),
             }}
           >
             {pl.name}
@@ -477,10 +535,7 @@ const MapText: React.FC<{geo: Geo; frames: number} & Pick<MapShotProps, 'regions
         const mid = r.points[Math.floor(r.points.length / 2)];
         const [x, y] = toScreen(geo, cam, mid);
         const w = textWidth(r.label, fonts.body, 36, 800) + 16;
-        const box = clampBox({x: x - w / 2, y: y - 100, w, h: 48}, 200);
-        if (!box) {
-          return null;
-        }
+        const box = {x: x - w / 2, y: y - 100, w, h: 48};
         const start = ((r.startAt ?? 0.8) + (r.duration ?? 3) * 0.45) * fps;
         return (
           <div
@@ -492,7 +547,7 @@ const MapText: React.FC<{geo: Geo; frames: number} & Pick<MapShotProps, 'regions
               fontSize: 36,
               color: p.light,
               ...halo(alpha(p.ink, 0.85), 8),
-              opacity: ramp(frame, start, 0.5 * fps),
+              opacity: ramp(frame, start, 0.5 * fps) * visibility(box),
             }}
           >
             {r.label}
@@ -552,7 +607,7 @@ export const MapShot: React.FC<MapShotProps> = (props) => {
           {props.title ? (
             <div style={{position: 'absolute', left: 0, top: 0, width: W, height: 380, background: `linear-gradient(180deg, ${alpha(p.bg, 0.85)} 0%, ${alpha(p.bg, 0.6)} 50%, ${alpha(p.bg, 0)} 100%)`}} />
           ) : null}
-          <MapText geo={geo} frames={props.frames} regions={props.regions} places={props.places} labels={props.labels} routes={props.routes} />
+          <MapText geo={geo} frames={props.frames} hasTitle={Boolean(props.title)} regions={props.regions} places={props.places} labels={props.labels} routes={props.routes} />
           {props.title ? <TitlePlate title={props.title} subtitle={props.subtitle} /> : null}
         </>
       }

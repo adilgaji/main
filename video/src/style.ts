@@ -49,6 +49,8 @@ export type Treatment = {
   /** Зерно: файл из public/textures и сила (0 — нет) */
   grainTexture: string;
   grainOpacity: number;
+  /** Раз во сколько кадров зерно меняется (3 = десять раз в секунду) */
+  grainEvery: number;
   /** Сила бумажной текстуры на фонах */
   paperOpacity: number;
   /** Затемнение по краям (0…1) */
@@ -103,7 +105,8 @@ const documentary: StyleDef = {
   treatment: {
     filter: 'none',
     grainTexture: 'textures/grain.png',
-    grainOpacity: 0.22,
+    grainOpacity: 0.16,
+    grainEvery: 3,
     paperOpacity: 0.5,
     vignette: 0.55,
   },

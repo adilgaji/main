@@ -1,0 +1,494 @@
+{
+  "shots": [
+    {
+      "id": "narrator",
+      "narration": "How do we know what happened at Thermopylae? Our guide is Herodotus, a Greek writer who told the story of this war.",
+      "shot": {
+        "type": "narrator",
+        "beats": [
+          {
+            "at": 0,
+            "pose": "welcome",
+            "emotion": "smile"
+          },
+          {
+            "at": 2.2,
+            "pose": "explain",
+            "emotion": "curious"
+          },
+          {
+            "at": 4.6,
+            "pose": "point",
+            "emotion": "smile"
+          }
+        ],
+        "board": {
+          "kicker": "The question",
+          "title": "How do we know?",
+          "lines": [
+            "Who wrote it down?",
+            "How long after the events?",
+            "Can the numbers be checked?"
+          ]
+        },
+        "seed": 4
+      }
+    },
+    {
+      "id": "map",
+      "narration": "He says the Persian king Xerxes led a huge army out of Asia and down through Greece, as far as a place called Thermopylae.",
+      "shot": {
+        "type": "map",
+        "view": [
+          19.6,
+          36.2,
+          29.6,
+          41.4
+        ],
+        "viewTo": [
+          21.0,
+          36.6,
+          27.2,
+          41.2
+        ],
+        "title": "Xerxes marches on Greece",
+        "subtitle": "480 BC · the route Herodotus describes",
+        "regions": [
+          {
+            "label": "Persian Empire",
+            "color": "accent2",
+            "appearAt": 0.5,
+            "labelAt": [
+              28.6,
+              39.5
+            ],
+            "polygon": [
+              [
+                26.0,
+                40.0
+              ],
+              [
+                26.7,
+                40.5
+              ],
+              [
+                27.6,
+                40.6
+              ],
+              [
+                29.0,
+                41.3
+              ],
+              [
+                38.0,
+                42.5
+              ],
+              [
+                38.0,
+                32.5
+              ],
+              [
+                30.0,
+                33.6
+              ],
+              [
+                27.9,
+                36.4
+              ],
+              [
+                27.2,
+                36.6
+              ],
+              [
+                27.0,
+                37.6
+              ],
+              [
+                26.2,
+                38.3
+              ],
+              [
+                26.6,
+                39.0
+              ],
+              [
+                26.0,
+                39.5
+              ]
+            ]
+          }
+        ],
+        "routes": [
+          {
+            "startAt": 1.2,
+            "duration": 3.6,
+            "color": "accent2",
+            "points": [
+              [
+                28.04,
+                38.49
+              ],
+              [
+                27.3,
+                39.3
+              ],
+              [
+                26.6,
+                39.9
+              ],
+              [
+                26.41,
+                40.19
+              ],
+              [
+                26.35,
+                40.6
+              ],
+              [
+                26.0,
+                40.87
+              ],
+              [
+                24.9,
+                40.95
+              ],
+              [
+                23.9,
+                40.75
+              ],
+              [
+                22.95,
+                40.63
+              ],
+              [
+                22.5,
+                40.1
+              ],
+              [
+                22.42,
+                39.64
+              ],
+              [
+                22.45,
+                39.15
+              ],
+              [
+                22.54,
+                38.8
+              ]
+            ]
+          }
+        ],
+        "places": [
+          {
+            "name": "Sardis",
+            "at": [
+              28.04,
+              38.49
+            ],
+            "kind": "capital",
+            "appearAt": 0.8,
+            "label": "right"
+          },
+          {
+            "name": "Hellespont",
+            "at": [
+              26.41,
+              40.19
+            ],
+            "kind": "city",
+            "appearAt": 2.0,
+            "label": "top"
+          },
+          {
+            "name": "Athens",
+            "at": [
+              23.73,
+              37.98
+            ],
+            "kind": "city",
+            "appearAt": 0.6,
+            "label": "right"
+          },
+          {
+            "name": "Sparta",
+            "at": [
+              22.43,
+              37.07
+            ],
+            "kind": "city",
+            "appearAt": 0.6,
+            "label": "left"
+          },
+          {
+            "name": "Thermopylae",
+            "at": [
+              22.54,
+              38.8
+            ],
+            "kind": "battle",
+            "appearAt": 4.6,
+            "label": "left"
+          }
+        ],
+        "labels": [
+          {
+            "text": "AEGEAN SEA",
+            "at": [
+              25.2,
+              37.6
+            ],
+            "kind": "sea",
+            "size": 46
+          }
+        ]
+      }
+    },
+    {
+      "id": "timeline",
+      "narration": "It was the year 480 BC — ten years after the Persians first landed at Marathon.",
+      "shot": {
+        "type": "timeline",
+        "from": -504,
+        "to": -472,
+        "playFrom": -502,
+        "playTo": -477,
+        "title": "The Persian Wars",
+        "events": [
+          {
+            "year": -499,
+            "label": "Greek cities in Asia rebel against Persia"
+          },
+          {
+            "year": -490,
+            "label": "Marathon: the first invasion is stopped"
+          },
+          {
+            "year": -480,
+            "label": "Thermopylae and Salamis",
+            "highlight": true
+          },
+          {
+            "year": -479,
+            "label": "Plataea: the invasion ends"
+          }
+        ],
+        "backdrop": "vault",
+        "seed": 3
+      }
+    },
+    {
+      "id": "infographic",
+      "narration": "Herodotus lists the Greek units at the pass: about five thousand men. For the Persian side, he gives a total of more than two and a half million fighting men. That is an ancient claim, not a checked count.",
+      "shot": {
+        "type": "infographic",
+        "variant": "areas",
+        "title": "How big was the army?",
+        "subtitle": "The numbers Herodotus gives",
+        "items": [
+          {
+            "label": "Greeks at the pass",
+            "value": 5200,
+            "note": "the units Herodotus lists"
+          },
+          {
+            "label": "Persian fighting men",
+            "value": 2641610,
+            "note": "Herodotus's own total",
+            "status": "claim"
+          }
+        ],
+        "source": "Herodotus, Histories 7.185 and 7.202–203 · trans. A. D. Godley, 1920",
+        "backdrop": "dusk",
+        "seed": 7
+      }
+    },
+    {
+      "id": "kenburns",
+      "narration": "Greek soldiers of this time carried a large round shield, like the one on this Athenian wine bowl.",
+      "shot": {
+        "type": "kenburns",
+        "src": "demo/met_248299.jpg",
+        "width": 2400,
+        "height": 2580,
+        "from": {
+          "x": 0.5,
+          "y": 0.5,
+          "zoom": 1.0
+        },
+        "to": {
+          "x": 0.47,
+          "y": 0.6,
+          "zoom": 1.75
+        },
+        "title": "A man in armour, a round shield",
+        "caption": "Athenian wine bowl, about 460 BC",
+        "credit": "The Metropolitan Museum of Art, New York · public domain (CC0)"
+      }
+    },
+    {
+      "id": "quote",
+      "narration": "Herodotus also copied the words carved over the Spartan dead: Foreigner, go tell the Spartans that we lie here obedient to their commands.",
+      "shot": {
+        "type": "quote",
+        "kicker": "Inscription at Thermopylae",
+        "text": "Foreigner, go tell the Spartans that we lie here obedient to their commands.",
+        "author": "Epitaph of the Spartans, quoted by Herodotus",
+        "source": "Histories 7.228 · translated by A. D. Godley, 1920",
+        "backdrop": "ink",
+        "seed": 5
+      }
+    }
+  ],
+  "extra": {
+    "bars": {
+      "type": "infographic",
+      "variant": "bars",
+      "title": "Who stood at the pass?",
+      "subtitle": "Four of the units Herodotus lists",
+      "items": [
+        {
+          "label": "Spartans",
+          "value": 300
+        },
+        {
+          "label": "Thespians",
+          "value": 700
+        },
+        {
+          "label": "Thebans",
+          "value": 400
+        },
+        {
+          "label": "Phocians",
+          "value": 1000
+        }
+      ],
+      "source": "Herodotus, Histories 7.202–203 · trans. A. D. Godley, 1920",
+      "backdrop": "stone",
+      "seed": 11
+    },
+    "mapWide": {
+      "type": "map",
+      "view": [
+        22.0,
+        22.0,
+        52.0,
+        43.0
+      ],
+      "title": "Rivers of the Near East",
+      "subtitle": "Modern coastlines and rivers · Natural Earth",
+      "places": [],
+      "labels": [
+        {
+          "text": "MEDITERRANEAN SEA",
+          "at": [
+            27.5,
+            34.0
+          ],
+          "kind": "sea",
+          "size": 40
+        },
+        {
+          "text": "Nile",
+          "at": [
+            32.6,
+            26.2
+          ],
+          "kind": "land",
+          "size": 38
+        },
+        {
+          "text": "Euphrates",
+          "at": [
+            39.6,
+            35.2
+          ],
+          "kind": "land",
+          "size": 38
+        },
+        {
+          "text": "Tigris",
+          "at": [
+            45.4,
+            34.2
+          ],
+          "kind": "land",
+          "size": 38
+        }
+      ]
+    },
+    "mapWorld": {
+      "type": "map",
+      "view": [
+        -160.0,
+        -52.0,
+        175.0,
+        72.0
+      ],
+      "title": "The world",
+      "subtitle": "Natural Earth · public domain",
+      "labels": [
+        {
+          "text": "ATLANTIC OCEAN",
+          "at": [
+            -35.0,
+            28.0
+          ],
+          "kind": "sea",
+          "size": 40
+        },
+        {
+          "text": "PACIFIC OCEAN",
+          "at": [
+            -140.0,
+            5.0
+          ],
+          "kind": "sea",
+          "size": 40
+        },
+        {
+          "text": "INDIAN OCEAN",
+          "at": [
+            78.0,
+            -22.0
+          ],
+          "kind": "sea",
+          "size": 40
+        }
+      ],
+      "places": [
+        {
+          "name": "Thermopylae",
+          "at": [
+            22.54,
+            38.8
+          ],
+          "kind": "battle",
+          "appearAt": 0.6,
+          "label": "right"
+        },
+        {
+          "name": "Tenochtitlan",
+          "at": [
+            -99.13,
+            19.43
+          ],
+          "kind": "city",
+          "appearAt": 0.9,
+          "label": "bottom"
+        },
+        {
+          "name": "Thebes",
+          "at": [
+            32.64,
+            25.7
+          ],
+          "kind": "city",
+          "appearAt": 1.2,
+          "label": "bottom"
+        }
+      ]
+    }
+  }
+}

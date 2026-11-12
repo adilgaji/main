@@ -36,7 +36,6 @@ OK, WARN, FAIL, INFO = "ok", "warn", "fail", "info"
 MARK = {OK: "[ OK ]", WARN: "[ !! ]", FAIL: "[НЕТ!]", INFO: "[ .. ]"}
 
 # Минимальные требования
-MIN_NODE = 20
 NEED_PY = (3, 12)
 MIN_FREE_GB_FAIL = 10
 MIN_FREE_GB_WARN = 20
@@ -186,6 +185,13 @@ def check_python() -> None:
         add(FAIL, "Python 3.12", f"найден только Python {cur}, нужен 3.12", fix, key="python")
 
 
+def node_supported(ver: tuple[int, ...]) -> bool:
+    """Remotion 4 работает на Node 20.19+, 22.13+ и 24+ (так записано в его package.json)."""
+    major = ver[0]
+    minor = ver[1] if len(ver) > 1 else 0
+    return (major == 20 and minor >= 19) or (major == 22 and minor >= 13) or major >= 24
+
+
 def check_node() -> None:
     fix = "Терминал:  winget install OpenJS.NodeJS.LTS   (потом перезапустите Терминал)"
     exe = which("node")
@@ -196,8 +202,14 @@ def check_node() -> None:
     ver = first_version(out)
     if not ver:
         add(FAIL, "Node.js", f"не удалось узнать версию: {out[:80]}", fix, key="node")
-    elif ver[0] < MIN_NODE:
-        add(FAIL, "Node.js", f"версия {out} слишком старая, нужна {MIN_NODE}+", fix, key="node")
+    elif not node_supported(ver):
+        add(
+            FAIL,
+            "Node.js",
+            f"версия {out} не подходит для Remotion: нужна 22.13+ (или 20.19+, или 24+)",
+            fix,
+            key="node",
+        )
     else:
         add(OK, "Node.js", f"{out}", key="node")
     npm = which("npm")

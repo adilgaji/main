@@ -3,7 +3,7 @@
 import React from 'react';
 import {AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame} from 'remotion';
 import {ShotFrame} from '../components/ShotFrame';
-import {Appear, SourceLine} from '../components/TextBits';
+import {Appear} from '../components/TextBits';
 import {alpha, CLAMP, EASE} from '../lib/anim';
 import {FRAME, SAFE, useStyle} from '../style';
 
@@ -88,10 +88,24 @@ const KenBurnsText: React.FC<KenBurnsShotProps> = ({title, caption, credit}) => 
         </Appear>
       ) : null}
       {credit ? (
-        <>
-          <div style={{position: 'absolute', left: 0, right: 0, top: 690, height: 110, background: `linear-gradient(180deg, ${alpha('#000000', 0)} 0%, ${alpha('#000000', 0.5)} 100%)`}} />
-          <SourceLine text={credit} delay={0.8} />
-        </>
+        <Appear
+          delay={0.8}
+          rise={0}
+          style={{
+            position: 'absolute',
+            left: SAFE.left,
+            top: 730,
+            padding: '8px 18px 10px',
+            borderRadius: radius,
+            backgroundColor: alpha(p.bg, 0.72),
+            fontFamily: fonts.body,
+            fontWeight: 600,
+            fontSize: 30,
+            color: alpha(p.light, 0.92),
+          }}
+        >
+          {credit}
+        </Appear>
       ) : null}
     </AbsoluteFill>
   );

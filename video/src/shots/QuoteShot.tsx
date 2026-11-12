@@ -71,7 +71,7 @@ const QuoteArt: React.FC<QuoteShotProps> = ({backdrop, seed}) => {
       />
       {/* большая открывающая кавычка */}
       <svg width={FRAME.width} height={FRAME.height} style={{position: 'absolute', inset: 0, opacity: k}}>
-        <g transform={`translate(${PANEL.x + 70} ${PANEL.y - 34}) scale(1.9)`} fill={p.accent2}>
+        <g transform={`translate(${PANEL.x + 96} ${PANEL.y - 30}) scale(1.35)`} fill={p.accent2}>
           <path d="M 0 60 C 0 26 18 6 48 0 L 54 14 C 38 20 30 30 30 44 L 52 44 L 52 92 L 0 92 Z" />
           <path d="M 70 60 C 70 26 88 6 118 0 L 124 14 C 108 20 100 30 100 44 L 122 44 L 122 92 L 70 92 Z" />
         </g>
@@ -99,8 +99,8 @@ const QuoteText: React.FC<QuoteShotProps> = ({frames, text, author, source, kick
         <div
           style={{
             position: 'absolute',
-            left: PANEL.x + PAD.x + 190,
-            top: PANEL.y + 46,
+            left: PANEL.x + PAD.x + 180,
+            top: PANEL.y + 50,
             fontFamily: fonts.body,
             fontWeight: 800,
             fontSize: 30,

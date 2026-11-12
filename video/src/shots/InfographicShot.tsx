@@ -62,7 +62,8 @@ const AreasArt: React.FC<InfographicShotProps> = ({items}) => {
       <line x1={SAFE.left} y1={BASE_Y} x2={FRAME.width - SAFE.right} y2={BASE_Y} stroke={alpha(p.light, 0.35)} strokeWidth={3} />
       {/* маленький квадрат + кольцо-указатель */}
       <rect x={sx} y={BASE_Y - s * kSmall} width={s * kSmall} height={s * kSmall} fill={p.accent} />
-      <circle cx={sx + s / 2} cy={BASE_Y - s / 2} r={46 + pulse * 26} fill="none" stroke={p.accent} strokeWidth={4} opacity={(1 - pulse) * kSmall} />
+      <circle cx={sx + s / 2} cy={BASE_Y - s / 2} r={26 + pulse * 18} fill="none" stroke={p.accent} strokeWidth={4} opacity={(1 - pulse) * kSmall} />
+      <line x1={sx + s / 2} y1={BASE_Y - s - 14} x2={sx + s / 2} y2={BASE_Y - 108} stroke={alpha(p.accent, 0.8 * kSmall)} strokeWidth={3} strokeDasharray="3 9" strokeLinecap="round" />
       {/* большой квадрат, разлинованный на клетки размером с маленький */}
       <g transform={`translate(${bx} ${BASE_Y - BIG * kBig})`}>
         <rect width={BIG * kBig} height={BIG * kBig} fill={mix(p.accent2, p.bg, 0.1)} />
@@ -111,8 +112,8 @@ const AreasText: React.FC<InfographicShotProps> = ({items}) => {
   const bx = FRAME.width - SAFE.right - BIG - 40;
   return (
     <>
-      <ItemText item={small} delay={0.6} left={SAFE.left + 150} top={BASE_Y - 330} width={560} />
-      <ItemText item={big} delay={1.8} left={bx - 640} top={BASE_Y - 330} width={600} align="right" />
+      <ItemText item={small} delay={0.6} left={SAFE.left + 40} top={BASE_Y - 400} width={560} />
+      <ItemText item={big} delay={1.8} left={bx - 640} top={BASE_Y - 400} width={600} align="right" />
       <div
         style={{
           position: 'absolute',
@@ -139,7 +140,7 @@ const AreasText: React.FC<InfographicShotProps> = ({items}) => {
 
 // ---------------------------------------------------------------- bars
 
-const BAR = {x: 660, w: 760, h: 64, rowH: 128, top: 300};
+const BAR = {x: 660, w: 760, h: 60, rowH: 108, top: 290};
 
 const BarsArt: React.FC<InfographicShotProps> = ({items}) => {
   const {palette: p, radius} = useStyle();
@@ -230,7 +231,7 @@ export const InfographicShot: React.FC<InfographicShotProps> = (props) => {
           {variant === 'areas' && items.length >= 2 ? <AreasText {...props} /> : null}
           {variant === 'bars' ? items.map((it, i) => <BarRowText key={it.label} item={it} index={i} />) : null}
           {variant === 'number' ? <NumberText {...props} /> : null}
-          {source ? <SourceLine text={source} delay={1.2} /> : null}
+          {source ? <SourceLine text={source} delay={1.2} align={variant === 'areas' ? 'right' : 'left'} /> : null}
         </AbsoluteFill>
       }
     />

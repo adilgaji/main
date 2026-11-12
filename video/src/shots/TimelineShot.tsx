@@ -139,7 +139,7 @@ const TimelineText: React.FC<TimelineShotProps> = (props) => {
       </div>
 
       {ticks.map((t, i) =>
-        ticks.length > 7 && i % 2 === 1 ? null : (
+        (ticks.length > 7 && i % 2 === 1) || props.events.some((e) => Math.abs(xOf(props, e.year) - xOf(props, t)) < 70) ? null : (
           <div
             key={t}
             style={{

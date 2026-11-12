@@ -12,6 +12,7 @@
     "@remotion/cli": "4.0.543",
     "@remotion/fonts": "4.0.543",
     "@remotion/layout-utils": "4.0.543",
+    "@remotion/media": "4.0.543",
     "@remotion/paths": "4.0.543",
     "@remotion/transitions": "4.0.543",
     "d3-geo": "^3.1.2",
