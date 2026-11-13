@@ -489,6 +489,136 @@
           "label": "bottom"
         }
       ]
+    },
+    "compare": {
+      "type": "compare",
+      "left": {
+        "label": "THEN · 480 BC",
+        "heading": "A bronze helmet",
+        "lines": [
+          "Hammered from one sheet",
+          "Heavy, hot, hard to see out of"
+        ],
+        "icon": "helmet",
+        "tone": "accent"
+      },
+      "right": {
+        "label": "WHAT IS LEFT",
+        "heading": "Words on stone",
+        "lines": [
+          "A poem carved for the dead",
+          "Copied down by Herodotus"
+        ],
+        "icon": "scroll",
+        "tone": "paper"
+      },
+      "seed": 5
+    },
+    "diagram": {
+      "type": "diagram",
+      "title": "Three days at the pass",
+      "subtitle": "The order of events Herodotus gives",
+      "nodes": [
+        {
+          "id": "d1",
+          "label": "Days 1–2",
+          "sub": "Attacks on the pass fail",
+          "col": 0,
+          "row": 0
+        },
+        {
+          "id": "path",
+          "label": "A mountain path",
+          "sub": "A local man shows the way",
+          "col": 1,
+          "row": 0,
+          "tone": "accent2"
+        },
+        {
+          "id": "d3",
+          "label": "Day 3",
+          "sub": "The Greeks are surrounded",
+          "col": 2,
+          "row": 0,
+          "tone": "accent"
+        },
+        {
+          "id": "stay",
+          "label": "Leonidas stays",
+          "sub": "Most of the army leaves",
+          "col": 2,
+          "row": 1,
+          "tone": "dark"
+        }
+      ],
+      "links": [
+        {
+          "from": "d1",
+          "to": "path"
+        },
+        {
+          "from": "path",
+          "to": "d3"
+        },
+        {
+          "from": "d3",
+          "to": "stay",
+          "dashed": true
+        }
+      ],
+      "source": "Herodotus, Histories 7.210–222",
+      "backdrop": "vault",
+      "seed": 8
+    },
+    "scene": {
+      "type": "scene",
+      "setting": "pass",
+      "time": "day",
+      "title": "The Hot Gates",
+      "subtitle": "Cliffs on one side, the sea on the other",
+      "note": "Illustration · not to scale",
+      "items": [
+        {
+          "icon": "hoplite",
+          "x": 1010,
+          "y": 930,
+          "size": 300,
+          "count": 5,
+          "gap": 150,
+          "rows": 2,
+          "tone": "accent",
+          "appearAt": 0.4
+        },
+        {
+          "icon": "soldier",
+          "x": 835,
+          "y": 640,
+          "size": 120,
+          "count": 6,
+          "gap": 50,
+          "rows": 3,
+          "tone": "accent2",
+          "flip": true,
+          "appearAt": 1.4
+        },
+        {
+          "icon": "ship",
+          "x": 1600,
+          "y": 690,
+          "size": 150,
+          "tone": "dark",
+          "appearAt": 2.0
+        },
+        {
+          "icon": "rock",
+          "x": 620,
+          "y": 1060,
+          "size": 150,
+          "tone": "dark",
+          "appearAt": 0.2
+        }
+      ],
+      "seed": 3
     }
   }
 }

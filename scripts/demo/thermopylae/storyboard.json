@@ -1,0 +1,983 @@
+{
+ "chapters": [
+  {
+   "id": "c1",
+   "shots": [
+    {
+     "at": "",
+     "shot": {
+      "type": "scene",
+      "setting": "pass",
+      "time": "dusk",
+      "title": "Thermopylae, 480 BC",
+      "subtitle": "A narrow road between cliffs and the sea",
+      "note": "Illustration · not to scale",
+      "items": [
+       {
+        "icon": "rock",
+        "x": 600,
+        "y": 1070,
+        "size": 170,
+        "tone": "dark",
+        "appearAt": 0.1
+       },
+       {
+        "icon": "hoplite",
+        "x": 1030,
+        "y": 930,
+        "size": 300,
+        "count": 5,
+        "gap": 150,
+        "rows": 2,
+        "tone": "accent",
+        "appearAt": 0.4
+       },
+       {
+        "icon": "soldier",
+        "x": 830,
+        "y": 640,
+        "size": 120,
+        "count": 6,
+        "gap": 52,
+        "rows": 3,
+        "tone": "accent2",
+        "flip": true,
+        "appearAt": 1.6
+       },
+       {
+        "icon": "ship",
+        "x": 1620,
+        "y": 700,
+        "size": 150,
+        "tone": "dark",
+        "appearAt": 2.4
+       }
+      ],
+      "seed": 3
+     }
+    },
+    {
+     "at": "They chose a place",
+     "transition": "zoom",
+     "shot": {
+      "type": "map",
+      "view": [
+       20.6,
+       36.7,
+       25.8,
+       40.0
+      ],
+      "viewTo": [
+       21.9,
+       38.35,
+       23.5,
+       39.25
+      ],
+      "title": "Thermopylae",
+      "subtitle": "Modern coastline · in 480 BC the sea reached the pass",
+      "places": [
+       {
+        "name": "Thermopylae",
+        "at": [
+         22.54,
+         38.8
+        ],
+        "kind": "battle",
+        "appearAt": 0.6,
+        "label": "left"
+       },
+       {
+        "name": "Athens",
+        "at": [
+         23.73,
+         37.98
+        ],
+        "kind": "city",
+        "appearAt": 0.4,
+        "label": "right"
+       },
+       {
+        "name": "Sparta",
+        "at": [
+         22.43,
+         37.07
+        ],
+        "kind": "city",
+        "appearAt": 0.4,
+        "label": "left"
+       }
+      ],
+      "labels": [
+       {
+        "text": "AEGEAN SEA",
+        "at": [
+         24.6,
+         38.9
+        ],
+        "kind": "sea",
+        "size": 44
+       }
+      ]
+     }
+    },
+    {
+     "at": "Why fight there?",
+     "transition": "slide",
+     "shot": {
+      "type": "narrator",
+      "beats": [
+       {
+        "at": 0,
+        "pose": "think",
+        "emotion": "curious"
+       },
+       {
+        "at": 2.0,
+        "pose": "explain",
+        "emotion": "serious"
+       }
+      ],
+      "board": {
+       "kicker": "The questions",
+       "title": "Can we trust it?",
+       "lines": [
+        "Why fight at this spot?",
+        "Who told the story?",
+        "Are the numbers real?"
+       ]
+      },
+      "seed": 6
+     }
+    },
+    {
+     "at": "Our main witness",
+     "transition": "fade",
+     "shot": {
+      "type": "kenburns",
+      "image": "met:245829",
+      "from": {
+       "x": 0.5,
+       "y": 0.34,
+       "zoom": 1.0
+      },
+      "to": {
+       "x": 0.5,
+       "y": 0.3,
+       "zoom": 1.18
+      },
+      "title": "Herodotus",
+      "caption": "Marble bust · Roman, 2nd century AD"
+     }
+    },
+    {
+     "at": "Years later",
+     "transition": "wipe",
+     "shot": {
+      "type": "timeline",
+      "from": -492,
+      "to": -422,
+      "playFrom": -490,
+      "playTo": -426,
+      "title": "When was it written?",
+      "subtitle": "About fifty years after the battle",
+      "events": [
+       {
+        "year": -484,
+        "label": "Herodotus is born (about)"
+       },
+       {
+        "year": -480,
+        "label": "Thermopylae",
+        "highlight": true
+       },
+       {
+        "year": -430,
+        "label": "His Histories appear (about)"
+       }
+      ],
+      "spans": [
+       {
+        "from": -480,
+        "to": -430,
+        "label": "about 50 years"
+       }
+      ],
+      "backdrop": "vault",
+      "seed": 4
+     }
+    },
+    {
+     "at": "His book opens",
+     "transition": "fade",
+     "shot": {
+      "type": "quote",
+      "kicker": "The first lines of the Histories",
+      "text": "…so that things done by man not be forgotten in time.",
+      "author": "Herodotus of Halicarnassus",
+      "source": "Histories 1.0 · trans. A. D. Godley, 1920",
+      "backdrop": "parchment",
+      "seed": 2
+     }
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "shots": [
+    {
+     "at": "",
+     "shot": {
+      "type": "kenburns",
+      "image": "met:324433",
+      "from": {
+       "x": 0.45,
+       "y": 0.45,
+       "zoom": 1.0
+      },
+      "to": {
+       "x": 0.36,
+       "y": 0.42,
+       "zoom": 1.3
+      },
+      "title": "Persia",
+      "caption": "A royal guard, carved about 486–465 BC"
+     }
+    },
+    {
+     "at": "In 480 BC he led",
+     "transition": "zoom",
+     "shot": {
+      "type": "map",
+      "view": [
+       19.6,
+       36.2,
+       29.6,
+       41.4
+      ],
+      "viewTo": [
+       21.0,
+       36.6,
+       27.2,
+       41.2
+      ],
+      "title": "Out of Asia, into Greece",
+      "subtitle": "480 BC · the route Herodotus describes",
+      "regions": [
+       {
+        "label": "Persian Empire",
+        "color": "accent2",
+        "appearAt": 0.5,
+        "labelAt": [
+         28.6,
+         39.5
+        ],
+        "polygon": [
+         [
+          26.0,
+          40.0
+         ],
+         [
+          26.7,
+          40.5
+         ],
+         [
+          27.6,
+          40.6
+         ],
+         [
+          29.0,
+          41.3
+         ],
+         [
+          38.0,
+          42.5
+         ],
+         [
+          38.0,
+          32.5
+         ],
+         [
+          30.0,
+          33.6
+         ],
+         [
+          27.9,
+          36.4
+         ],
+         [
+          27.2,
+          36.6
+         ],
+         [
+          27.0,
+          37.6
+         ],
+         [
+          26.2,
+          38.3
+         ],
+         [
+          26.6,
+          39.0
+         ],
+         [
+          26.0,
+          39.5
+         ]
+        ]
+       }
+      ],
+      "routes": [
+       {
+        "startAt": 1.2,
+        "duration": 3.6,
+        "color": "accent2",
+        "points": [
+         [
+          28.04,
+          38.49
+         ],
+         [
+          27.3,
+          39.3
+         ],
+         [
+          26.6,
+          39.9
+         ],
+         [
+          26.41,
+          40.19
+         ],
+         [
+          26.35,
+          40.6
+         ],
+         [
+          26.0,
+          40.87
+         ],
+         [
+          24.9,
+          40.95
+         ],
+         [
+          23.9,
+          40.75
+         ],
+         [
+          22.95,
+          40.63
+         ],
+         [
+          22.5,
+          40.1
+         ],
+         [
+          22.42,
+          39.64
+         ],
+         [
+          22.45,
+          39.15
+         ],
+         [
+          22.54,
+          38.8
+         ]
+        ]
+       }
+      ],
+      "places": [
+       {
+        "name": "Sardis",
+        "at": [
+         28.04,
+         38.49
+        ],
+        "kind": "capital",
+        "appearAt": 0.8,
+        "label": "right"
+       },
+       {
+        "name": "Hellespont",
+        "at": [
+         26.41,
+         40.19
+        ],
+        "kind": "city",
+        "appearAt": 2.0,
+        "label": "top"
+       },
+       {
+        "name": "Athens",
+        "at": [
+         23.73,
+         37.98
+        ],
+        "kind": "city",
+        "appearAt": 0.6,
+        "label": "right"
+       },
+       {
+        "name": "Sparta",
+        "at": [
+         22.43,
+         37.07
+        ],
+        "kind": "city",
+        "appearAt": 0.6,
+        "label": "left"
+       },
+       {
+        "name": "Thermopylae",
+        "at": [
+         22.54,
+         38.8
+        ],
+        "kind": "battle",
+        "appearAt": 4.6,
+        "label": "left"
+       }
+      ],
+      "labels": [
+       {
+        "text": "AEGEAN SEA",
+        "at": [
+         25.2,
+         37.6
+        ],
+        "kind": "sea",
+        "size": 46
+       }
+      ]
+     }
+    },
+    {
+     "at": "How big was that army?",
+     "transition": "fade",
+     "shot": {
+      "type": "infographic",
+      "variant": "number",
+      "title": "How big was the army?",
+      "subtitle": "The total Herodotus gives",
+      "items": [
+       {
+        "label": "Persian fighting men",
+        "value": 2641610,
+        "note": "Herodotus's own count",
+        "status": "claim"
+       }
+      ],
+      "source": "Herodotus, Histories 7.185 · trans. A. D. Godley, 1920",
+      "backdrop": "dusk",
+      "seed": 7
+     }
+    },
+    {
+     "at": "Most historians today",
+     "transition": "slide",
+     "shot": {
+      "type": "narrator",
+      "beats": [
+       {
+        "at": 0,
+        "pose": "explain",
+        "emotion": "serious"
+       },
+       {
+        "at": 3.0,
+        "pose": "think",
+        "emotion": "concerned"
+       }
+      ],
+      "board": {
+       "kicker": "Historians disagree",
+       "title": "How many Persians?",
+       "lines": [
+        "Herodotus: 2.6 million",
+        "Today: far fewer",
+        "The true number is unknown"
+       ]
+      },
+      "seed": 2
+     }
+    },
+    {
+     "at": "To hold the pass",
+     "transition": "wipe",
+     "shot": {
+      "type": "infographic",
+      "variant": "areas",
+      "title": "Greeks against Persians",
+      "subtitle": "The numbers Herodotus gives",
+      "items": [
+       {
+        "label": "Greeks at the pass",
+        "value": 5200,
+        "note": "the units Herodotus lists"
+       },
+       {
+        "label": "Persian fighting men",
+        "value": 2641610,
+        "note": "Herodotus's own total",
+        "status": "claim"
+       }
+      ],
+      "source": "Herodotus, Histories 7.185 and 7.202–203 · trans. A. D. Godley, 1920",
+      "backdrop": "stone",
+      "seed": 9
+     }
+    },
+    {
+     "at": "Their leader was Leonidas",
+     "transition": "fade",
+     "shot": {
+      "type": "kenburns",
+      "image": "met:256133",
+      "from": {
+       "x": 0.5,
+       "y": 0.45,
+       "zoom": 1.0
+      },
+      "to": {
+       "x": 0.5,
+       "y": 0.4,
+       "zoom": 1.15
+      },
+      "title": "Leonidas of Sparta",
+      "caption": "A Greek helmet of his time · bronze, late 500s BC"
+     }
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "shots": [
+    {
+     "at": "",
+     "shot": {
+      "type": "scene",
+      "setting": "coast",
+      "time": "day",
+      "title": "Four days of waiting",
+      "subtitle": "The Persian camp outside the pass",
+      "note": "Illustration · not to scale",
+      "items": [
+       {
+        "icon": "tent",
+        "x": 420,
+        "y": 760,
+        "size": 150,
+        "count": 4,
+        "gap": 170,
+        "tone": "accent2",
+        "appearAt": 0.2
+       },
+       {
+        "icon": "banner",
+        "x": 700,
+        "y": 900,
+        "size": 260,
+        "tone": "accent2",
+        "appearAt": 0.8
+       },
+       {
+        "icon": "soldier",
+        "x": 360,
+        "y": 1000,
+        "size": 230,
+        "count": 4,
+        "gap": 120,
+        "tone": "dark",
+        "appearAt": 1.0
+       },
+       {
+        "icon": "fire",
+        "x": 980,
+        "y": 980,
+        "size": 120,
+        "tone": "accent",
+        "appearAt": 1.4
+       }
+      ],
+      "seed": 12
+     }
+    },
+    {
+     "at": "For two days",
+     "transition": "fade",
+     "shot": {
+      "type": "kenburns",
+      "image": "met:248299",
+      "from": {
+       "x": 0.55,
+       "y": 0.62,
+       "zoom": 1.25
+      },
+      "to": {
+       "x": 0.5,
+       "y": 0.6,
+       "zoom": 1.45
+      },
+      "title": "Two days of attacks",
+      "caption": "A Greek soldier on an Athenian wine bowl, about 460 BC"
+     }
+    },
+    {
+     "at": "Even his best troops",
+     "transition": "slide",
+     "shot": {
+      "type": "infographic",
+      "variant": "number",
+      "title": "The Immortals",
+      "subtitle": "The king's own guard",
+      "items": [
+       {
+        "label": "men, always kept at full strength",
+        "value": 10000,
+        "note": "as Herodotus describes them",
+        "status": "claim"
+       }
+      ],
+      "source": "Herodotus, Histories 7.83 and 7.211 · trans. A. D. Godley, 1920",
+      "backdrop": "ink",
+      "seed": 13
+     }
+    },
+    {
+     "at": "Then a local man",
+     "transition": "wipe",
+     "shot": {
+      "type": "diagram",
+      "title": "A way around",
+      "subtitle": "What Herodotus tells",
+      "nodes": [
+       {
+        "id": "army",
+        "label": "Persian army",
+        "sub": "In front of the pass",
+        "col": 0,
+        "row": 0,
+        "tone": "accent2"
+       },
+       {
+        "id": "pass",
+        "label": "The pass",
+        "sub": "Held by the Greeks",
+        "col": 1,
+        "row": 0,
+        "tone": "accent"
+       },
+       {
+        "id": "path",
+        "label": "Mountain path",
+        "sub": "Shown by Ephialtes",
+        "col": 0,
+        "row": 1,
+        "tone": "paper"
+       },
+       {
+        "id": "behind",
+        "label": "Behind the Greeks",
+        "sub": "By the next morning",
+        "col": 1,
+        "row": 1,
+        "tone": "dark"
+       }
+      ],
+      "links": [
+       {
+        "from": "army",
+        "to": "pass",
+        "label": "blocked",
+        "dashed": true
+       },
+       {
+        "from": "army",
+        "to": "path"
+       },
+       {
+        "from": "path",
+        "to": "behind",
+        "tone": "accent2"
+       },
+       {
+        "from": "behind",
+        "to": "pass",
+        "tone": "accent2"
+       }
+      ],
+      "source": "Herodotus, Histories 7.213–218 · trans. A. D. Godley, 1920",
+      "backdrop": "vault",
+      "seed": 8
+     }
+    },
+    {
+     "at": "By the next morning",
+     "transition": "fade",
+     "shot": {
+      "type": "scene",
+      "setting": "pass",
+      "time": "night",
+      "title": "Surrounded",
+      "note": "Illustration · not to scale",
+      "items": [
+       {
+        "icon": "soldier",
+        "x": 300,
+        "y": 470,
+        "size": 90,
+        "count": 7,
+        "gap": 40,
+        "tone": "accent2",
+        "appearAt": 0.3
+       },
+       {
+        "icon": "hoplite",
+        "x": 1060,
+        "y": 930,
+        "size": 300,
+        "count": 4,
+        "gap": 160,
+        "tone": "accent",
+        "appearAt": 0.1
+       },
+       {
+        "icon": "fire",
+        "x": 1500,
+        "y": 980,
+        "size": 110,
+        "tone": "accent",
+        "appearAt": 0.6
+       }
+      ],
+      "seed": 21
+     }
+    }
+   ]
+  },
+  {
+   "id": "c4",
+   "shots": [
+    {
+     "at": "",
+     "shot": {
+      "type": "infographic",
+      "variant": "bars",
+      "title": "Who stayed to the end?",
+      "subtitle": "The units Herodotus names",
+      "items": [
+       {
+        "label": "Spartans",
+        "value": 300
+       },
+       {
+        "label": "Thespians",
+        "value": 700
+       },
+       {
+        "label": "Thebans",
+        "value": 400
+       }
+      ],
+      "source": "Herodotus, Histories 7.202 and 7.222 · trans. A. D. Godley, 1920",
+      "backdrop": "stone",
+      "seed": 11
+     }
+    },
+    {
+     "at": "Most of those who stayed",
+     "transition": "fade",
+     "shot": {
+      "type": "scene",
+      "setting": "pass",
+      "time": "dusk",
+      "title": "The last stand",
+      "note": "Illustration · not to scale",
+      "items": [
+       {
+        "icon": "banner",
+        "x": 1160,
+        "y": 900,
+        "size": 300,
+        "tone": "accent",
+        "appearAt": 0.2
+       },
+       {
+        "icon": "hoplite",
+        "x": 1000,
+        "y": 960,
+        "size": 260,
+        "count": 3,
+        "gap": 170,
+        "tone": "accent",
+        "appearAt": 0.4
+       },
+       {
+        "icon": "shield",
+        "x": 1420,
+        "y": 1040,
+        "size": 90,
+        "tone": "accent",
+        "appearAt": 1.0
+       }
+      ],
+      "seed": 31
+     }
+    },
+    {
+     "at": "The Persians marched on",
+     "transition": "slide",
+     "shot": {
+      "type": "timeline",
+      "from": -493,
+      "to": -476,
+      "playFrom": -491,
+      "playTo": -478,
+      "title": "How the war ended",
+      "events": [
+       {
+        "year": -490,
+        "label": "Marathon: the first invasion fails"
+       },
+       {
+        "year": -480,
+        "label": "Thermopylae, then Salamis",
+        "highlight": true
+       },
+       {
+        "year": -479,
+        "label": "Plataea: the invasion ends"
+       }
+      ],
+      "backdrop": "vault",
+      "seed": 5
+     }
+    },
+    {
+     "at": "After the war",
+     "transition": "fade",
+     "shot": {
+      "type": "narrator",
+      "beats": [
+       {
+        "at": 0,
+        "pose": "point",
+        "emotion": "neutral"
+       }
+      ],
+      "board": {
+       "kicker": "After the war",
+       "title": "Words on stone",
+       "lines": [
+        "Stones set up at the pass",
+        "Herodotus copied the words"
+       ]
+      },
+      "seed": 14
+     }
+    },
+    {
+     "at": "Herodotus copied the words",
+     "transition": "fade",
+     "shot": {
+      "type": "quote",
+      "kicker": "Inscription at Thermopylae",
+      "text": "Foreigner, go tell the Spartans that we lie here obedient to their commands.",
+      "author": "Epitaph of the Spartans, quoted by Herodotus",
+      "source": "Histories 7.228 · translated by A. D. Godley, 1920",
+      "backdrop": "ink",
+      "seed": 5
+     }
+    },
+    {
+     "at": "And the pass?",
+     "transition": "wipe",
+     "shot": {
+      "type": "compare",
+      "revealAt": 1.6,
+      "left": {
+       "label": "480 BC",
+       "heading": "Room for one wagon",
+       "lines": [
+        "Cliffs on one side, sea on the other",
+        "Herodotus, Histories 7.176"
+       ],
+       "icon": "wall",
+       "tone": "paper",
+       "backdrop": "stone"
+      },
+      "right": {
+       "label": "IN 1907",
+       "heading": "A wide plain",
+       "lines": [
+        "River mud pushed the sea back"
+       ],
+       "image": "loc:2003688305",
+       "zoom": 1.3,
+       "focus": {
+        "x": 0.28,
+        "y": 0.5
+       }
+      },
+      "seed": 4
+     }
+    },
+    {
+     "at": "Next time",
+     "transition": "fade",
+     "shot": {
+      "type": "map",
+      "view": [
+       21.8,
+       37.5,
+       24.6,
+       39.2
+      ],
+      "viewTo": [
+       22.9,
+       37.7,
+       24.1,
+       38.35
+      ],
+      "title": "Next: Salamis",
+      "subtitle": "The sea battle of 480 BC",
+      "places": [
+       {
+        "name": "Thermopylae",
+        "at": [
+         22.54,
+         38.8
+        ],
+        "kind": "battle",
+        "appearAt": 0.2,
+        "label": "left"
+       },
+       {
+        "name": "Salamis",
+        "at": [
+         23.48,
+         37.95
+        ],
+        "kind": "battle",
+        "appearAt": 0.8,
+        "label": "left"
+       },
+       {
+        "name": "Athens",
+        "at": [
+         23.73,
+         37.98
+        ],
+        "kind": "city",
+        "appearAt": 0.6,
+        "label": "right"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

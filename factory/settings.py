@@ -25,6 +25,9 @@ DEFAULTS: dict = {
         "paragraph_gap": 0.85,  # пауза между абзацами, секунды
     },
     "loudness": {"target_lufs": -14.5, "max_true_peak_db": -1.5},
+    # Smithsonian Open Access: бесплатный личный ключ с https://api.data.gov/signup/
+    # (общий DEMO_KEY быстро упирается в лимит запросов)
+    "images": {"smithsonian_api_key": ""},
 }
 
 

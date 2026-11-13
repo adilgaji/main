@@ -1,0 +1,113 @@
+{
+  "title": "Thermopylae: How Much of the Story Can We Trust?",
+  "subgenre": "wars and battles",
+  "structure": "investigation",
+  "chapters": [
+    {
+      "id": "c1",
+      "title": "Room for one wagon",
+      "text": "In the summer of 480 BC, a few thousand Greeks tried to stop the biggest army their world had ever seen. They chose a place where, says one ancient writer, the road had room for just one wagon. Why fight there? And how much of this famous story can we really trust?\nOur main witness is Herodotus, a Greek writer who was only a small child when this war began. Years later, he travelled and asked people what they remembered. His book opens with a promise: so that things done by man not be forgotten in time."
+    },
+    {
+      "id": "c2",
+      "title": "The king who came west",
+      "text": "The invader was Xerxes, king of Persia, an empire that stretched from Egypt to India. In 480 BC he led his army out of Asia, across a narrow strait, and down the coast of Greece.\nHow big was that army? Herodotus gives a total of more than two and a half million fighting men. Most historians today think that is far too many, and that the real army was much smaller. Nobody knows the true number.\nTo hold the pass, the Greeks sent a little over five thousand men, plus fighters from nearby towns. Their leader was Leonidas, one of the two kings of Sparta."
+    },
+    {
+      "id": "c3",
+      "title": "Three days in the pass",
+      "text": "When Xerxes arrived, he waited four days, expecting the Greeks to run away. They did not. On the fifth day, he attacked.\nFor two days, his soldiers attacked the narrow pass, and for two days they failed. Even his best troops were thrown back. Herodotus calls them the Immortals: ten thousand men, always kept at full strength.\nThen a local man named Ephialtes showed the Persians a mountain path that went around the pass. By the next morning, the Greeks were about to be surrounded."
+    },
+    {
+      "id": "c4",
+      "title": "Why the story lasted",
+      "text": "On that last day, Leonidas sent most of the army away. He stayed with his three hundred Spartans, and with the men of Thespiae and Thebes. Most of those who stayed were killed, Leonidas among them.\nThe Persians marched on. But later that year, their fleet lost at Salamis, and the next summer, their army lost at Plataea.\nAfter the war, the Greeks set up stones at the pass. Herodotus copied the words written for the Spartans: Foreigner, go tell the Spartans that we lie here obedient to their commands.\nAnd the pass? River mud has pushed the sea back by kilometres, and the road for one wagon is now a wide plain. Next time, we sail to Salamis, where the Persian fleet was beaten."
+    }
+  ],
+  "sources": [
+    "Herodotus, The Histories, translated by A. D. Godley (Loeb Classical Library, 1920–1925): 1.0; 7.83; 7.176; 7.185; 7.202–203; 7.210–228; 8.1–96 (Salamis); 9 (Plataea). Перевод 1920 года — public domain.",
+    "Encyclopaedia Britannica: «Battle of Thermopylae», «Herodotus», «Xerxes I» — для дат и оценок историков (открыть и сверить с ноутбука: из облака сайт отказывает роботам)."
+  ],
+  "facts": [
+    {
+      "claim": "Battle of Thermopylae in 480 BC (summer)",
+      "status": "fact",
+      "source": "Herodotus 7; Britannica «Battle of Thermopylae»"
+    },
+    {
+      "claim": "The road had room for one wagon",
+      "status": "fact (ancient description)",
+      "source": "Herodotus 7.176"
+    },
+    {
+      "claim": "Herodotus was a small child in 480 BC (born about 484 BC)",
+      "status": "fact (approximate date)",
+      "source": "Britannica «Herodotus»"
+    },
+    {
+      "claim": "Opening words of the Histories",
+      "status": "fact (quotation)",
+      "source": "Herodotus 1.0, Godley 1920"
+    },
+    {
+      "claim": "Persian Empire from Egypt to India",
+      "status": "fact",
+      "source": "Britannica «Xerxes I», «Achaemenian dynasty»"
+    },
+    {
+      "claim": "Herodotus: 2,641,610 fighting men",
+      "status": "legend/ancient claim — названо в озвучке как слова Геродота",
+      "source": "Herodotus 7.185"
+    },
+    {
+      "claim": "Modern historians: far smaller, true number unknown",
+      "status": "disputed — так и сказано в озвучке",
+      "source": "Britannica «Battle of Thermopylae»"
+    },
+    {
+      "claim": "A little over 5,000 Greeks plus Locrians and Phocians",
+      "status": "fact (ancient count)",
+      "source": "Herodotus 7.202–203"
+    },
+    {
+      "claim": "Leonidas one of the two kings of Sparta",
+      "status": "fact",
+      "source": "Herodotus 7.204; Britannica «Leonidas»"
+    },
+    {
+      "claim": "Waited four days, attacked on the fifth",
+      "status": "fact (ancient account)",
+      "source": "Herodotus 7.210"
+    },
+    {
+      "claim": "Immortals: 10,000, always kept at full strength",
+      "status": "fact (ancient account)",
+      "source": "Herodotus 7.83, 7.211"
+    },
+    {
+      "claim": "Ephialtes showed the mountain path",
+      "status": "fact (ancient account)",
+      "source": "Herodotus 7.213–218"
+    },
+    {
+      "claim": "Leonidas sent most away; 300 Spartans, Thespians, Thebans stayed; most killed",
+      "status": "fact (ancient account)",
+      "source": "Herodotus 7.219–225, 7.233"
+    },
+    {
+      "claim": "Salamis later in 480 BC; Plataea 479 BC",
+      "status": "fact",
+      "source": "Herodotus 8, 9; Britannica"
+    },
+    {
+      "claim": "Epitaph «Foreigner, go tell the Spartans…»",
+      "status": "fact (quotation)",
+      "source": "Herodotus 7.228, Godley 1920"
+    },
+    {
+      "claim": "River silt pushed the coast back by kilometres; pass now a plain",
+      "status": "fact",
+      "source": "Britannica «Thermopylae» (сверить с ноутбука)"
+    }
+  ]
+}

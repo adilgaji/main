@@ -2,17 +2,67 @@
 // Всё содержимое приходит снаружи (из раскадровки) в виде данных.
 import {Audio} from '@remotion/media';
 import React from 'react';
-import {AbsoluteFill, Sequence, staticFile, type CalculateMetadataFunction} from 'remotion';
+import {AbsoluteFill, interpolate, Sequence, staticFile, useCurrentFrame, type CalculateMetadataFunction} from 'remotion';
 import {Captions, type CaptionWord} from './components/Captions';
 import {useFontsReady} from './fonts';
+import {CLAMP, EASE} from './lib/anim';
 import {Shot, type ShotSpec} from './shots';
 import {FONT, FRAME, getStyle, StyleContext, type StyleDef} from './style';
 
+/** Переход между кадрами. Длительность и вид задаёт сборщик главы (factory/storyboard.py). */
+export type TransitionKind = 'cut' | 'fade' | 'slide' | 'wipe' | 'zoom' | 'dip';
+export type Transition = {kind: TransitionKind; frames: number};
+
 export type TimedShot = {
-  /** Первый кадр и длительность в кадрах (от начала главы) */
+  /** Первый кадр и длительность в кадрах (от начала главы) — уже вместе с «нахлёстом» на переход */
   start: number;
   frames: number;
   shot: ShotSpec;
+  /** Как кадр входит (первые enter.frames кадров) и как уходит (последние exit.frames кадров) */
+  enter?: Transition | null;
+  exit?: Transition | null;
+};
+
+/**
+ * Переход: новый кадр лежит поверх старого и проявляется / выезжает / открывается шторкой.
+ * «dip» — проявление из фона и уход в фон (начало и конец главы).
+ */
+const Transitioned: React.FC<{item: TimedShot}> = ({item}) => {
+  const frame = useCurrentFrame();
+  let opacity = 1;
+  let shiftX = 0;
+  let scale = 1;
+  let clip: string | undefined;
+  const en = item.enter;
+  if (en && en.frames > 0 && en.kind !== 'cut') {
+    const k = interpolate(frame, [0, en.frames], [0, 1], {...CLAMP, easing: EASE.inOut});
+    if (en.kind === 'slide') {
+      shiftX += (1 - k) * 100;
+    } else if (en.kind === 'wipe') {
+      clip = `inset(0 ${(1 - k) * 100}% 0 0)`;
+    } else {
+      opacity *= k;
+      if (en.kind === 'zoom') {
+        scale *= 1.1 - 0.1 * k;
+      }
+    }
+  }
+  const ex = item.exit;
+  if (ex && ex.frames > 0 && ex.kind !== 'cut') {
+    const k = interpolate(frame, [item.frames - ex.frames, item.frames], [0, 1], {...CLAMP, easing: EASE.inOut});
+    if (ex.kind === 'dip') {
+      opacity *= 1 - k;
+    } else if (ex.kind === 'slide') {
+      shiftX -= k * 22;
+    } else if (ex.kind === 'zoom') {
+      scale *= 1 + 0.05 * k;
+    }
+  }
+  return (
+    <AbsoluteFill style={{opacity, translate: `${shiftX}% 0px`, scale, clipPath: clip}}>
+      <Shot spec={item.shot} frames={item.frames} />
+    </AbsoluteFill>
+  );
 };
 
 export type ChapterProps = {
@@ -61,7 +111,7 @@ export const Chapter: React.FC<ChapterProps> = ({styleId, audio, words, shots, c
   <Stage styleId={styleId}>
     {shots.map((s, i) => (
       <Sequence key={i} from={s.start} durationInFrames={s.frames} name={`${i + 1}. ${s.shot.type}`}>
-        <Shot spec={s.shot} frames={s.frames} />
+        <Transitioned item={s} />
       </Sequence>
     ))}
     {captions && words?.length ? (

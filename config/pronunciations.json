@@ -8,29 +8,167 @@
     "consonants": "b d f h j (yes) k l m n p s t v w z ɡ ŋ (sing) ɹ (red) ʃ (ship) ʒ (vision) ʧ (chair) ʤ (jam) θ (think) ð (this); только us: T (мягкая t, как в water)"
   },
   "words": {
-    "Antikythera": {"us": "ˌæntɪkɪθˈɪɹə", "gb": "ˌantɪkɪθˈɪəɹə", "say": "an-ti-ki-THEER-uh", "note": "Greek island; the Antikythera mechanism"},
-    "Atahualpa": {"us": "ˌɑtəwˈɑlpə", "gb": "ˌatəwˈɑːlpə", "say": "ah-tuh-WAHL-puh", "note": "last Inca emperor"},
-    "Çatalhöyük": {"us": "ʧɑtˌɑlhˈujʊk", "gb": "ʧɑːtˌɑːlhˈuːjʊk", "say": "chah-tahl-HOO-yook", "note": "Neolithic settlement in Turkey"},
-    "Cortés": {"us": "kɔɹtˈɛz", "gb": "kɔːtˈɛz", "say": "kor-TEZ", "note": "Hernán Cortés, Spanish conquistador"},
-    "Cusco": {"us": "kˈuskO", "gb": "kˈuːskQ", "say": "KOOS-koh", "note": "Inca capital"},
-    "Cuzco": {"us": "kˈuskO", "gb": "kˈuːskQ", "say": "KOOS-koh", "note": "Inca capital (older spelling)"},
-    "Darius": {"us": "dəɹˈIəs", "gb": "dəɹˈIəs", "say": "duh-RYE-us", "note": "Persian kings"},
-    "Göbekli": {"us": "ɡəbˈɛkli", "gb": "ɡəbˈɛkli", "say": "guh-BEK-lee", "note": "Göbekli Tepe, Turkey"},
-    "Hanseatic": {"us": "hˌænsiˈæTɪk", "gb": "hˌansɪˈatɪk", "say": "han-see-AT-ik", "note": "Hanseatic League"},
-    "Huitzilopochtli": {"us": "wˌitsilOpˈOʧtli", "gb": "wˌiːtsiːlQpˈQʧtli", "say": "weet-see-loh-POHCH-tlee", "note": "Aztec god"},
-    "Kublai": {"us": "kˈublI", "gb": "kˈuːblI", "say": "KOO-bly", "note": "Kublai Khan"},
-    "Leonidas": {"us": "liˈɑnɪdəs", "gb": "liːˈɒnɪdəs", "say": "lee-ON-i-dus", "note": "king of Sparta"},
-    "Mexica": {"us": "mɛʃˈikə", "gb": "mɛʃˈiːkə", "say": "meh-SHEE-kuh", "note": "the people usually called Aztecs"},
-    "Nazca": {"us": "nˈɑskə", "gb": "nˈaskə", "say": "NAHS-kuh", "note": "Nazca lines, Peru"},
-    "Pizarro": {"us": "pɪzˈɑɹO", "gb": "pɪzˈɑːɹQ", "say": "pi-ZAR-oh", "note": "Francisco Pizarro"},
-    "Quetzalcoatl": {"us": "kˌɛtsɑlkOˈɑtᵊl", "gb": "kˌɛtsalkQˈɑːtᵊl", "say": "ket-sahl-koh-AH-tul", "note": "Mesoamerican feathered-serpent god"},
-    "Ramesses": {"us": "ɹˈæməsiz", "gb": "ɹˈaməsiːz", "say": "RAM-uh-seez", "note": "Egyptian pharaohs"},
-    "Reconquista": {"us": "ɹˌAkɑnkˈistə", "gb": "ɹˌAkɒnkˈiːstə", "say": "ray-kon-KEE-stuh", "note": "Christian reconquest of Iberia"},
-    "Senenmut": {"us": "sˈɛnənmˌut", "gb": "sˈɛnənmˌuːt", "say": "SEN-en-moot", "note": "Hatshepsut's chief official"},
-    "Tenochtitlan": {"us": "tɛnˌɑʧtitlˈɑn", "gb": "tɛnˌɒʧtiːtlˈɑːn", "say": "teh-notch-teet-LAHN", "note": "Aztec capital"},
-    "Teotihuacan": {"us": "tˌAOtˌiwəkˈɑn", "gb": "tˌAQtˌiːwəkˈɑːn", "say": "tay-oh-tee-wah-KAHN", "note": "ancient city in Mexico"},
-    "Tutankhamun": {"us": "tˌutᵊnkɑmˈun", "gb": "tˌuːtᵊnkɑːmˈuːn", "say": "too-tun-kah-MOON", "note": "Egyptian pharaoh"},
-    "Voynich": {"us": "vˈYnɪʧ", "gb": "vˈYnɪʧ", "say": "VOY-nitch", "note": "Voynich manuscript"},
-    "Xerxes": {"us": "zˈɜɹksiz", "gb": "zˈɜːksiːz", "say": "ZURK-seez", "note": "Persian king"}
+    "Antikythera": {
+      "us": "ˌæntɪkɪθˈɪɹə",
+      "gb": "ˌantɪkɪθˈɪəɹə",
+      "say": "an-ti-ki-THEER-uh",
+      "note": "Greek island; the Antikythera mechanism"
+    },
+    "Atahualpa": {
+      "us": "ˌɑtəwˈɑlpə",
+      "gb": "ˌatəwˈɑːlpə",
+      "say": "ah-tuh-WAHL-puh",
+      "note": "last Inca emperor"
+    },
+    "Çatalhöyük": {
+      "us": "ʧɑtˌɑlhˈujʊk",
+      "gb": "ʧɑːtˌɑːlhˈuːjʊk",
+      "say": "chah-tahl-HOO-yook",
+      "note": "Neolithic settlement in Turkey"
+    },
+    "Cortés": {
+      "us": "kɔɹtˈɛz",
+      "gb": "kɔːtˈɛz",
+      "say": "kor-TEZ",
+      "note": "Hernán Cortés, Spanish conquistador"
+    },
+    "Cusco": {
+      "us": "kˈuskO",
+      "gb": "kˈuːskQ",
+      "say": "KOOS-koh",
+      "note": "Inca capital"
+    },
+    "Cuzco": {
+      "us": "kˈuskO",
+      "gb": "kˈuːskQ",
+      "say": "KOOS-koh",
+      "note": "Inca capital (older spelling)"
+    },
+    "Darius": {
+      "us": "dəɹˈIəs",
+      "gb": "dəɹˈIəs",
+      "say": "duh-RYE-us",
+      "note": "Persian kings"
+    },
+    "Ephialtes": {
+      "us": "ˌɛfiˈæltiz",
+      "gb": "ˌɛfiˈaltiːz",
+      "say": "ef-ee-AL-teez",
+      "note": "man who showed the Persians the path at Thermopylae"
+    },
+    "Göbekli": {
+      "us": "ɡəbˈɛkli",
+      "gb": "ɡəbˈɛkli",
+      "say": "guh-BEK-lee",
+      "note": "Göbekli Tepe, Turkey"
+    },
+    "Hanseatic": {
+      "us": "hˌænsiˈæTɪk",
+      "gb": "hˌansɪˈatɪk",
+      "say": "han-see-AT-ik",
+      "note": "Hanseatic League"
+    },
+    "Huitzilopochtli": {
+      "us": "wˌitsilOpˈOʧtli",
+      "gb": "wˌiːtsiːlQpˈQʧtli",
+      "say": "weet-see-loh-POHCH-tlee",
+      "note": "Aztec god"
+    },
+    "Kublai": {
+      "us": "kˈublI",
+      "gb": "kˈuːblI",
+      "say": "KOO-bly",
+      "note": "Kublai Khan"
+    },
+    "Leonidas": {
+      "us": "liˈɑnɪdəs",
+      "gb": "liːˈɒnɪdəs",
+      "say": "lee-ON-i-dus",
+      "note": "king of Sparta"
+    },
+    "Mexica": {
+      "us": "mɛʃˈikə",
+      "gb": "mɛʃˈiːkə",
+      "say": "meh-SHEE-kuh",
+      "note": "the people usually called Aztecs"
+    },
+    "Nazca": {
+      "us": "nˈɑskə",
+      "gb": "nˈaskə",
+      "say": "NAHS-kuh",
+      "note": "Nazca lines, Peru"
+    },
+    "Pizarro": {
+      "us": "pɪzˈɑɹO",
+      "gb": "pɪzˈɑːɹQ",
+      "say": "pi-ZAR-oh",
+      "note": "Francisco Pizarro"
+    },
+    "Plataea": {
+      "us": "plətˈiə",
+      "gb": "plətˈiːə",
+      "say": "pluh-TEE-uh",
+      "note": "battle of 479 BC"
+    },
+    "Quetzalcoatl": {
+      "us": "kˌɛtsɑlkOˈɑtᵊl",
+      "gb": "kˌɛtsalkQˈɑːtᵊl",
+      "say": "ket-sahl-koh-AH-tul",
+      "note": "Mesoamerican feathered-serpent god"
+    },
+    "Ramesses": {
+      "us": "ɹˈæməsiz",
+      "gb": "ɹˈaməsiːz",
+      "say": "RAM-uh-seez",
+      "note": "Egyptian pharaohs"
+    },
+    "Reconquista": {
+      "us": "ɹˌAkɑnkˈistə",
+      "gb": "ɹˌAkɒnkˈiːstə",
+      "say": "ray-kon-KEE-stuh",
+      "note": "Christian reconquest of Iberia"
+    },
+    "Senenmut": {
+      "us": "sˈɛnənmˌut",
+      "gb": "sˈɛnənmˌuːt",
+      "say": "SEN-en-moot",
+      "note": "Hatshepsut's chief official"
+    },
+    "Tenochtitlan": {
+      "us": "tɛnˌɑʧtitlˈɑn",
+      "gb": "tɛnˌɒʧtiːtlˈɑːn",
+      "say": "teh-notch-teet-LAHN",
+      "note": "Aztec capital"
+    },
+    "Teotihuacan": {
+      "us": "tˌAOtˌiwəkˈɑn",
+      "gb": "tˌAQtˌiːwəkˈɑːn",
+      "say": "tay-oh-tee-wah-KAHN",
+      "note": "ancient city in Mexico"
+    },
+    "Thespiae": {
+      "us": "θˈɛspiˌi",
+      "gb": "θˈɛspiˌiː",
+      "say": "THES-pee-ee",
+      "note": "Greek city in Boeotia"
+    },
+    "Tutankhamun": {
+      "us": "tˌutᵊnkɑmˈun",
+      "gb": "tˌuːtᵊnkɑːmˈuːn",
+      "say": "too-tun-kah-MOON",
+      "note": "Egyptian pharaoh"
+    },
+    "Voynich": {
+      "us": "vˈYnɪʧ",
+      "gb": "vˈYnɪʧ",
+      "say": "VOY-nitch",
+      "note": "Voynich manuscript"
+    },
+    "Xerxes": {
+      "us": "zˈɜɹksiz",
+      "gb": "zˈɜːksiːz",
+      "say": "ZURK-seez",
+      "note": "Persian king"
+    }
   }
 }

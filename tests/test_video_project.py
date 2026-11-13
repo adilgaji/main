@@ -49,8 +49,8 @@ def test_demo_shots_use_registered_types():
     lib = json.loads((VIDEO / "src" / "demo" / "library.json").read_text(encoding="utf-8"))
     shots = [s["shot"] for s in lib["shots"]] + list(lib["extra"].values())
     assert {s["type"] for s in shots} <= known
-    # все шесть типов кадров показаны в демо
-    assert {s["shot"]["type"] for s in lib["shots"]} == known
+    # каждый тип кадра есть в образцах библиотеки (основные шесть — в демо-ролике)
+    assert {s["type"] for s in shots} == known
     for item in lib["shots"]:
         assert item["narration"].strip(), f"у кадра {item['id']} нет текста озвучки"
     for s in shots:
