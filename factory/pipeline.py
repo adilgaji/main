@@ -405,6 +405,7 @@ def step_storyboard(folder: Path) -> dict:
 # ---------------------------------------------------------------- шаги целиком
 
 def run_step(folder: Path, step: str, note: str = "") -> Path:
+    folder = Path(folder).resolve()
     if step not in STEPS[1:]:
         raise PipelineError(f"Шаг: {', '.join(STEPS[1:])}")
     if step != "topic":

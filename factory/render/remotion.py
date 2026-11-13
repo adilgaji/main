@@ -57,6 +57,7 @@ def source_fingerprint() -> str:
 
 def bundle(out_dir: Path) -> Path:
     """Собирает проект один раз. Папка public (карты, шрифты, картинки этого видео) копируется внутрь."""
+    out_dir = Path(out_dir).resolve()  # рендер запускается из папки video/ — пути только абсолютные
     if out_dir.exists():
         shutil.rmtree(out_dir)
     env = {**os.environ, "NODE_USE_ENV_PROXY": "1"}
@@ -140,6 +141,9 @@ def render_chapters(
     готовые главы остаются на диске — повторный запуск продолжит с упавшей.
     """
     fingerprint = source_fingerprint()
+    serve = Path(serve).resolve()
+    for j in jobs:
+        j["props"], j["out"] = str(Path(j["props"]).resolve()), str(Path(j["out"]).resolve())
     todo, skipped = [], []
     for j in jobs:
         j["key"] = chapter_key(Path(j["props"]), fingerprint, crf)
@@ -178,6 +182,7 @@ def render_chapters(
 
 def still(serve: Path, composition: str, props_path: Path, out: Path, gl: str | None = None) -> Path:
     """Один кадр (обложка, лист) в PNG. До 3 попыток, как и у глав."""
+    serve, props_path, out = Path(serve).resolve(), Path(props_path).resolve(), Path(out).resolve()
     last = ""
     for attempt, mode in enumerate(([gl] if gl else gl_modes()) * TRIES, 1):
         if attempt > TRIES:

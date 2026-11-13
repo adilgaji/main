@@ -106,6 +106,7 @@ def review(folder: Path, script: dict, board: dict, pkg: dict, shorts_report: li
 
 
 def package(folder: Path, parallel: int = 2) -> dict:
+    folder = Path(folder).resolve()
     style = require_style_chosen(folder)
     settings = effective(load_settings(), json.loads((folder / "state.json").read_text(encoding="utf-8")).get("overrides"))
     script, board, plan = _read(folder, "script.json"), _read(folder, "storyboard.json"), _read(folder / "work", "plan.json")

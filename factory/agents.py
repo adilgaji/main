@@ -98,7 +98,7 @@ def _record(folder: Path | None, name: str, seconds: float, cost: float, tries: 
 
 def _call(name: str, agent: dict, task: str, data: dict, schema: dict, model: str | None, timeout: int) -> tuple[dict, dict]:
     fake = os.environ.get("FACTORY_FAKE_AGENTS")
-    if fake:
+    if fake and (Path(fake) / f"{name}.json").exists():  # готовый ответ (тесты, повтор без лишних трат)
         return json.loads((Path(fake) / f"{name}.json").read_text(encoding="utf-8")), {"cost": 0.0}
     tools = agent["tools"]
     with tempfile.TemporaryDirectory(prefix="hf_agent_") as cwd:
