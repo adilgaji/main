@@ -55,7 +55,7 @@ routes[''] = async () => {
    <tr><td>Прогноз к экзамену</td><td>${f.words.projected} (цель ${f.words.target})</td></tr>
    <tr><td>Темп / нужно, слов в день</td><td>${f.words.rate_per_day} / ${f.words.need_rate ?? '—'}</td></tr>
    <tr><td>Аудирование (30 дн.)</td><td>${f.components.listening ?? 'нет данных'}${f.components.listening != null ? '%' : ''}</td></tr>
-   <tr><td>Грамматика и письмо</td><td>${f.components.grammar ?? 'нет данных'}${f.components.grammar != null ? '%' : ''} <span class="sm mut">(охват пунктов ${f.grammar.covered_pct}%)</span></td></tr><tr><td>Чтение · говорение</td><td class="mut">нет данных</td></tr>
+   <tr><td>Грамматика и письмо</td><td>${f.components.grammar ?? 'нет данных'}${f.components.grammar != null ? '%' : ''} <span class="sm mut">(охват пунктов ${f.grammar.covered_pct}%)</span></td></tr><tr><td>Говорение (автооценка)</td><td>${f.components.speaking ?? 'нет данных'}${f.components.speaking != null ? '%' : ''}</td></tr><tr><td>Чтение</td><td class="mut">нет данных</td></tr>
    <tr><td>Отставание от графика</td><td class="${b.words > 20 ? 'bad' : ''}">${b.words} слов; пропущено дней: ${b.missed_days}</td></tr></table>
    ${f.messages.map(m => `<div class="sm warn">• ${esc(m)}</div>`).join('')}<div class="sm mut" style="margin-top:6px">${esc(f.note)}</div></div>`;
 };
@@ -235,6 +235,52 @@ routes.feedback = async () => {
    <div class="sm">${esc(i.payload.prompt)}</div><div class="hz s" style="font-size:22px;text-align:left">${esc(i.payload.answer)}</div>
    ${i.feedback ? `<div class="sm">Балл: <b>${esc(i.feedback.score)}/5</b></div>${(i.feedback.errors || []).map(e => `<div class="sm">• <span class="bad">${esc(e.orig)}</span> → <b>${esc(e.fix)}</b> <span class="mut">${esc(e.rule_ru)}</span></div>`).join('')}${i.feedback.better_version ? `<div class="sm">Лучше: ${esc(i.feedback.better_version)}</div>` : ''}` : ''}</div>`).join('') || '<div class="card mut">Пока пусто.</div>'}`;
 };
+
+// ---------- Говорение ----------
+routes.speaking = async (rest) => {
+  const kind = rest[0]; const st = await api('/speaking/status');
+  if (!kind) {
+    app.innerHTML = `<h1>Говорение</h1><div class="card col"><a class="btn p" href="#/speaking/repeat">Повторить фразу (произношение, тоны)</a><a class="btn" href="#/speaking/question">Ответить на вопрос</a><a class="btn" href="#/speaking/retell">Пересказать услышанное</a><a class="btn" href="#/speaking/monologue">Монолог по теме</a><a class="btn" href="#/feedback">Разборы от Claude</a></div>
+     <div class="card sm"><b>Распознавание речи:</b> ${st.fake ? 'тестовый режим' : st.loaded ? `работает (${esc(st.model)}, ${st.device === 'cuda' ? 'видеокарта' : 'процессор'})` : 'модель загрузится при первой записи (первый раз ~1 минута)'} ${st.error ? `<div class="warn">${esc(st.error)}</div>` : ''}<div class="mut">Формат заданий устной части нового HSK 4 официально не подтверждён (см. EXAM_SPEC.md) — это тренировка по общим типам.</div></div>`; return;
+  }
+  const seen = (routes._sseen = routes._sseen || []); const q = await api(`/speaking/next?kind=${kind}&exclude=${seen.slice(-8).join(',')}`); seen.push(q.id);
+  const l = await api('/lan'); const noMic = !(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  const body = kind === 'repeat' ? `<div class="hz s">${esc(q.zh)}</div><div class="mut sm" style="text-align:center">${esc(q.ru)}</div><div style="text-align:center;margin:8px 0">${spk(q.audio, '🔊 Образец')} <button id="slow">🐢 Медленно</button></div>`
+    : kind === 'question' ? `<div class="hz s">${esc(q.zh)}</div><div class="mut sm" style="text-align:center">${esc(q.ru)}</div><div style="text-align:center">${spk(q.audio)}</div><div class="sm">Подсказка (слова): ${q.words.map(esc).join(' · ')}</div>`
+    : kind === 'retell' ? `<div style="text-align:center"><button class="p" id="hear">🔊 Слушать рассказ</button></div><div class="sm">Опорные слова: ${q.words.map(esc).join(' · ')}</div>`
+    : `<div class="hz s" style="font-size:24px">${esc(q.zh)}</div><div class="mut sm" style="text-align:center">${esc(q.ru)}</div><div class="sm">Используй: ${q.words.map(esc).join(' · ')}</div>`;
+  app.innerHTML = `<a href="#/speaking" class="sm">← Говорение</a><h1>${({repeat:'Повтор фразы',question:'Ответ на вопрос',retell:'Пересказ',monologue:'Монолог'})[kind]}</h1><div class="card"><p>${esc(q.prompt)}</p>${body}</div>
+   ${noMic ? `<div class="card warn">Браузер не даёт доступ к микрофону на этом адресе. ${l.https_port ? `Открой <b>https://${esc(location.hostname)}:${l.https_port}</b> (появится предупреждение — «Всё равно перейти») или используй ноутбук.` : 'Используй ноутбук (адрес http://localhost:8765).'}</div>` :
+   `<div class="card" style="text-align:center"><button class="p" id="rec" style="font-size:20px;padding:16px 28px">🎙 Запись</button><div class="sm mut" id="rs"></div></div>`}<div id="fb"></div>`;
+  if (kind === 'retell') $('#hear').onclick = async () => { await playSeq(q.audios); };
+  if (kind === 'repeat') $('#slow').onclick = () => play(q.audio, 'slow');
+  if (noMic) return;
+  let mr = null, chunks = [], t0 = 0;
+  $('#rec').onclick = async () => {
+    if (mr && mr.state === 'recording') { mr.stop(); return; }
+    let stream; try { stream = await navigator.mediaDevices.getUserMedia({audio: true}); } catch (e) { $('#rs').textContent = 'Нет доступа к микрофону: разреши его в браузере.'; return; }
+    const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || '';
+    mr = new MediaRecorder(stream, mime ? {mimeType: mime} : {}); chunks = []; t0 = Date.now();
+    mr.ondataavailable = e => chunks.push(e.data);
+    mr.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop()); $('#rec').disabled = true; $('#rec').textContent = '⏳ Распознаю…'; $('#rs').textContent = '';
+      const blob = new Blob(chunks, {type: mr.mimeType || 'audio/webm'});
+      try {
+        const r = await fetch(`/api/speaking/upload?kind=${kind}&task_id=${encodeURIComponent(q.id)}&prompt=${encodeURIComponent(q.zh || q.ru || '')}`, {method: 'POST', headers: {'Content-Type': blob.type}, body: blob});
+        if (!r.ok) throw new Error((await r.json()).detail || r.status); showResult(await r.json());
+      } catch (e) { $('#rec').disabled = false; $('#rec').textContent = '🎙 Запись'; $('#rs').textContent = 'Ошибка: ' + e.message; }
+    };
+    mr.start(); $('#rec').textContent = '⏹ Стоп'; $('#rs').textContent = 'Говори…';
+  };
+  const showResult = r => {
+    $('#rec').textContent = '🎙 Ещё раз'; $('#rec').disabled = false; mr = null;
+    let det = '';
+    if (kind === 'repeat') { const bad = new Set(r.wrong_idx); det = `<div class="hz s">${[...r.ref].map((c, i) => `<span class="${bad.has(i) ? 'bad' : 'ok'}">${esc(c)}</span>`).join('')}</div><div class="sm">Совпадение: <b>${Math.round(r.ratio * 100)}%</b>. Красным — знаки, которые не прозвучали верно.</div>`; }
+    else det = `<div class="sm">Опорные слова: ${r.found.map(w => `<span class="ok">${esc(w)}</span>`).join(' ') || '—'} ${r.missing.map(w => `<span class="bad">${esc(w)}</span>`).join(' ')}</div><div class="sm">Длина: ${r.length} знаков ${r.length_ok ? '' : '<span class="warn">(коротковато)</span>'} · авто-оценка ${Math.round(r.score * 100)}%</div>`;
+    $('#fb').innerHTML = `<div class="card"><div class="sm mut">Я услышал (${r.stt.device}, ${r.stt.secs} с):</div><div class="hz s" style="font-size:22px">${esc(r.transcript) || '<span class="mut">ничего не распознано</span>'}</div>${det}${r.queued ? '<div class="sm mut" style="margin-top:6px">Запись сохранена и ждёт содержательного разбора (/hsk-check).</div>' : ''}</div><button class="p" style="width:100%" id="nx">Дальше</button>`;
+    $('#nx').onclick = () => routes.speaking([kind]);
+  };
+};
 // ---------- Статистика / Ещё ----------
 routes.stats = async () => {
   const s = await api('/stats'), w = s.words;
@@ -246,8 +292,8 @@ routes.stats = async () => {
 routes.more = async () => {
   const l = await api('/lan'), st = await api('/state');
   app.innerHTML = `<h1>Ещё</h1><div class="card col"><a class="btn" href="#/words">Словарь (поиск)</a><a class="btn" href="#/placement">Пройти входной тест заново</a><a class="btn" href="#/settings">Настройки плана</a></div>
-   <div class="card"><h2>С телефона</h2><div class="sm">Телефон и ноутбук в одной Wi-Fi сети. Открой в браузере телефона:</div>${l.ips.map(ip => `<div class="big" style="font-size:18px">http://${ip}:${l.port}</div>`).join('') || '<div class="mut">адрес не определён — смотри окно start.bat</div>'}</div>
-   <div class="card"><h2>Модули</h2><div class="sm">Готово: ${st.available.join(', ')}. Говорение, чтение, пробные экзамены — в разработке (см. PROGRESS.md).</div></div>`;
+   <div class="card"><h2>С телефона</h2><div class="sm">Телефон и ноутбук в одной Wi-Fi сети. Открой в браузере телефона:</div>${l.ips.map(ip => `<div class="big" style="font-size:18px">http://${ip}:${l.port}</div>${l.https_port ? `<div class="sm">с микрофоном: <b>https://${ip}:${l.https_port}</b> (предупреждение сертификата → «Всё равно перейти»)</div>` : ''}`).join('') || '<div class="mut">адрес не определён — смотри окно start.bat</div>'}</div>
+   <div class="card"><h2>Модули</h2><div class="sm">Готово: ${st.available.join(', ')}. Чтение и пробные экзамены — в разработке (см. PROGRESS.md).</div></div>`;
 };
 routes.words = async () => {
   app.innerHTML = `<h1>Словарь</h1><input id="q" placeholder="иероглифы, пиньинь, русский или английский"><div id="res"></div>`;
@@ -259,7 +305,7 @@ routes.settings = async () => {
   app.innerHTML = `<h1>Настройки плана</h1><div class="card col"><label>Дата начала<input type="date" id="st" value="${s.start}"></label><label>Дата экзамена<input type="date" id="ex" value="${s.exam}"></label><label>Минут в день<input type="number" id="mn" value="${s.minutes}"></label><button class="p" id="sv">Сохранить</button></div><div class="sm mut">Блок «Сегодня» пересчитывается сам: сколько новых слов в день, сколько на аудирование и т.д.</div>`;
   $('#sv').onclick = async () => { await api('/settings', {start: $('#st').value, exam: $('#ex').value, minutes: +$('#mn').value}); location.hash = '#/'; };
 };
-['speaking', 'reading', 'mock'].forEach(k => routes[k] = async () => { app.innerHTML = '<h1>Скоро</h1><div class="card">Этот модуль ещё в разработке (см. PROGRESS.md).</div><a class="btn" href="#/">← Сегодня</a>'; });
+['reading', 'mock'].forEach(k => routes[k] = async () => { app.innerHTML = '<h1>Скоро</h1><div class="card">Этот модуль ещё в разработке (см. PROGRESS.md).</div><a class="btn" href="#/">← Сегодня</a>'; });
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('/sw.js').catch(() => {});
 $('#clock').textContent = new Date().toLocaleDateString('ru-RU', {weekday: 'short', day: 'numeric', month: 'long'});
 route();

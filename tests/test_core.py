@@ -100,3 +100,19 @@ def test_writing_and_queue():
     f = client.get('/api/today').json()['forecast']; assert f['grammar']['writing_score_pct'] == 80 and f['components']['grammar'] is not None
 def test_placement_has_grammar():
     qs = client.get('/api/placement/questions').json()['questions']; assert sum(x['type'] == 'grammar' for x in qs) == 6
+
+def test_speaking_flow(monkeypatch):
+    monkeypatch.setenv('HSK_FAKE_STT', '我喜欢吃饺子因为很好吃')
+    st = client.get('/api/speaking/status').json(); assert 'fake' in st
+    q = client.get('/api/speaking/next?kind=question').json(); assert q['words'] and q['audio']['text']
+    r = client.post(f'/api/speaking/upload?kind=question&task_id={q["id"]}', content=b'x' * 2000, headers={'content-type': 'audio/webm'}).json()
+    assert r['transcript'] and 0 <= r['score'] <= 1 and r['queued'] and 'found' in r
+    rep = client.get('/api/speaking/next?kind=repeat').json(); ref = rep['zh']
+    monkeypatch.setenv('HSK_FAKE_STT', ref)
+    ok = client.post(f'/api/speaking/upload?kind=repeat&task_id={rep["id"]}', content=b'x' * 2000).json(); assert ok['ratio'] == 1.0 and ok['queued'] is False
+    monkeypatch.setenv('HSK_FAKE_STT', ref[:3])
+    bad = client.post(f'/api/speaking/upload?kind=repeat&task_id={rep["id"]}', content=b'x' * 2000).json(); assert bad['ratio'] < 0.85 and bad['queued'] and bad['wrong_idx']
+    assert client.post('/api/speaking/upload?kind=repeat&task_id=x', content=b'x').status_code == 400
+    for k in ('retell', 'monologue'): assert client.get(f'/api/speaking/next?kind={k}').json()['kind'] == k
+    assert client.get('/api/today').json()['forecast']['components']['speaking'] is not None
+    assert any(x['kind'] == 'speaking' for x in client.get('/api/queue').json())

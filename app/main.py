@@ -11,6 +11,8 @@ app = FastAPI(title='HSK 4 Trainer')
 from .ctx import C
 from .grammar import router as grammar_router
 app.include_router(grammar_router)
+from .speaking import router as speaking_router
+app.include_router(speaking_router)
 def rows(q, a=()): return [dict(r) for r in C.execute(q, a).fetchall()]
 # ---------- общее ----------
 @app.get('/api/state')
@@ -38,7 +40,8 @@ def lan():
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.connect(('10.255.255.255', 1)); ips.add(s.getsockname()[0]); s.close()
     except Exception: pass
-    return {'ips': sorted(ips), 'port': 8765}
+    from .config import ROOT
+    return {'ips': sorted(ips), 'port': 8765, 'https_port': 8766 if (ROOT / 'cert' / 'server.crt').exists() else None}
 # ---------- слова и карточки ----------
 @app.get('/api/words')
 def words(q: str = '', limit: int = 40):

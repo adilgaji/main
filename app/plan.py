@@ -27,7 +27,8 @@ def done_today(c):
     lis = c.execute("SELECT COUNT(*) n FROM l_attempts WHERE ts>=? AND mode!='dictation'", (iso0,)).fetchone()['n']
     dic = c.execute("SELECT COUNT(*) n FROM l_attempts WHERE ts>=? AND mode='dictation'", (iso0,)).fetchone()['n']
     gram = c.execute("SELECT COUNT(*) n FROM g_attempts WHERE ts>=? AND kind!='placement'", (iso0,)).fetchone()['n'] + c.execute("SELECT COUNT(*) n FROM queue WHERE ts>=?", (iso0,)).fetchone()['n']
-    return {'grammar': gram, 'review': rev, 'new': new, 'triage': tri, 'listening': lis, 'dictation': dic}
+    spk = c.execute("SELECT COUNT(*) n FROM s_attempts WHERE ts>=?", (iso0,)).fetchone()['n']
+    return {'speaking': spk, 'grammar': gram, 'review': rev, 'new': new, 'triage': tri, 'listening': lis, 'dictation': dic}
 def pools(c):
     """сколько слов ещё не введено: из старого HSK 3 (сортировка) и по-настоящему новых"""
     intro = {r['word_id'] for r in c.execute("SELECT word_id FROM cards WHERE kind='recog'")}
@@ -66,7 +67,7 @@ def build_today(c):
             add(k, v[0], m, max(1, round(m / 1.5)), 'заданий', v[2], v[3])
         else:
             blocks.append({'key': k, 'title': v[0], 'minutes': 0, 'target': 0, 'unit': '', 'route': v[2], 'hint': 'модуль ещё не готов — минуты отданы другим блокам', 'available': False})
-    done = done_today(c); dmap = {'grammar': done['grammar'], 'review': done['review'], 'new': done['new'], 'triage': done['triage'], 'listening': done['listening'] + done['dictation']}
+    done = done_today(c); dmap = {'speaking': done['speaking'], 'grammar': done['grammar'], 'review': done['review'], 'new': done['new'], 'triage': done['triage'], 'listening': done['listening'] + done['dictation']}
     for b in blocks: b['done'] = dmap.get(b['key'], 0)
     total_min = sum(b['minutes'] for b in blocks)
     return {'date': t.isoformat(), 'day': day, 'week': week, 'weeks_total': 16, 'phase': phase_of(min(week, 16)), 'days_left': days_left,
@@ -116,7 +117,8 @@ def forecast(c):
     la = listening_accuracy(c, 30)
     ga, cov = grammar_acc(c); ws = writing_score(c)
     gparts = [x for x in (None if ga is None else ga * cov, ws) if x is not None]
-    comp = {'vocab': vocab_pct, 'listening': la, 'grammar': (sum(gparts) / len(gparts)) if gparts else None, 'reading': None, 'speaking': None}
+    sp = c.execute("SELECT AVG(score) a, COUNT(*) n FROM s_attempts WHERE ts>=?", (db.iso(db.now() - timedelta(days=30)),)).fetchone(); sp_pct = sp['a'] if sp['n'] else None
+    comp = {'vocab': vocab_pct, 'listening': la, 'grammar': (sum(gparts) / len(gparts)) if gparts else None, 'reading': None, 'speaking': sp_pct}
     have = {k: v for k, v in comp.items() if v is not None}; wsum = sum(W[k] for k in have)
     ready = sum(W[k] * have[k] for k in have) / wsum if wsum else 0
     need_rate = max(0, (target - st['known']) / max(1, left - 14)) if left > 14 else None
@@ -130,7 +132,7 @@ def forecast(c):
     if pend: msgs.append(f'На проверке у Claude: {pend} письменных ответов — запусти /hsk-check.')
     return {'ready_pct': round(ready * 100), 'covered_weight': round(wsum * 100), 'components': {k: (None if v is None else round(v * 100)) for k, v in comp.items()},
             'grammar': {'acc': None if ga is None else round(ga * 100), 'covered_pct': round(cov * 100), 'writing_score_pct': None if ws is None else round(ws * 100)}, 'words': {**st, 'target': round(target), 'projected': round(projected), 'rate_per_day': round(rate, 1), 'need_rate': None if need_rate is None else round(need_rate, 1)},
-            'days_left': left, 'messages': msgs, 'note': f'Оценка по доступным навыкам (вес {round(wsum*100)}% от экзамена). Чтение и говорение — пока без данных.'}
+            'days_left': left, 'messages': msgs, 'note': f'Оценка по доступным навыкам (вес {round(wsum*100)}% от экзамена). Чтение — пока без данных; говорение — автооценка по расшифровке (грубо).'}
 def stats(c):
     since = db.iso(db.now() - timedelta(days=30))
     kinds = c.execute('SELECT kind, SUM(correct) c, COUNT(*) n FROM reviews WHERE ts>=? GROUP BY kind', (since,)).fetchall()
