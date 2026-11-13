@@ -35,6 +35,9 @@ def test_srt_matches_text_exactly(tmp_path):
     assert captions.problems(path, expected[:-1] + ["Herodotos."], 40.0)
     assert back[-1]["start"] >= 30.0
     assert captions.srt_time(3723.5) == "01:02:03,500"
+    # последняя реплика не выходит за конец видео (на экране она держится ещё 0,6 с после слова)
+    short = captions.cues([(0.0, w2)], total=w2[-1]["end"] + 0.2)
+    assert short[-1]["end"] == w2[-1]["end"] + 0.2
 
 
 def test_chapters_files_and_checks(tmp_path):

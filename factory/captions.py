@@ -78,8 +78,9 @@ def srt_time(t: float) -> str:
     return f"{ms // 3600000:02d}:{ms // 60000 % 60:02d}:{ms // 1000 % 60:02d},{ms % 1000:03d}"
 
 
-def cues(chapters: list[tuple[float, list[dict]]], max_chars: int = MAX_CHARS) -> list[dict]:
-    """chapters: [(начало главы в секундах, слова главы со временем от её начала)] → реплики."""
+def cues(chapters: list[tuple[float, list[dict]]], max_chars: int = MAX_CHARS, total: float | None = None) -> list[dict]:
+    """chapters: [(начало главы в секундах, слова главы со временем от её начала)] → реплики.
+    total — длина видео: ни одна реплика не заканчивается позже конца файла."""
     out = []
     for offset, words in chapters:
         for pg in build_pages(words, max_chars):
@@ -87,6 +88,9 @@ def cues(chapters: list[tuple[float, list[dict]]], max_chars: int = MAX_CHARS) -
             out.append({"start": offset + pg["start"], "end": offset + pg["end"], "text": text})
     for a, b in zip(out, out[1:]):  # реплики не накладываются
         a["end"] = min(a["end"], b["start"])
+    if total is not None:
+        for c in out:
+            c["end"] = min(c["end"], total)
     return out
 
 

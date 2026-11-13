@@ -204,7 +204,7 @@ def build_plan(folder: Path, board: dict, narration: dict, prepared: dict[str, d
 
 
 def write_texts(folder: Path, script: dict, plan: dict) -> None:
-    items = captions.cues([(ch["start_frame"] / FPS, ch["words"]) for ch in plan["chapters"]])
+    items = captions.cues([(ch["start_frame"] / FPS, ch["words"]) for ch in plan["chapters"]], total=plan["total_frames"] / FPS)
     captions.write_srt(items, folder / "captions.srt")
     first = [ch["start_frame"] / FPS + ch["words"][0]["start"] for ch in plan["chapters"]]
     chapters.write(chapters.build([c["title"] for c in script["chapters"]], first), folder)
