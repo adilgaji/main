@@ -15,6 +15,6 @@ words of the excerpt, both copied EXACTLY from the text. Hook + excerpt must las
 
 A Short must make sense on its own (no "as we saw", no unexplained names) and end on a satisfying line.
 Pick the most surprising moments. `title` up to 60 characters, honest, no clickbait. `description` 1–2
-sentences. Different Shorts must not overlap.
+sentences. Different Shorts must not overlap. `summary_ru`: 1–2 plain Russian sentences for the owner.
 
 Return only the JSON object that matches the schema.
