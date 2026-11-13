@@ -110,7 +110,7 @@ def jobs():
         if d.name.startswith("_") or not (d / "state.json").exists():
             continue
         st = load_state(d)
-        out.append({"id": d.name, "topic": st.get("topic"), "step": st.get("step"), "status": st.get("status")})
+        out.append({"id": d.name, "topic": st.get("topic"), "step": st.get("step"), "status": st.get("status"), "format": st.get("format", "short")})
     return out
 
 
@@ -153,7 +153,7 @@ def create_job(data: dict = Body(...)):
     topic = (data.get("topic") or "").strip()
     if len(topic) < 5:
         raise HTTPException(400, "Введите тему (хотя бы несколько слов)")
-    job = new_job(topic, data.get("style") or "classic")
+    job = new_job(topic, data.get("style") or "classic", data.get("format") or "short")
     if data.get("angle"):
         update_state(job, angle=data["angle"])
     background(job.name, job, step_script, job)
@@ -167,7 +167,7 @@ def job_info(job_id: str):
     st = load_state(job)
     st["running"] = job_id in _busy and _busy[job_id].is_alive()
     log = (job / "log.txt").read_text(encoding="utf-8").splitlines()[-40:] if (job / "log.txt").exists() else []
-    files = {n: (job / n).exists() for n in ["voice.wav", "video.mp4", "thumbnail.png"]}
+    files = {n: (job / n).exists() for n in ["voice.wav", "video.mp4", "thumbnail.png", "captions.srt"]}
     data = {"id": job_id, "state": st, "log": log, "files": files}
     data["script"] = read_json(job / "script.json")
     data["storyboard"] = read_json(job / "storyboard.json")

@@ -47,3 +47,6 @@ Write the result as JSON to <job>/script.json (UTF-8) with exactly this shape:
   "notes": "assumptions, things deliberately left out"
 }
 Then reply with one line: DONE <word_count>.
+
+If the prompt says FORMAT: LONG, follow docs/LONG_FORMAT.md (850–1000 words, 4–6 chapters with re-hooks, no endless loop) and add
+"chapters": [{"title": "...", "starts_with": "first 4-6 words of the chapter exactly as in the script"}] to script.json.

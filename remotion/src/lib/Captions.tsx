@@ -12,13 +12,13 @@ import {COLORS, FONT_FAMILY, SAFE, TYPE, VIDEO} from '../style';
 export type Word = Caption & {keyword?: boolean};
 
 /** Разбить слова на «страницы»: до 3 слов и до 16 символов, разрыв после знаков препинания. */
-export const paginate = (words: Word[]): Word[][] => {
+export const paginate = (words: Word[], maxWords = 3, maxChars = 16): Word[][] => {
   const pages: Word[][] = [];
   let cur: Word[] = [];
   const len = (p: Word[]) => p.map((w) => w.text.trim()).join(' ').length;
   words.forEach((w, i) => {
     const next = [...cur, w];
-    if (cur.length && (cur.length >= 3 || len(next) > 16)) {
+    if (cur.length && (cur.length >= maxWords || len(next) > maxChars)) {
       pages.push(cur);
       cur = [w];
     } else {
@@ -34,11 +34,14 @@ export const paginate = (words: Word[]): Word[][] => {
   return pages;
 };
 
-export const KaraokeCaptions: React.FC<{words: Word[]; top?: number}> = ({words, top = 1130}) => {
+export type CaptionLayout = {left: number; width: number; top: number; minHeight: number; fontSize: number; maxWords: number; maxChars: number};
+
+export const KaraokeCaptions: React.FC<{words: Word[]; top?: number; layout?: Partial<CaptionLayout>}> = ({words, top = 1130, layout = {}}) => {
+  const L: CaptionLayout = {left: SAFE.left, width: VIDEO.width - SAFE.left - SAFE.right, top, minHeight: 260, fontSize: TYPE.caption, maxWords: 3, maxChars: 16, ...layout};
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const ms = (frame / fps) * 1000;
-  const pages = React.useMemo(() => paginate(words), [words]);
+  const pages = React.useMemo(() => paginate(words, L.maxWords, L.maxChars), [words, L.maxWords, L.maxChars]);
 
   // текущая страница: от начала первого слова до начала следующей страницы
   const idx = pages.findIndex((p, i) => ms >= p[0].startMs && (i === pages.length - 1 || ms < pages[i + 1][0].startMs));
@@ -58,10 +61,10 @@ export const KaraokeCaptions: React.FC<{words: Word[]; top?: number}> = ({words,
     <div
       style={{
         position: 'absolute',
-        top,
-        left: SAFE.left,
-        width: VIDEO.width - SAFE.left - SAFE.right,
-        minHeight: 260,
+        top: L.top,
+        left: L.left,
+        width: L.width,
+        minHeight: L.minHeight,
         display: 'flex',
         flexWrap: 'wrap',
         justifyContent: 'center',
@@ -84,7 +87,7 @@ export const KaraokeCaptions: React.FC<{words: Word[]; top?: number}> = ({words,
             style={{
               fontFamily: FONT_FAMILY,
               fontWeight: 900,
-              fontSize: TYPE.caption,
+              fontSize: L.fontSize,
               lineHeight: 1.15,
               textTransform: 'uppercase',
               color: isKw && spoken ? COLORS.accentInk : active ? COLORS.accent : COLORS.ink,

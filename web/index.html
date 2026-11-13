@@ -51,6 +51,12 @@
   .style-card b { font-size: 15px; }
   .style-card span { font-size: 12px; color: var(--muted); line-height: 1.3; }
   .style-card.on { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,200,69,.25); }
+  .formats { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 14px 0 26px; }
+  .fmt-card { background: var(--panel2); border: 3px solid transparent; border-radius: 16px; padding: 16px; cursor: pointer; text-align: left; display: flex; gap: 16px; align-items: center; color: var(--ink); }
+  .fmt-card.on { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,200,69,.25); }
+  .fmt-shape { background: var(--accent); border-radius: 6px; flex-shrink: 0; opacity: .9; }
+  .fmt-card b { font-size: 18px; display: block; }
+  .fmt-card span { font-size: 13px; color: var(--muted); }
   .style-chip { display: inline-flex; align-items: center; gap: 8px; background: var(--panel2); border-radius: 999px; padding: 4px 12px 4px 4px; font-size: 14px; }
   .style-chip img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
 </style>
@@ -88,6 +94,13 @@ let STYLES = [];
 const getStyle = () => { try { return localStorage.getItem('style') || 'classic'; } catch (e) { return window._style || 'classic'; } };
 const setStyle = (id) => { window._style = id; try { localStorage.setItem('style', id); } catch (e) {} document.querySelectorAll('.style-card').forEach((c) => c.classList.toggle('on', c.dataset.id === id)); const n = $('#styleName'); if (n) n.textContent = (STYLES.find((x) => x.id === id) || {}).name || id; };
 const styleById = (id) => STYLES.find((x) => x.id === id) || {id, name: id, ru: ''};
+const FORMATS = {short: {name: 'Shorts', ru: 'Вертикально 9:16 · 30–55 секунд · бесконечная петля', w: 27, h: 48},
+                 long: {name: 'Длинное видео', ru: 'Горизонтально 16:9 · 6–7 минут · главы с таймкодами', w: 64, h: 36}};
+const getFormat = () => { try { return localStorage.getItem('format') || 'short'; } catch (e) { return window._format || 'short'; } };
+const setFormat = (id) => { window._format = id; try { localStorage.setItem('format', id); } catch (e) {} document.querySelectorAll('.fmt-card').forEach((c) => c.classList.toggle('on', c.dataset.id === id)); const n = $('#fmtName'); if (n) n.textContent = FORMATS[id].name; };
+const formatPicker = () => `<div class="formats">${Object.entries(FORMATS).map(([id, f]) => `
+    <button class="fmt-card ${id === getFormat() ? 'on' : ''}" data-id="${id}" onclick="setFormat('${id}')">
+      <div class="fmt-shape" style="width:${f.w}px;height:${f.h}px"></div><div><b>${f.name}</b><span>${f.ru}</span></div></button>`).join('')}</div>`;
 const stylePicker = () => `<div class="styles">${STYLES.map((st) => `
     <button class="style-card ${st.id === getStyle() ? 'on' : ''}" data-id="${st.id}" onclick="setStyle('${st.id}')">
       <img src="/static/styles/${st.id}.jpg" alt="${esc(st.name)}" loading="lazy"><b>${esc(st.name)}</b><span>${esc(st.ru)}</span></button>`).join('')}</div>`;
@@ -98,16 +111,19 @@ async function home() {
   if (!STYLES.length) STYLES = await api('/api/styles');
   $('#app').innerHTML = `
     <div class="card">
-      <h2 style="margin-top:0">1. Выберите стиль видео</h2>
+      <h2 style="margin-top:0">1. Формат</h2>
+      ${formatPicker()}
+      <h2>2. Стиль видео</h2>
       <p class="muted">Нажмите на картинку — так будет выглядеть ролик.</p>
       ${stylePicker()}
       <div class="row"><button class="primary big" onclick="go('#/new')">▶ Запустить</button>
-      <span class="muted">Стиль: <b id="styleName">${esc(styleById(getStyle()).name)}</b></span></div>
+      <span class="muted"><b id="fmtName">${esc(FORMATS[getFormat()].name)}</b> · стиль <b id="styleName">${esc(styleById(getStyle()).name)}</b></span></div>
     </div>
     <div class="card jobs"><h3>Мои ролики</h3>
-      ${jobs.length ? jobs.map((j) => `<a href="#/job/${j.id}">${esc(j.topic)} <span class="muted">· ${esc(j.id.slice(0, 10))} · ${esc(statusText(j))}</span></a>`).join('') : '<p class="muted">Пока нет роликов.</p>'}
+      ${jobs.length ? jobs.map((j) => `<a href="#/job/${j.id}">${esc(j.topic)} <span class="muted">· ${fmtTag(j)} · ${esc(j.id.slice(0, 10))} · ${esc(statusText(j))}</span></a>`).join('') : '<p class="muted">Пока нет роликов.</p>'}
     </div>`;
 }
+const fmtTag = (j) => (j.format === 'long' ? '▭ 16:9' : '▯ Shorts');
 const statusText = (j) => j.status === 'error' ? 'ошибка' : j.step === 'done' ? 'готово' : j.status === 'review' ? 'ждёт вашего решения' : 'в работе';
 
 /* ---------------- шаг 1: тема ---------------- */
@@ -116,7 +132,7 @@ async function newVideo() {
   const st = styleById(getStyle());
   $('#app').innerHTML = `${stepsBar(0)}
     <div class="card"><h2>Шаг 1. Выберите тему</h2>
-      <p><span class="style-chip"><img src="/static/styles/${st.id}.jpg" alt="">Стиль: <b>${esc(st.name)}</b></span>
+      <p><span class="style-chip">${esc(FORMATS[getFormat()].name)}</span> <span class="style-chip"><img src="/static/styles/${st.id}.jpg" alt="">Стиль: <b>${esc(st.name)}</b></span>
       <a href="#/" style="color:var(--accent);margin-left:10px">изменить</a></p>
       <div class="row">
         <button class="big" onclick="manualTopic()">✍️ Ввести тему сам</button>
@@ -157,7 +173,7 @@ async function ideaPoll() {
 }
 const confirmIdea = () => confirmTopic(window._idea.topic, window._idea.angle || '');
 async function confirmTopic(topic, angle = '') {
-  try { const r = await post('/api/jobs', {topic, angle, style: getStyle()}); go('#/job/' + r.id); } catch (e) { fail(e); }
+  try { const r = await post('/api/jobs', {topic, angle, style: getStyle(), format: getFormat()}); go('#/job/' + r.id); } catch (e) { fail(e); }
 }
 
 /* ---------------- ролик ---------------- */
@@ -168,7 +184,7 @@ async function job(id) {
   const i = stepIndex(st);
   if (!STYLES.length) STYLES = await api('/api/styles');
   const sty = styleById(st.style || 'classic');
-  let html = `${stepsBar(i)}<h2>${esc(st.topic)}</h2><p><span class="style-chip"><img src="/static/styles/${sty.id}.jpg" alt="">Стиль: <b>${esc(sty.name)}</b></span></p>`;
+  let html = `${stepsBar(i)}<h2>${esc(st.topic)}</h2><p><span class="style-chip">${esc((FORMATS[st.format || 'short'] || FORMATS.short).name)}</span> <span class="style-chip"><img src="/static/styles/${sty.id}.jpg" alt="">Стиль: <b>${esc(sty.name)}</b></span></p>`;
   if (st.status === 'error' && !st.running) {
     html += `<div class="card err"><h3>Шаг не удался (после 3 попыток)</h3><pre>${esc(st.error)}</pre>
       <p><button class="primary" onclick="act('${id}','retry')">Повторить</button></p></div>${logBox(d)}`;
@@ -256,7 +272,7 @@ function resultView(d) {
   const rv = d.review;
   const problems = st.problems || [];
   return `<div class="grid2">
-      <div><video controls src="/api/jobs/${d.id}/file/video.mp4?t=${Date.now()}"></video></div>
+      <div style="${st.format === 'long' ? 'grid-column: 1 / -1' : ''}"><video controls src="/api/jobs/${d.id}/file/video.mp4?t=${Date.now()}"></video></div>
       <div>
         ${problems.length ? `<div class="card err"><b>Проверки нашли проблемы:</b><ul>${problems.map((p) => `<li>${esc(p)}</li>`).join('')}</ul></div>` : '<div class="card">✅ Все автоматические проверки пройдены</div>'}
         ${rv ? `<div class="card ${rv.verdict === 'pass' ? '' : 'err'}"><b>Контроль качества: ${rv.verdict === 'pass' ? '✅ пройден' : '⚠️ нужна доработка'}</b><p>${esc(rv.summary_ru)}</p>

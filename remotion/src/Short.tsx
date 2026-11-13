@@ -11,8 +11,8 @@ import {KaraokeCaptions, Word} from './lib/Captions';
 import {Shot, ShotCtx, ShotTransition} from './templates/shot';
 import {GuideT, TEMPLATES} from './templates/Templates';
 import {StyleId, applyTheme} from './styles/themes';
-import {StyleOverlay} from './styles/StyleLayer';
-import {pickEnvs} from './lib/Env';
+import {StyleOverlay, setFrame} from './styles/StyleLayer';
+import {pickEnvs, setEnvSize} from './lib/Env';
 import {FONT_FAMILY, COLORS as C, TYPE} from './style';
 
 loadFonts();
@@ -42,6 +42,8 @@ const Disclaimer: React.FC = () => (
 export const Short: React.FC<ShortProps> = ({audio, words, shots, music, style = 'classic'}) => {
   const {fps, durationInFrames} = useVideoConfig();
   applyTheme(style); // палитра стиля — до отрисовки всех кадров
+  setEnvSize(VIDEO.width, VIDEO.height);
+  setFrame(VIDEO.width, VIDEO.height, null);
   const envs = pickEnvs(shots);
   const first = shots[0];
   const FirstT = first ? TEMPLATES[first.template] ?? GuideT : null;

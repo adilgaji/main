@@ -4,7 +4,8 @@ import {VIDEO} from './style';
 import {TestScene, calcTestScene} from './scenes/TestScene';
 import {Short, calcShort} from './Short';
 import {StyleSample, StyleSampleSheet} from './scenes/StyleSample';
-import {Thumbnail} from './Thumbnail';
+import {Thumbnail, ThumbnailWide} from './Thumbnail';
+import {Long, calcLong} from './Long';
 import {WmPulseNavy, WmPulseNavy2, WordmarkSheet, WmCoral, WmSerif, WmPulse, WmLab, WmMolecule, WmMarker} from './brand/Wordmarks';
 import {BlueprintPairSheet, Banner2Sheet, BannerBlueprint, BannerMicroscope, BannerNeurons, BannerSoft} from './brand/Banners2';
 import {BannerClassic, BannerDark, BannerOrgans, BannerSheet} from './brand/Banners';
@@ -45,6 +46,17 @@ export const RemotionRoot: React.FC = () => {
       <Still id="LogoHeart" component={LogoHeart} width={800} height={800} />
       <Still id="LogoWord" component={LogoWord} width={800} height={800} />
       <Still id="LogoGuideCell" component={LogoGuideCell} width={800} height={800} />
+      <Composition
+        id="Long"
+        component={Long}
+        calculateMetadata={calcLong}
+        durationInFrames={300}
+        fps={VIDEO.fps}
+        width={1920}
+        height={1080}
+        defaultProps={{audio: 'jobs/test/voice.wav', words: [], shots: [], total: 10, chapters: [], style: 'classic' as const}}
+      />
+      <Still id="ThumbnailWide" component={ThumbnailWide} width={1280} height={720} defaultProps={{text: 'WHY MUSCLES *GROW*', visual: 'muscle', visual_params: {repair: 1}, pose: 'think', emotion: 'surprised', style: 'classic' as const}} />
       <Still id="Thumbnail" component={Thumbnail} width={VIDEO.width} height={VIDEO.height} defaultProps={{text: 'WHY MUSCLES *GROW*', visual: 'muscle', visual_params: {repair: 1}, pose: 'think', emotion: 'surprised'}} />
       <Composition
         id="Short"

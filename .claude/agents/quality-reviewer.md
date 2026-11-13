@@ -28,3 +28,5 @@ Write <job>/review.json:
  "fixes": [{"file": "script.json|storyboard.json|title.txt|description.txt|tags.txt", "problem": "...", "suggestion": "..."}],
  "summary_ru": "2–3 предложения по-русски для человека"}
 Reply with one line: DONE <verdict>.
+
+If the prompt says FORMAT: LONG, judge it by docs/LONG_FORMAT.md (chapters, re-hooks, no loop needed; chapters with timestamps in the description).

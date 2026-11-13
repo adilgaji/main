@@ -11,8 +11,13 @@ import {MuscleFiber} from './MuscleFiber';
 
 export type EnvKind = 'muscle' | 'blood' | 'neural' | 'cells' | 'soft' | 'molecules' | 'bone' | 'air' | 'dna' | 'skin' | 'night' | 'grid' | 'abstract';
 export const ENV_KINDS: EnvKind[] = ['muscle', 'blood', 'neural', 'cells', 'molecules', 'bone', 'air', 'dna', 'skin', 'night', 'grid', 'abstract', 'soft'];
-const W = VIDEO.width;
-const H = VIDEO.height;
+let W: number = VIDEO.width;
+let H: number = VIDEO.height;
+/** Размер кадра для фонов (вертикальный Shorts или горизонтальное видео). */
+export const setEnvSize = (w: number, h: number) => {
+  W = w;
+  H = h;
+};
 
 const Glow: React.FC = () => (
   <AbsoluteFill style={{background: `radial-gradient(ellipse at 50% 42%, ${COLORS.bgGlow} 0%, ${COLORS.bg} 78%)`}} />

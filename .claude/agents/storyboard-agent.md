@@ -45,3 +45,6 @@ Write <job>/storyboard.json:
             "transition": "cut|zoom|slide|fade"}]}
 Times are computed later from words.json — do not write them.
 Reply with one line: DONE <number of shots>.
+
+If the prompt says FORMAT: LONG, follow docs/LONG_FORMAT.md: shots 3–7 s (max 9 s), the first shot of every chapter
+uses template "chapter" ({"number": N, "title": "..."}), no endless-loop ending.

@@ -10,8 +10,8 @@ import {Cell, Molecule} from './lib/CellAndMolecules';
 import {BodyOutline} from './lib/BodyOutline';
 import {MuscleFiber} from './lib/MuscleFiber';
 import {Icon} from './lib/Diagram';
-import {Env, envFor} from './lib/Env';
-import {StyleLayer} from './styles/StyleLayer';
+import {Env, envFor, setEnvSize} from './lib/Env';
+import {StyleLayer, setFrame} from './styles/StyleLayer';
 import {StyleId, applyTheme} from './styles/themes';
 
 loadFonts();
@@ -43,6 +43,8 @@ const Big: React.FC<{visual: string; vp: any}> = ({visual, vp = {}}) => {
 
 export const Thumbnail: React.FC<ThumbProps> = ({text, visual, visual_params, pose = 'point', emotion = 'surprised', style = 'classic'}) => {
   applyTheme(style);
+  setEnvSize(VIDEO.width, VIDEO.height);
+  setFrame(VIDEO.width, VIDEO.height, null);
   const parts = text.split(/(\*[^*]+\*)/).filter(Boolean);
   return (
     <StyleLayer
@@ -83,6 +85,58 @@ export const Thumbnail: React.FC<ThumbProps> = ({text, visual, visual_params, po
               </span>
             ) : (
               <span key={i}>{p}</span>
+            ),
+          )}
+        </div>
+      }
+    />
+  );
+};
+
+/** Горизонтальная обложка 1280x720 для длинного видео: текст слева, визуал и гид справа. */
+export const ThumbnailWide: React.FC<ThumbProps> = ({text, visual, visual_params, pose = 'point', emotion = 'surprised', style = 'classic'}) => {
+  applyTheme(style);
+  setEnvSize(1280, 720);
+  setFrame(1280, 720, {x: 470, y: -560 * 0.78, scale: 0.78});
+  const parts = text.split(/(\*[^*]+\*)/).filter(Boolean);
+  return (
+    <StyleLayer
+      style={style}
+      bg={<Env kind={envFor(visual)} />}
+      fg={
+        <div style={{position: 'absolute', left: 0, width: VIDEO.width, top: 640, height: 600, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+          <Big visual={visual} vp={visual_params} />
+        </div>
+      }
+      actor={
+        <div style={{position: 'absolute', left: 20, top: 1000}}>
+          <Stickman pose={pose as PoseName} emotion={emotion as Emotion} size={440} alive={false} />
+        </div>
+      }
+      ui={
+        <div
+          className="hl"
+          style={{
+            position: 'absolute',
+            left: -560,
+            top: 640,
+            width: 640,
+            fontFamily: FONT_FAMILY,
+            fontWeight: 900,
+            fontSize: 112,
+            lineHeight: 1.05,
+            color: COLORS.ink,
+            textTransform: 'uppercase',
+            textShadow: `0 8px 0 ${COLORS.bg}`,
+          }}
+        >
+          {parts.map((p, i) =>
+            p.startsWith('*') ? (
+              <span key={i} style={{...keywordStyle, borderRadius: 18, padding: '0 14px', textShadow: 'none'}}>
+                {p.slice(1, -1)}
+              </span>
+            ) : (
+              <span key={i}>{p} </span>
             ),
           )}
         </div>

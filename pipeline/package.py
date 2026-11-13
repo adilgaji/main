@@ -27,8 +27,8 @@ def check_packaging(pk: dict) -> list[str]:
     if len(pk.get("titles", [])) != 3:
         problems.append("need exactly 3 titles")
     for t in pk.get("titles", []):
-        if len(t) > 60:
-            problems.append(f"title longer than 60 characters ({len(t)}): {t}")
+        if len(t) > 70:
+            problems.append(f"title longer than 70 characters ({len(t)}): {t}")
         if any(w in t.lower() for w in FORBIDDEN):
             problems.append(f"forbidden word in title: {t}")
     for t in pk.get("tags", []) + pk.get("titles", []):
@@ -60,7 +60,13 @@ def build_files(job: Path, pk: dict):
     if lines and lines[-1].strip().startswith("#"):
         hashtags = lines.pop().strip()
         desc = "\n".join(lines).strip()
-    full = f"{desc}\n\n⚠️ {DISCLAIMER}\n\nSources:\n" + "\n".join(src_lines) + (f"\n\n{hashtags}" if hashtags else "") + "\n"
+    chapters = ""
+    ch_file = job / "chapters.json"
+    if ch_file.exists():
+        chs = json.loads(ch_file.read_text(encoding="utf-8"))
+        if len(chs) >= 3:  # правило YouTube: минимум 3 главы, первая с 0:00
+            chapters = "\n\nChapters:\n" + "\n".join(f"{int(c['start']) // 60}:{int(c['start']) % 60:02d} {c['title']}" for c in chs)
+    full = f"{desc}{chapters}\n\n⚠️ {DISCLAIMER}\n\nSources:\n" + "\n".join(src_lines) + (f"\n\n{hashtags}" if hashtags else "") + "\n"
     (job / "description.txt").write_text(full, encoding="utf-8")
     # теги
     (job / "tags.txt").write_text(", ".join(pk["tags"]) + "\n", encoding="utf-8")
@@ -77,7 +83,10 @@ def render_thumbnail(job: Path, pk: dict, log: Log):
     th = {**pk["thumbnail"], "style": json.loads((job / "state.json").read_text(encoding="utf-8")).get("style", "classic")}
     props = job / "thumb_props.json"
     props.write_text(json.dumps(th, ensure_ascii=False), encoding="utf-8")
-    run([NPX, "remotion", "still", "src/index.ts", "Thumbnail", str((job / "thumbnail.png").resolve()), f"--props={props.resolve()}", "--log=error"],
+    from job import fmt_of
+
+    comp = "ThumbnailWide" if fmt_of(job) == "long" else "Thumbnail"
+    run([NPX, "remotion", "still", "src/index.ts", comp, str((job / "thumbnail.png").resolve()), f"--props={props.resolve()}", "--log=error"],
         cwd=REMOTION, env=browser_env())
     log("Обложка готова: thumbnail.png")
 
@@ -87,7 +96,9 @@ def package(job: Path, log: Log | None = None, review: bool = True) -> dict:
     log = log or Log(job / "log.txt")
     update_state(job, step="packaging", status="working")
     rel = job.relative_to(ROOT).as_posix()
-    base = f"Packaging task. Job folder: {rel}. Follow docs/PACKAGING.md exactly and write {rel}/packaging.json."
+    from job import format_note
+
+    base = f"Packaging task. Job folder: {rel}. Follow docs/PACKAGING.md exactly and write {rel}/packaging.json. " + format_note(job)
     prev = json.loads((job / "review.json").read_text(encoding="utf-8")) if (job / "review.json").exists() else {}
     pk_fixes = [f for f in prev.get("fixes", []) if f.get("file") in ("title.txt", "description.txt", "tags.txt")]
     if pk_fixes:
@@ -105,7 +116,7 @@ def package(job: Path, log: Log | None = None, review: bool = True) -> dict:
     retry("обложка", render_thumbnail, log, job=job, pk=pk, log=log)
     result = {"packaging": pk, "problems": problems}
     if review:
-        retry("контроль качества", run_agent, log, name="quality-reviewer", prompt=f"Job folder: {rel}. Review this video package.", log=log)
+        retry("контроль качества", run_agent, log, name="quality-reviewer", prompt=f"Job folder: {rel}. Review this video package. " + format_note(job), log=log)
         rv = json.loads((job / "review.json").read_text(encoding="utf-8"))
         result["review"] = rv
         log(f"Контроль качества: {rv['verdict']} — {rv.get('summary_ru', '')}")

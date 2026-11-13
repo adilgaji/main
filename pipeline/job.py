@@ -55,11 +55,23 @@ def slugify(s: str) -> str:
 STYLES = ["classic", "glass", "pixel", "paper", "watercolour", "terminal", "isometric", "thermal", "clay"]
 
 
-def new_job(topic: str, style: str = "classic") -> Path:
+FORMATS = {"short": (30, 55), "long": (330, 450)}  # допустимая длина (сек) для каждого формата
+
+
+def fmt_of(job: Path) -> str:
+    return load_state(job).get("format", "short")
+
+
+def limits(job: Path) -> tuple[int, int]:
+    return FORMATS.get(fmt_of(job), FORMATS["short"])
+
+
+def new_job(topic: str, style: str = "classic", fmt: str = "short") -> Path:
     job = OUTPUT / f"{dt.date.today():%Y-%m-%d}_{slugify(topic)}"
     job.mkdir(parents=True, exist_ok=True)
     style = style if style in STYLES else "classic"
-    save_state(job, {"topic": topic, "style": style, "step": "script", "status": "new", "created": dt.datetime.now().isoformat(timespec="seconds"), "history": []})
+    fmt = fmt if fmt in FORMATS else "short"
+    save_state(job, {"topic": topic, "style": style, "format": fmt, "step": "script", "status": "new", "created": dt.datetime.now().isoformat(timespec="seconds"), "history": []})
     return job
 
 
@@ -108,6 +120,14 @@ def write_script_txt(job: Path):
 HISTORY = OUTPUT / "_history.json"
 
 
+def format_note(job: Path) -> str:
+    """Подсказка агентам о формате ролика."""
+    if fmt_of(job) == "long":
+        return ("FORMAT: LONG horizontal video, 6-7 minutes (850-1000 words), 4-6 chapters with re-hooks every 60-90 s. "
+                "Read docs/LONG_FORMAT.md — it overrides the Shorts length, loop and storyboard rules.\n")
+    return "FORMAT: vertical Shorts, 30-55 s, endless loop.\n"
+
+
 def recent_structures(n: int = 4) -> list[str]:
     try:
         return [h["structure"] for h in json.loads(HISTORY.read_text(encoding="utf-8"))[-n:] if h.get("structure")]
@@ -125,7 +145,7 @@ def step_script(job: Path, remarks: str = "", log: Log | None = None) -> dict:
     log = log or Log(job / "log.txt")
     st = update_state(job, step="script", status="working")
     rel = job.relative_to(ROOT).as_posix()
-    prompt = f"Topic: {st['topic']}\nJob folder: {rel}\n"
+    prompt = f"Topic: {st['topic']}\nJob folder: {rel}\n" + format_note(job)
     avoid = [x for x in recent_structures() if x]
     prompt += f"Avoid structures (used in the latest videos): {', '.join(avoid) or 'none yet'}\n"
     if st.get("angle"):
@@ -199,9 +219,10 @@ def compute_times(job: Path) -> list[str]:
         s["end"] = shots[i + 1]["start"] if i + 1 < len(shots) else round(total, 2)
         s["duration"] = round(s["end"] - s["start"], 2)
         s["text"] = "".join(w["text"] for w in words[s["first_word"]: s["last_word"] + 1]).strip()
+        max_shot = 9.0 if fmt_of(job) == "long" else 5.0
         if s["duration"] < 2.0:
             problems.append(f"Кадр {s['id']}: слишком короткий ({s['duration']} с)")
-        if s["duration"] > 5.0:
+        if s["duration"] > max_shot:
             problems.append(f"Кадр {s['id']}: слишком длинный ({s['duration']} с)")
     sb["total"] = round(total, 2)
     sb["sum_of_shots"] = round(sum(s["duration"] for s in shots), 2)
@@ -217,16 +238,17 @@ def step_storyboard(job: Path, remarks: str = "", log: Log | None = None):
     # длина ролика должна быть 30–40 с: иначе текст автоматически сокращается/дополняется
     for _ in range(2):
         dur = ffprobe_duration(job / "voice.wav")
-        if MIN_SEC <= dur <= MAX_SEC:
+        lo, hi = limits(job)
+        if lo <= dur <= hi:
             break
         words_now = len(json.loads((job / "words.json").read_text(encoding="utf-8")))
-        target = round(words_now * (45 if dur > MAX_SEC else 35) / dur)
-        log(f"Озвучка {dur:.1f} с — вне нормы {MIN_SEC}–{MAX_SEC} с. Прошу сценариста привести текст к ~{target} словам")
-        step_script(job, remarks=f"The voiceover is {dur:.1f} s, it must be {MIN_SEC}-{MAX_SEC} s. Rewrite to about {target} words, keep the hook, the core idea, the plain-language explanations and the strongest facts.", log=log)
+        target = round(words_now * ((hi * 0.85) if dur > hi else (lo * 1.15)) / dur)
+        log(f"Озвучка {dur:.1f} с — вне нормы {lo}–{hi} с. Прошу сценариста привести текст к ~{target} словам")
+        step_script(job, remarks=f"The voiceover is {dur:.1f} s, it must be {lo}-{hi} s. Rewrite to about {target} words, keep the hook, the core idea, the plain-language explanations and the strongest facts.", log=log)
         update_state(job, step="storyboard", status="working")
         make_voice(job, log)
     rel = job.relative_to(ROOT).as_posix()
-    prompt = f"Job folder: {rel}\n"
+    prompt = f"Job folder: {rel}\n" + format_note(job)
     if remarks and remarks != "__revoice__":
         prompt += f"Remarks from the human editor (must be addressed): {remarks}\n"
     problems: list[str] = []
@@ -250,9 +272,10 @@ if __name__ == "__main__":
     ap.add_argument("arg")
     ap.add_argument("--remarks", default="")
     ap.add_argument("--style", default="classic")
+    ap.add_argument("--format", default="short", choices=["short", "long"])
     a = ap.parse_args()
     if a.cmd == "new":
-        print(new_job(a.arg, a.style))
+        print(new_job(a.arg, a.style, a.format))
     elif a.cmd == "script":
         step_script(Path(a.arg).resolve(), a.remarks)
     else:

@@ -101,3 +101,8 @@ satellite (клетки-сателлиты сливаются с волокно�
 {"headline": "Rest is *training*", "pose": "wave", "emotion": "happy"}
 ```
 Всегда показывает «Educational, not medical advice».
+
+### chapter — титульный кадр главы (только длинное видео)
+```json
+{"number": 2, "title": "The *repair* crew"}
+```

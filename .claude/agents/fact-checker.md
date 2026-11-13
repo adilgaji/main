@@ -26,3 +26,5 @@ Write <job>/script.json back (same shape; updated script/claims/sources; keep "s
                "removed": ["claims removed and why"], "warnings": ["anything the human should look at"]}.
 If the script cannot be fixed, set verdict "fail" and explain in warnings.
 Reply with one line: DONE <verdict>.
+
+If script.json has "chapters", keep them consistent with the text (starts_with must match the script exactly).

@@ -11,8 +11,26 @@ import {Delaunay} from 'd3-delaunay';
 import {COLORS, VIDEO} from '../style';
 import {StyleId, THEMES, applyTheme} from './themes';
 
-const W = VIDEO.width;
-const H = VIDEO.height;
+let W: number = VIDEO.width;
+let H: number = VIDEO.height;
+/**
+ * «Сцена»: шаблоны кадров спроектированы в координатах 1080x1920. В горизонтальном видео
+ * сцена (схема, гид, надписи) вписывается в левую часть широкого кадра, а фон — на весь кадр.
+ */
+let STAGE: null | {x: number; y: number; scale: number} = null;
+export const setFrame = (w: number, h: number, stage: null | {x: number; y: number; scale: number} = null) => {
+  W = w;
+  H = h;
+  STAGE = stage;
+};
+const Stage: React.FC<{children: React.ReactNode}> = ({children}) =>
+  STAGE ? (
+    <AbsoluteFill style={{transformOrigin: '0 0', transform: `translate(${STAGE.x}px, ${STAGE.y}px) scale(${STAGE.scale})`, width: VIDEO.width, height: VIDEO.height}}>
+      {children}
+    </AbsoluteFill>
+  ) : (
+    <>{children}</>
+  );
 
 /* ------------------------------- фильтры ------------------------------- */
 export const Filters: React.FC<{style: StyleId}> = ({style}) => (
@@ -241,14 +259,28 @@ export const StyleLayer: React.FC<{
   actor?: React.ReactNode;
   ui?: React.ReactNode;
   seed?: string | number;
-}> = ({style, bg, fg: fgRaw, actor, ui, seed: seedRaw = 0}) => {
+}> = ({style, bg, fg: fgRaw, actor: actorRaw, ui: uiRaw, seed: seedRaw = 0}) => {
+  let actor = actorRaw;
+  let ui = uiRaw;
   const seed = `k${seedRaw}`;
   applyTheme(style);
   const cls = `st-${style}`;
   const layer = (children: React.ReactNode, css: React.CSSProperties = {}) => <AbsoluteFill style={css}>{children}</AbsoluteFill>;
   // схема рисуется дважды: формы (под обработкой стиля) и буквы (чёткие, поверх)
-  const fg = <AbsoluteFill className="pass-shape">{fgRaw}</AbsoluteFill>;
-  const fgText = <AbsoluteFill className="pass-text" style={{visibility: 'hidden'}}>{fgRaw}</AbsoluteFill>;
+  const fg = (
+    <Stage>
+      <AbsoluteFill className="pass-shape">{fgRaw}</AbsoluteFill>
+    </Stage>
+  );
+  const fgText = (
+    <Stage>
+      <AbsoluteFill className="pass-text" style={{visibility: 'hidden'}}>
+        {fgRaw}
+      </AbsoluteFill>
+    </Stage>
+  );
+  actor = actor ? <Stage>{actor}</Stage> : actor;
+  ui = ui ? <Stage>{ui}</Stage> : ui;
 
   let scene: React.ReactNode;
   switch (style) {
@@ -369,7 +401,7 @@ export const StyleLayer: React.FC<{
       scene = (
         <>
           {layer(bg)}
-          {layer(fgRaw)}
+          {layer(<Stage>{fgRaw}</Stage>)}
           {layer(actor)}
         </>
       );

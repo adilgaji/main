@@ -477,7 +477,26 @@ export const OutroT: React.FC = () => {
   );
 };
 
+/* --------------------------------- CHAPTER ------------------------------- */
+/** Титульный кадр главы (для длинных видео): большой номер и название. */
+export const ChapterT: React.FC = () => {
+  const {t, p} = useShot();
+  const k = ramp(t, 0, 0.5);
+  return (
+    <Frame
+      env="abstract"
+      fg={
+        <div style={abs(CX - 260, 430, {width: 520, height: 520, borderRadius: '50%', background: COLORS.bgSoft, border: `14px solid ${COLORS.accent}`, display: 'flex', alignItems: 'center', justifyContent: 'center', scale: String(0.7 + 0.3 * k), opacity: k})}>
+          <div className="txt" style={{fontFamily: FONT_FAMILY, fontWeight: 900, fontSize: 300, color: COLORS.ink, lineHeight: 1}}>{p.number ?? 1}</div>
+        </div>
+      }
+      ui={<Headline text={p.title ?? ''} top={HEAD_TOP} />}
+    />
+  );
+};
+
 export const TEMPLATES: Record<string, React.FC> = {
+  chapter: ChapterT,
   hook: HookT,
   guide: GuideT,
   body: BodyT,
