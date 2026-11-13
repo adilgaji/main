@@ -30,7 +30,8 @@ def tones_equal(got, dic, target):
     """сравнение пиньиня по слогам; нейтральный тон в словаре или в тексте - совместим с любым"""
     sylls = [p[0].replace('v', 'ü') for p in pinyin(target, style=Style.NORMAL, v_to_u=True)]
     if len(sylls) != len(target): return True  # нельзя разобрать - не придираемся
-    g, d = _norm(got).replace('r', '') if got.endswith('r') and not target.endswith('儿') else _norm(got), _norm(dic)
+    g, d = _norm(got), _norm(dic)
+    if target.endswith('儿'): g, d = g.rstrip('r'), d.rstrip('r')
     gi = di = 0
     for s in sylls:
         n = len(s)
@@ -47,6 +48,7 @@ def _decompose(t, allowed):
     return ok[len(t)]
 def validate_sentence(zh, target=None, grammar=False):
     st = _load(); issues = []; extra = st['grammar'] if grammar else set()
+    if re.fullmatch(r'[\d\s]+', zh): return []   # номера и числа
     if not re.search(r'[\u4e00-\u9fff]', zh): return ['нет китайского текста']
     for t in segment(zh):
         al = st['allowed'] | extra
