@@ -1,0 +1,7 @@
+hsk.db*
+audio/*.mp3
+__pycache__/
+*.pyc
+.venv/
+venv/
+recordings/
