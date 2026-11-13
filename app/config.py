@@ -7,4 +7,4 @@ CONTENT = ROOT / 'content'
 WEB = ROOT / 'web'
 PORT = 8765
 # какие модули уже реализованы (остальные в плане показываются как «скоро», их минуты перераспределяются)
-AVAILABLE = {'review', 'new', 'triage', 'listening'}
+AVAILABLE = {'review', 'new', 'triage', 'listening', 'grammar'}

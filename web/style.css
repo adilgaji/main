@@ -3,7 +3,7 @@
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;padding-bottom:72px}
 header{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;position:sticky;top:0;background:var(--bg);z-index:5;border-bottom:1px solid var(--line)}
 #logo{font-weight:700;color:var(--acc);text-decoration:none;font-size:18px}#clock{color:var(--mut);font-size:13px}
-main{max-width:720px;margin:0 auto;padding:14px 16px}
+main{max-width:720px;margin:0 auto;padding:14px 16px 40px}
 nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
 nav a{flex:1;text-align:center;padding:12px 4px;color:var(--mut);text-decoration:none;font-size:14px}nav a.on{color:var(--acc);font-weight:700}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:0 0 12px}

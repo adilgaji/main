@@ -96,3 +96,8 @@ for x in src:
     if lv(x, 'old') is not None and lv(x, 'old') <= 4: allowed.add(x['simplified'])
 (ROOT/'content/allowed_words.txt').write_text('\n'.join(sorted(allowed)), encoding='utf-8')
 print('разрешённых слов для проверки контента:', len(allowed))
+
+# слова стандарта 2021 уровней 1-4 (нужны только для примеров к грамматике: 格外, 渐渐, 假如...)
+g = {x['simplified'] for x in src if lv(x, 'new') is not None and lv(x, 'new') <= 4}
+(ROOT/'content/allowed_grammar.txt').write_text('\n'.join(sorted(g - allowed)), encoding='utf-8')
+print('доп. слов стандарта 2021 для грамматики:', len(g - allowed))

@@ -66,3 +66,37 @@ def test_plan_reschedules_after_missed_days():
     t1 = client.get('/api/today').json()
     assert t1['behind']['missed_days'] >= 15 and t1['behind']['words'] > 0
     client.post('/api/settings', json={'start': st['start']})
+
+def test_grammar_content_complete():
+    g = json.load(open(ROOT / 'content/grammar.json', encoding='utf-8'))
+    import csv
+    nos = {int(r['No']) for r in csv.DictReader(open(ROOT / 'data/raw/hsk30-grammar.csv', encoding='utf-8')) if r['Level'] == '4'}
+    assert {x['no'] for x in g} == nos and len(g) == 76
+    for x in g:
+        assert ''.join(x['order']['parts']) == x['order']['answer'] and len(x['order']['parts']) >= 3
+        c = x['choice']; assert len(set(c['options'])) == 4 and '___' in c['zh'] and 0 <= c['answer'] < 4
+        assert x['ru'] and x['en'] and len(x['examples']) == 2
+def test_grammar_flow():
+    assert len(client.get('/api/grammar/list').json()) == 76
+    for kind in ('order', 'choice'):
+        q = client.get(f'/api/grammar/next?kind={kind}').json(); assert 'answer' not in q
+        wrong = client.post('/api/grammar/answer', json={'point_id': q['point_id'], 'kind': kind, 'answer': 'zzz'}).json(); assert wrong['correct'] is False and wrong['rule']
+        right = client.post('/api/grammar/answer', json={'point_id': q['point_id'], 'kind': kind, 'answer': wrong['answer'] if kind == 'choice' else wrong['answer']}).json()
+        if kind == 'order': assert right['correct'] is True
+    assert client.get('/api/grammar/point/G249').json()['examples']
+def test_writing_and_queue():
+    o = client.get('/api/writing/next?kind=order').json(); assert len(o['parts']) >= 3
+    r = client.post('/api/writing/order', json={'id': o['id'], 'answer': ''.join(o['parts'])}).json(); assert 'answer' in r
+    assert client.post('/api/writing/order', json={'id': o['id'], 'answer': r['answer']}).json()['correct'] is True
+    t = client.get('/api/writing/next?kind=translate').json()
+    s = client.post('/api/writing/submit', json={'kind': 'translate', 'id': t['id'], 'answer': '我想申请奖学金。', 'prompt': t['ru']}).json(); assert s['queued'] and s['reference']
+    assert client.post('/api/writing/submit', json={'kind': 'sentence', 'id': 'S1', 'answer': ' '}).status_code == 400
+    sent = client.get('/api/writing/next?kind=sentence').json(); assert sent['word']['hanzi']
+    assert client.get('/api/writing/next?kind=describe').json()['words']
+    q = client.get('/api/queue').json(); assert q and q[0]['status'] == 'pending'
+    assert client.get('/api/today').json()['queue_pending'] >= 1
+    # имитация /hsk-check: записываем разбор, прогноз учитывает балл
+    C.execute("UPDATE queue SET status='checked', feedback=? WHERE id=?", (json.dumps({'score': 4, 'errors': []}), q[0]['id'])); C.commit()
+    f = client.get('/api/today').json()['forecast']; assert f['grammar']['writing_score_pct'] == 80 and f['components']['grammar'] is not None
+def test_placement_has_grammar():
+    qs = client.get('/api/placement/questions').json()['questions']; assert sum(x['type'] == 'grammar' for x in qs) == 6

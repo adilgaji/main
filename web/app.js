@@ -45,7 +45,7 @@ routes[''] = async () => {
   <div class="card"><div class="row sm mut"><span>День <b>${t.day}</b> · неделя ${t.week}/16</span><span style="text-align:right">До экзамена: <b>${t.days_left}</b> дн.</span></div>
    <div class="sm">${esc(t.phase)}</div>
    <div class="bar" style="margin:8px 0"><i style="width:${pct(t.minutes_today, t.planned_minutes)}%"></i></div>
-   <div class="sm mut">Сегодня учился: ${t.minutes_today} мин из ${t.planned_minutes} · серия: ${t.streak} дн.</div></div>
+   ${t.queue_pending ? `<div class="sm warn">На проверку у Claude: ${t.queue_pending} ответов → /hsk-check</div>` : ''}<div class="sm mut">Сегодня учился: ${t.minutes_today} мин из ${t.planned_minutes} · серия: ${t.streak} дн.</div></div>
   <div class="card">${t.blocks.map(k => `<div class="blk ${k.available ? '' : 'off'}"><div><b>${esc(k.title)}</b><br><span class="sm mut">${k.available ? `~${k.minutes} мин · ${k.done}/${k.target} ${k.unit}` : ''} ${esc(k.hint)}</span></div>
      ${k.available ? `<a class="btn ${k.done >= k.target && k.target ? '' : 'p'}" href="${k.route}">${k.done >= k.target && k.target ? '✓' : 'Начать'}</a>` : '<span class="pill">скоро</span>'}</div>`).join('')}</div>
   <div class="card"><h2>Прогноз (только цифры)</h2>
@@ -55,7 +55,7 @@ routes[''] = async () => {
    <tr><td>Прогноз к экзамену</td><td>${f.words.projected} (цель ${f.words.target})</td></tr>
    <tr><td>Темп / нужно, слов в день</td><td>${f.words.rate_per_day} / ${f.words.need_rate ?? '—'}</td></tr>
    <tr><td>Аудирование (30 дн.)</td><td>${f.components.listening ?? 'нет данных'}${f.components.listening != null ? '%' : ''}</td></tr>
-   <tr><td>Грамматика · чтение · говорение</td><td class="mut">нет данных</td></tr>
+   <tr><td>Грамматика и письмо</td><td>${f.components.grammar ?? 'нет данных'}${f.components.grammar != null ? '%' : ''} <span class="sm mut">(охват пунктов ${f.grammar.covered_pct}%)</span></td></tr><tr><td>Чтение · говорение</td><td class="mut">нет данных</td></tr>
    <tr><td>Отставание от графика</td><td class="${b.words > 20 ? 'bad' : ''}">${b.words} слов; пропущено дней: ${b.missed_days}</td></tr></table>
    ${f.messages.map(m => `<div class="sm warn">• ${esc(m)}</div>`).join('')}<div class="sm mut" style="margin-top:6px">${esc(f.note)}</div></div>`;
 };
@@ -141,12 +141,15 @@ async function dictation() {
 // ---------- Входной тест ----------
 routes.placement = async () => {
   app.innerHTML = '<h1>Входной тест</h1><div class="card">Загрузка…</div>'; const {questions} = await api('/placement/questions');
-  const vocab = [], lis = []; let i = 0;
+  const vocab = [], lis = [], gram = []; let i = 0;
   const step = () => {
-    if (i >= questions.length) return finish(); const q = questions[i]; const prog = `<div class="bar"><i style="width:${pct(i, questions.length)}%"></i></div><div class="sm mut">Вопрос ${i + 1} из ${questions.length} · ${q.type === 'vocab' ? 'слова' : 'аудирование'}</div>`; const t0 = Date.now();
+    if (i >= questions.length) return finish(); const q = questions[i]; const prog = `<div class="bar"><i style="width:${pct(i, questions.length)}%"></i></div><div class="sm mut">Вопрос ${i + 1} из ${questions.length} · ${({vocab:'слова',listening:'аудирование',grammar:'грамматика'})[q.type]}</div>`; const t0 = Date.now();
     if (q.type === 'vocab') {
       app.innerHTML = `${prog}<div class="card"><div class="hz">${esc(q.hanzi)}</div><div style="text-align:center">${spk(q.audio)}</div><div class="col" style="margin-top:10px">${q.options.map((o, k) => `<button class="opt" data-i="${k}">${esc(o)}</button>`).join('')}<button class="opt mut" data-i="-1">Не знаю</button></div></div>`;
       document.querySelectorAll('.opt').forEach(b => b.onclick = () => { vocab.push({stratum: q.stratum, word_id: q.word_id, correct: +b.dataset.i === q.answer_idx}); i++; step(); });
+    } else if (q.type === 'grammar') {
+      app.innerHTML = `${prog}<div class="card"><div class="hz s" style="font-size:24px">${esc(q.zh)}</div><div class="col" style="margin-top:10px">${q.options.map((o, k) => `<button class="opt" data-i="${k}">${esc(o)}</button>`).join('')}</div></div>`;
+      document.querySelectorAll('.opt').forEach(b => b.onclick = () => { gram.push({point_id: q.point_id, correct: +b.dataset.i === q.answer_idx}); i++; step(); });
     } else {
       const it = q.item; let busy = false; app.innerHTML = `${prog}<div class="card"><div style="text-align:center"><button class="p" id="go" style="font-size:20px;padding:14px 26px">🔊 Слушать</button></div><div id="q" hidden><div class="col" style="margin-top:10px">${it.options.map((o, k) => `<button class="opt" data-i="${k}">${'ABCD'[k]}. ${esc(o)}</button>`).join('')}</div></div></div>`;
       $('#go').onclick = async () => { if (busy) return; busy = true; await playSeq(it.turns.map(t => t.audio).concat([it.question_audio])); $('#q').hidden = false; busy = false; };
@@ -154,13 +157,83 @@ routes.placement = async () => {
     }
   };
   const finish = async () => {
-    const r = await api('/placement/submit', {vocab, listening: lis});
+    const r = await api('/placement/submit', {vocab, listening: lis, grammar: gram});
     app.innerHTML = `<h1>Результат</h1><div class="card"><table><tr><td>Слов из списка (1950) ты знаешь</td><td><b>≈${r.known_est}</b></td></tr><tr><td>Добрать</td><td><b>≈${r.to_learn}</b></td></tr><tr><td>Нужно новых слов в день (до рубежа за 3 нед. до экзамена)</td><td><b>${r.per_day}</b></td></tr>
       <tr><td>Старый HSK 3 → знаешь</td><td>${r.strata_est_pct.old ?? '—'}%</td></tr><tr><td>Остальные слова ≤ уровня 3 / уровень 4</td><td>${r.strata_est_pct.l3 ?? '—'}% / ${r.strata_est_pct.l4 ?? '—'}%</td></tr>
-      <tr><td>Аудирование</td><td>${r.listening_acc == null ? '—' : Math.round(r.listening_acc * 100) + '%'} (мало вопросов — грубая оценка)</td></tr></table>
-      <p class="sm mut">Грамматика в входной тест пока не включена (модуль в разработке).</p></div><a class="btn p" href="#/">К плану на сегодня</a>`;
+      <tr><td>Аудирование</td><td>${r.listening_acc == null ? '—' : Math.round(r.listening_acc * 100) + '%'} (мало вопросов — грубая оценка)</td></tr>
+      <tr><td>Грамматика (6 вопросов)</td><td>${r.grammar_acc == null ? '—' : Math.round(r.grammar_acc * 100) + '%'}</td></tr></table><p class="sm mut">Вопросов мало — это грубая оценка.</p></div><a class="btn p" href="#/">К плану на сегодня</a>`;
   };
   step();
+};
+
+// ---------- Грамматика и письмо ----------
+function orderBuilder(box, parts, onCheck) {
+  let chosen = [];
+  const draw = () => { box.innerHTML = `<div class="card" style="min-height:64px" id="ans">${chosen.map((p, i) => `<button class="chip" data-a="${i}" style="margin:3px;font-size:20px">${esc(p)}</button>`).join('') || '<span class="mut sm">нажимай слова по порядку</span>'}</div>
+    <div id="pool" style="margin:8px 0">${parts.map((p, i) => chosen.includes(i) ? '' : `<button class="chip" data-p="${i}" style="margin:3px;font-size:20px">${esc(p)}</button>`).join('')}</div>
+    <div class="row"><button id="rst">Сброс</button><button class="p" id="chk" ${chosen.length === parts.length ? '' : 'disabled'}>Проверить</button></div>`;
+    box.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { chosen.push(+b.dataset.p); draw(); });
+    box.querySelectorAll('[data-a]').forEach(b => b.onclick = () => { chosen.splice(+b.dataset.a, 1); draw(); });
+    $('#rst').onclick = () => { chosen = []; draw(); }; $('#chk').onclick = () => onCheck(chosen.map(i => parts[i]).join(''));
+  };
+  chosen = chosen.map(Number); draw();
+}
+routes.grammar = async (rest) => {
+  if (rest[0] === 'practice') return grammarPractice();
+  if (rest[0] === 'point') return grammarPoint(rest[1]);
+  const list = await api('/grammar/list'); const groups = {};
+  list.forEach(p => (groups[p.group || 'Прочее'] = groups[p.group || 'Прочее'] || []).push(p));
+  app.innerHTML = `<h1>Грамматика и письмо</h1><div class="card col"><a class="btn p" href="#/grammar/practice">Практика грамматики (упорядочить фразу / выбрать)</a>
+   <div class="sm mut">Письменная часть:</div><div class="row"><a class="btn" href="#/writing/order">Порядок слов</a><a class="btn" href="#/writing/sentence">Со словом</a></div><div class="row"><a class="btn" href="#/writing/translate">Перевод RU→ZH</a><a class="btn" href="#/writing/describe">По описанию</a></div>
+   <a class="btn" href="#/feedback">Разборы от Claude</a></div><h2>76 пунктов HSK 4</h2>
+   ${Object.entries(groups).map(([g, ps]) => `<div class="card"><b>${esc(g)}</b>${ps.map(p => `<div class="blk"><a href="#/grammar/point/${p.id}" style="color:inherit;text-decoration:none">${esc(p.title)}</a><span class="pill">${p.acc == null ? '—' : p.acc + '%'}</span></div>`).join('')}</div>`).join('')}`;
+};
+async function grammarPoint(id) {
+  const p = await api('/grammar/point/' + id);
+  app.innerHTML = `<a href="#/grammar" class="sm">← Все пункты</a><h1>${esc(p.title)}</h1><div class="card"><div class="tag">${esc(p.group)}</div><p>${esc(p.ru)}</p><p class="mut sm">${esc(p.en)}</p></div>
+   <div class="card"><h2>Примеры</h2>${p.examples.map(e => `<div style="margin-bottom:8px"><span class="hz s" style="font-size:22px">${esc(e.zh)}</span> ${spk(e.audio)}<br><span class="mut sm">${esc(e.ru)}</span></div>`).join('')}</div>`;
+}
+async function grammarPractice() {
+  const ex = (routes._gseen = routes._gseen || []); const q = await api('/grammar/next?exclude=' + ex.slice(-15).join(',')); const t0 = Date.now();
+  app.innerHTML = `<h1>Практика грамматики</h1><div class="sm mut">№${q.no} · ${esc(q.title)}</div><div class="card"><p>${esc(q.prompt)}</p>${q.kind === 'order' ? `<div class="mut sm">${esc(q.hint)}</div><div id="bld"></div>` : `<div class="hz s" style="font-size:24px">${esc(q.zh)}</div><div class="col" style="margin-top:8px">${q.options.map((o, i) => `<button class="opt" data-o="${esc(o)}">${esc(o)}</button>`).join('')}</div>`}</div><div id="fb"></div>`;
+  const submit = async ans => {
+    const r = await api('/grammar/answer', {point_id: q.point_id, kind: q.kind, answer: ans, ms: Date.now() - t0}); ex.push(q.point_id);
+    document.querySelectorAll('.opt,.chip,#chk,#rst').forEach(b => b.disabled = true);
+    document.querySelectorAll('.opt').forEach(b => { if (b.dataset.o === r.answer.slice(0) || (q.kind === 'choice' && b.dataset.o === ans && r.correct)) b.classList.add(r.correct ? 'ok' : 'no'); });
+    $('#fb').innerHTML = `<div class="card"><b class="${r.correct ? 'ok' : 'bad'}">${r.correct ? 'Верно' : 'Неверно'}</b><div class="hz s" style="font-size:22px">${esc(r.answer)}</div><p class="sm">${esc(r.rule)}</p><p class="sm mut">${esc(r.rule_en)}</p><div class="sm">${esc(r.example.zh)} — <span class="mut">${esc(r.example.ru)}</span></div></div><button class="p" style="width:100%" id="nx">Дальше</button>`;
+    $('#nx').onclick = grammarPractice;
+  };
+  if (q.kind === 'order') orderBuilder($('#bld'), q.parts, submit); else document.querySelectorAll('.opt').forEach(b => b.onclick = () => submit(b.dataset.o));
+}
+routes.writing = async (rest) => {
+  const kind = rest[0] || 'order'; const seen = (routes._wseen = routes._wseen || []); const q = await api(`/writing/next?kind=${kind}&exclude=${seen.slice(-10).join(',')}`); const t0 = Date.now(); seen.push(q.id);
+  const head = `<a href="#/grammar" class="sm">← Грамматика и письмо</a><h1>${({order:'Порядок слов',sentence:'Предложение со словом',translate:'Перевод RU→ZH',describe:'По описанию'})[kind]}</h1><div class="card"><p>${esc(q.prompt)}</p>`;
+  const next = () => routes.writing([kind]);
+  if (kind === 'order') {
+    app.innerHTML = head + `<div class="mut sm">${esc(q.hint)}</div><div id="bld"></div></div><div id="fb"></div>`;
+    orderBuilder($('#bld'), q.parts, async ans => {
+      const r = await api('/writing/order', {id: q.id, answer: ans, ms: Date.now() - t0}); document.querySelectorAll('.chip,#chk,#rst').forEach(b => b.disabled = true);
+      $('#fb').innerHTML = `<div class="card"><b class="${r.correct ? 'ok' : 'bad'}">${r.correct ? 'Верно' : 'Не совпало с эталоном'}</b><div class="hz s" style="font-size:22px">${esc(r.answer)}</div><div class="sm mut">${esc(r.ru)}</div>
+        ${r.correct ? '' : `<button id="alt" class="sm">Мой порядок тоже возможен — отправить на проверку</button>`}</div><button class="p" style="width:100%" id="nx">Дальше</button>`;
+      if (!r.correct) $('#alt').onclick = async e => { await api('/writing/submit', {kind: 'order_alt', id: q.id, answer: ans, prompt: q.hint, extra: {reference: r.answer}}); e.target.textContent = 'Отправлено ✓'; e.target.disabled = true; };
+      $('#nx').onclick = next;
+    });
+    return;
+  }
+  const info = kind === 'sentence' ? `<div class="hz s">${esc(q.word.hanzi)}</div><div class="py sm">${esc(q.word.pinyin)} ${spk(q.word.audio)}</div><div class="center sm mut" style="text-align:center">${esc(q.word.ru)}</div>`
+    : kind === 'translate' ? `<h2>${esc(q.ru)}</h2><div class="mut sm">${esc(q.en)}</div><div class="sm">Полезно: ${q.words.map(esc).join(', ')}</div>` : `<h2>${esc(q.ru)}</h2><div class="sm">Слова: ${q.words.map(esc).join(', ')}</div>`;
+  app.innerHTML = head + info + `<textarea id="ans" rows="3" placeholder="введи по-китайски (пиньинь-клавиатура)" style="margin-top:8px"></textarea><button class="p" id="ok" style="width:100%;margin-top:8px">Отправить на проверку</button></div><div id="fb"></div>`;
+  $('#ok').onclick = async () => {
+    const r = await api('/writing/submit', {kind, id: q.id, answer: $('#ans').value, prompt: kind === 'sentence' ? `Предложение со словом ${q.word.hanzi}` : q.ru, extra: kind === 'sentence' ? {word: q.word.hanzi, word_id: q.word.id} : (kind === 'describe' ? {words: q.words} : {})});
+    $('#ok').disabled = true; $('#ans').disabled = true;
+    $('#fb').innerHTML = `<div class="card"><b class="ok">Отправлено в очередь «на проверку»</b><div class="sm mut">Разбор придёт после команды /hsk-check в Claude Code.</div>${r.reference ? `<div class="sm" style="margin-top:6px">Образец: <span class="hz s" style="font-size:20px">${esc(r.reference)}</span></div>` : ''}</div><button class="p" style="width:100%" id="nx">Следующее</button>`; $('#nx').onclick = next;
+  };
+};
+routes.feedback = async () => {
+  const q = await api('/queue'); const names = {writing_sentence: 'Предложение', writing_translation: 'Перевод', writing_describe: 'Описание', writing_order_alt: 'Порядок слов', speaking: 'Говорение'};
+  app.innerHTML = `<a href="#/grammar" class="sm">← Грамматика и письмо</a><h1>Разборы</h1>${q.map(i => `<div class="card"><div class="sm mut">${esc(names[i.kind] || i.kind)} · ${new Date(i.ts).toLocaleDateString('ru-RU')} · <b class="${i.status === 'checked' ? 'ok' : 'warn'}">${i.status === 'checked' ? 'проверено' : 'ждёт /hsk-check'}</b></div>
+   <div class="sm">${esc(i.payload.prompt)}</div><div class="hz s" style="font-size:22px;text-align:left">${esc(i.payload.answer)}</div>
+   ${i.feedback ? `<div class="sm">Балл: <b>${esc(i.feedback.score)}/5</b></div>${(i.feedback.errors || []).map(e => `<div class="sm">• <span class="bad">${esc(e.orig)}</span> → <b>${esc(e.fix)}</b> <span class="mut">${esc(e.rule_ru)}</span></div>`).join('')}${i.feedback.better_version ? `<div class="sm">Лучше: ${esc(i.feedback.better_version)}</div>` : ''}` : ''}</div>`).join('') || '<div class="card mut">Пока пусто.</div>'}`;
 };
 // ---------- Статистика / Ещё ----------
 routes.stats = async () => {
@@ -174,7 +247,7 @@ routes.more = async () => {
   const l = await api('/lan'), st = await api('/state');
   app.innerHTML = `<h1>Ещё</h1><div class="card col"><a class="btn" href="#/words">Словарь (поиск)</a><a class="btn" href="#/placement">Пройти входной тест заново</a><a class="btn" href="#/settings">Настройки плана</a></div>
    <div class="card"><h2>С телефона</h2><div class="sm">Телефон и ноутбук в одной Wi-Fi сети. Открой в браузере телефона:</div>${l.ips.map(ip => `<div class="big" style="font-size:18px">http://${ip}:${l.port}</div>`).join('') || '<div class="mut">адрес не определён — смотри окно start.bat</div>'}</div>
-   <div class="card"><h2>Модули</h2><div class="sm">Готово: ${st.available.join(', ')}. Грамматика/письмо, говорение, чтение, пробные экзамены — в разработке (см. PROGRESS.md).</div></div>`;
+   <div class="card"><h2>Модули</h2><div class="sm">Готово: ${st.available.join(', ')}. Говорение, чтение, пробные экзамены — в разработке (см. PROGRESS.md).</div></div>`;
 };
 routes.words = async () => {
   app.innerHTML = `<h1>Словарь</h1><input id="q" placeholder="иероглифы, пиньинь, русский или английский"><div id="res"></div>`;
@@ -186,7 +259,7 @@ routes.settings = async () => {
   app.innerHTML = `<h1>Настройки плана</h1><div class="card col"><label>Дата начала<input type="date" id="st" value="${s.start}"></label><label>Дата экзамена<input type="date" id="ex" value="${s.exam}"></label><label>Минут в день<input type="number" id="mn" value="${s.minutes}"></label><button class="p" id="sv">Сохранить</button></div><div class="sm mut">Блок «Сегодня» пересчитывается сам: сколько новых слов в день, сколько на аудирование и т.д.</div>`;
   $('#sv').onclick = async () => { await api('/settings', {start: $('#st').value, exam: $('#ex').value, minutes: +$('#mn').value}); location.hash = '#/'; };
 };
-['grammar', 'speaking', 'reading', 'mock'].forEach(k => routes[k] = async () => { app.innerHTML = '<h1>Скоро</h1><div class="card">Этот модуль ещё в разработке (см. PROGRESS.md).</div><a class="btn" href="#/">← Сегодня</a>'; });
+['speaking', 'reading', 'mock'].forEach(k => routes[k] = async () => { app.innerHTML = '<h1>Скоро</h1><div class="card">Этот модуль ещё в разработке (см. PROGRESS.md).</div><a class="btn" href="#/">← Сегодня</a>'; });
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('/sw.js').catch(() => {});
 $('#clock').textContent = new Date().toLocaleDateString('ru-RU', {weekday: 'short', day: 'numeric', month: 'long'});
 route();

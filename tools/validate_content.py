@@ -17,8 +17,9 @@ def _load():
     chars = set(''.join(allowed))
     for r in csv.DictReader(open(ROOT/'data/raw/hsk30-chars.csv', encoding='utf-8')):
         if r['Level'] in '1234' and r['Level'] != '': chars.add(r['Hanzi'])
-    for w in allowed: jieba.add_word(w, freq=200000)
-    _state.update(words={w['hanzi']: w for w in words}, allowed=allowed, chars=chars)
+    g = set(x for x in (ROOT/'content/allowed_grammar.txt').read_text(encoding='utf-8').split('\n') if x) if (ROOT/'content/allowed_grammar.txt').exists() else set()
+    for w in allowed | g: jieba.add_word(w, freq=200000)
+    _state.update(words={w['hanzi']: w for w in words}, allowed=allowed, chars=chars, grammar=g)
     return _state
 def segment(zh): _load(); return [t for t in jieba.lcut(zh, HMM=False) if not PUNCT.fullmatch(t)]
 def _norm(py): return re.sub(r'[\s\']', '', py).lower()
@@ -44,11 +45,12 @@ def _decompose(t, allowed):
     for i in range(1, len(t)+1):
         ok[i] = any(ok[j] and t[j:i] in allowed for j in range(max(0, i-6), i))
     return ok[len(t)]
-def validate_sentence(zh, target=None):
-    st = _load(); issues = []
+def validate_sentence(zh, target=None, grammar=False):
+    st = _load(); issues = []; extra = st['grammar'] if grammar else set()
     if not re.search(r'[\u4e00-\u9fff]', zh): return ['нет китайского текста']
     for t in segment(zh):
-        if t in st['allowed'] or _decompose(t, st['allowed']): continue
+        al = st['allowed'] | extra
+        if t in al or _decompose(t, al): continue
         issues.append(f'слово вне HSK4: {t}')
     if target:
         if target not in zh: issues.append(f'целевого слова {target} нет в предложении')

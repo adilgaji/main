@@ -12,6 +12,7 @@
 - `app/` — backend: `main.py` (API), `srs.py` (FSRS, py-fsrs), `cards.py` (упражнения), `plan.py` (план/прогноз/статистика), `audio.py` (имена файлов, голоса), `db.py` (схема, загрузка контента), `config.py` (`AVAILABLE` — готовые модули).
 - `web/` — SPA без сборки (`app.js`, `style.css`, `sw.js`, manifest).
 - `content/words.json` — 1950 слов (собирается `tools/build_vocab.py` из `data/raw/` + `content/ru/*.tsv` (русские переводы, писал Claude) + `content/en_fix.tsv`). `content/src/` — примеры и аудирование (вручную/по `/hsk-refill`).
+- `app/grammar.py` — грамматика, письмо, очередь `queue` (на `/hsk-check`). Контент: `content/src/grammar_src.tsv` → `tools/build_grammar.py`, `content/src/writing_src.txt` → `tools/build_writing.py`.
 - `tools/` — `build_vocab.py`, `validate_content.py`, `build_audio.py` (edge-tts, запускается на ноутбуке пользователя), `report.py`.
 - `.claude/commands/` — `/hsk-check`, `/hsk-refill`, `/hsk-week`.
 - `hsk.db`, `audio/*.mp3` — не в git.

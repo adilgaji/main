@@ -8,7 +8,9 @@ from . import db, srs, cards, plan, audio
 from .config import WEB, AUDIO_DIR, AVAILABLE
 logging.basicConfig(level=logging.INFO)
 app = FastAPI(title='HSK 4 Trainer')
-C = db.connect(); db.init(C)
+from .ctx import C
+from .grammar import router as grammar_router
+app.include_router(grammar_router)
 def rows(q, a=()): return [dict(r) for r in C.execute(q, a).fetchall()]
 # ---------- общее ----------
 @app.get('/api/state')
@@ -152,6 +154,8 @@ def dictation_check(d: Dict):
     C.execute('INSERT INTO l_attempts(item_id,ts,mode,correct,ms,answer) VALUES(?,?,?,?,?,?)', (d.id, db.iso(db.now()), 'dictation', int(ok), d.ms, d.answer)); C.commit()
     return {'correct': ok, 'zh': zh, 'pinyin': py, 'diff': diff, 'ratio': round(sm.ratio(), 2)}
 # ---------- входной тест ----------
+def grammar_points():
+    return [json.loads(r['json']) for r in C.execute('SELECT json FROM grammar')]
 @app.get('/api/placement/questions')
 def placement_questions(n_vocab: int = 36, n_listen: int = 8):
     random.seed()
@@ -166,8 +170,11 @@ def placement_questions(n_vocab: int = 36, n_listen: int = 8):
     random.shuffle(qs)
     lis = C.execute('SELECT * FROM listening ORDER BY RANDOM() LIMIT ?', (n_listen,)).fetchall()
     for r in lis: qs.append({'type': 'listening', 'item': l_view(r)})
+    for g in random.sample(grammar_points(), min(6, len(grammar_points()))):
+        c = g['choice']; opts = c['options'][:]; random.shuffle(opts)
+        qs.append({'type': 'grammar', 'point_id': g['id'], 'zh': c['zh'], 'options': opts, 'answer_idx': opts.index(c['options'][c['answer']])})
     return {'questions': qs}
-class PlacementIn(BaseModel): vocab: list[dict]; listening: list[dict]
+class PlacementIn(BaseModel): vocab: list[dict]; listening: list[dict]; grammar: list[dict] = []
 @app.post('/api/placement/submit')
 def placement_submit(p: PlacementIn):
     strata = {}
@@ -180,8 +187,10 @@ def placement_submit(p: PlacementIn):
     known = round(sum(size[k] * est.get(k, 0) for k in size)); total = len(ws)
     lis = [r for r in p.listening]; lacc = (sum(1 for r in lis if r['correct']) / len(lis)) if lis else None
     for r in lis: C.execute('INSERT INTO l_attempts(item_id,ts,mode,correct,ms,answer) VALUES(?,?,?,?,?,?)', (r['item_id'], db.iso(db.now()), 'placement', int(r['correct']), r.get('ms', 0), str(r.get('choice')))) 
+    gr = p.grammar; gacc = (sum(1 for r in gr if r['correct']) / len(gr)) if gr else None
+    for r in gr: C.execute('INSERT INTO g_attempts(point_id,kind,ts,correct,ms,answer) VALUES(?,?,?,?,?,?)', (r['point_id'], 'placement', db.iso(db.now()), int(r['correct']), 0, ''))
     s = plan.settings(C); exam = db.parse(s['exam'] + 'T00:00:00+00:00').date(); days = max(1, (exam - db.today()).days - 21)
-    res = {'known_est': known, 'total': total, 'to_learn': total - known, 'per_day': round((total - known) / days, 1), 'strata': {k: {'asked': v['n'], 'correct': v['c']} for k, v in strata.items()}, 'strata_est_pct': {k: round(100 * v) for k, v in est.items()}, 'listening_acc': lacc, 'days_to_intro_deadline': days}
+    res = {'known_est': known, 'total': total, 'to_learn': total - known, 'per_day': round((total - known) / days, 1), 'strata': {k: {'asked': v['n'], 'correct': v['c']} for k, v in strata.items()}, 'strata_est_pct': {k: round(100 * v) for k, v in est.items()}, 'listening_acc': lacc, 'grammar_acc': gacc, 'days_to_intro_deadline': days}
     C.execute('INSERT INTO placement(ts,json) VALUES(?,?)', (db.iso(db.now()), json.dumps(res))); db.put(C, 'placement_done', True)
     if db.get(C, 'plan') is None: db.put(C, 'plan', plan.settings(C))
     C.commit(); return res
