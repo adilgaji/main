@@ -6,6 +6,8 @@ import {Backdrop} from './components/Backdrop';
 import {Captions, type CaptionWord} from './components/Captions';
 import library from './demo/library.json';
 import {Shot, type ShotSpec} from './shots';
+import {calculateShortMetadata, Short, type ShortProps} from './Short';
+import {Thumbnail, THUMB, type ThumbnailProps} from './Thumbnail';
 import {FONT_SERVICE, FRAME, getStyle, STYLE_LIST, StyleContext, useStyle} from './style';
 
 type DemoShot = {id: string; narration: string; shot: ShotSpec};
@@ -189,6 +191,15 @@ const defaultChapter: ChapterProps = {
   shots: SHOTS.map((s, i) => ({start: i * PREVIEW_FRAMES, frames: PREVIEW_FRAMES, shot: s.shot})),
 };
 
+const defaultShort: ShortProps = {
+  styleId: null,
+  title: 'How do we know what happened?',
+  words: [],
+  shots: ['map', 'kenburns', 'timeline', 'quote'].map((id, i) => ({start: i * PREVIEW_FRAMES, frames: PREVIEW_FRAMES, shot: byId(id).shot})),
+};
+
+const defaultThumbnail: ThumbnailProps = {styleId: null, text: 'Can we trust it?', kicker: '480 BC', image: null, icon: 'hoplite', side: 'left'};
+
 export const RemotionRoot: React.FC = () => {
   return (
     <>
@@ -203,6 +214,18 @@ export const RemotionRoot: React.FC = () => {
         height={FRAME.height}
         defaultProps={defaultChapter}
       />
+      {/* Вертикальный Short 1080x1920 и обложка 1280x720 — тоже заполняются данными */}
+      <Composition
+        id="Short"
+        component={Short}
+        calculateMetadata={calculateShortMetadata}
+        durationInFrames={4 * PREVIEW_FRAMES}
+        fps={FRAME.fps}
+        width={1080}
+        height={1920}
+        defaultProps={defaultShort}
+      />
+      <Composition id="Thumbnail" component={Thumbnail} durationInFrames={1} fps={FRAME.fps} width={THUMB.width} height={THUMB.height} defaultProps={defaultThumbnail} />
       <Folder name="Styles">
         {/* Один и тот же кадр в 8 стилях: из этих листов владелец выбирает стиль */}
         <Composition id="Styles-Image" component={StyleSheetImage} durationInFrames={1} fps={FRAME.fps} width={FRAME.width} height={FRAME.height} />

@@ -16,13 +16,15 @@ export const LABEL_AREA = {
 
 export type Box = {x: number; y: number; w: number; h: number};
 
-export const insideArea = (b: Box, pad = 0): boolean =>
-  b.x >= LABEL_AREA.left - pad && b.x + b.w <= LABEL_AREA.right + pad && b.y >= LABEL_AREA.top - pad && b.y + b.h <= LABEL_AREA.bottom + pad;
+type Bounds = {left: number; right: number; top: number; bottom: number};
+
+export const insideArea = (b: Box, pad = 0, area: Bounds = LABEL_AREA): boolean =>
+  b.x >= area.left - pad && b.x + b.w <= area.right + pad && b.y >= area.top - pad && b.y + b.h <= area.bottom + pad;
 
 /** Сдвигает прямоугольник внутрь области. Возвращает null, если сдвиг больше maxShift. */
-export const clampBox = (b: Box, maxShift: number): Box | null => {
-  const x = Math.min(Math.max(b.x, LABEL_AREA.left), LABEL_AREA.right - b.w);
-  const y = Math.min(Math.max(b.y, LABEL_AREA.top), LABEL_AREA.bottom - b.h);
+export const clampBox = (b: Box, maxShift: number, area: Bounds = LABEL_AREA): Box | null => {
+  const x = Math.min(Math.max(b.x, area.left), area.right - b.w);
+  const y = Math.min(Math.max(b.y, area.top), area.bottom - b.h);
   if (Math.abs(x - b.x) > maxShift || Math.abs(y - b.y) > maxShift) {
     return null;
   }

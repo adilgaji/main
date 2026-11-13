@@ -3,7 +3,8 @@
 import React, {useMemo} from 'react';
 import {useCurrentFrame, useVideoConfig} from 'remotion';
 import {alpha} from '../lib/anim';
-import {SAFE, useStyle} from '../style';
+import {useCanvas} from '../lib/canvas';
+import {useStyle} from '../style';
 
 export type CaptionWord = {text: string; start: number; end: number};
 
@@ -92,11 +93,10 @@ export const buildPages = (words: CaptionWord[], maxChars: number): Page[] => {
   return pages;
 };
 
-export const Captions: React.FC<{words: CaptionWord[]; maxChars?: number; fontSize?: number}> = ({
-  words,
-  maxChars = 36,
-  fontSize = 62,
-}) => {
+export const Captions: React.FC<{words: CaptionWord[]; maxChars?: number; fontSize?: number}> = ({words, maxChars: chars, fontSize: size}) => {
+  const c = useCanvas();
+  const maxChars = chars ?? c.captionChars;
+  const fontSize = size ?? c.captionSize;
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const {captions: look, fonts} = useStyle();
@@ -110,9 +110,9 @@ export const Captions: React.FC<{words: CaptionWord[]; maxChars?: number; fontSi
     <div
       style={{
         position: 'absolute',
-        left: SAFE.left,
-        right: SAFE.right,
-        bottom: SAFE.bottom,
+        left: c.safe.left,
+        right: c.safe.right,
+        bottom: c.captionBottom,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',

@@ -27,7 +27,7 @@ export type TimedShot = {
  * Переход: новый кадр лежит поверх старого и проявляется / выезжает / открывается шторкой.
  * «dip» — проявление из фона и уход в фон (начало и конец главы).
  */
-const Transitioned: React.FC<{item: TimedShot}> = ({item}) => {
+export const TransitionLayer: React.FC<{item: TimedShot; children: React.ReactNode}> = ({item, children}) => {
   const frame = useCurrentFrame();
   let opacity = 1;
   let shiftX = 0;
@@ -60,7 +60,7 @@ const Transitioned: React.FC<{item: TimedShot}> = ({item}) => {
   }
   return (
     <AbsoluteFill style={{opacity, translate: `${shiftX}% 0px`, scale, clipPath: clip}}>
-      <Shot spec={item.shot} frames={item.frames} />
+      {children}
     </AbsoluteFill>
   );
 };
@@ -111,7 +111,9 @@ export const Chapter: React.FC<ChapterProps> = ({styleId, audio, words, shots, c
   <Stage styleId={styleId}>
     {shots.map((s, i) => (
       <Sequence key={i} from={s.start} durationInFrames={s.frames} name={`${i + 1}. ${s.shot.type}`}>
-        <Transitioned item={s} />
+        <TransitionLayer item={s}>
+          <Shot spec={s.shot} frames={s.frames} />
+        </TransitionLayer>
       </Sequence>
     ))}
     {captions && words?.length ? (

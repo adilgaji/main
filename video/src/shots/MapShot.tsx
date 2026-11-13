@@ -30,8 +30,9 @@ import {
   type Detail,
   type LonLat,
 } from '../lib/geo';
-import {insideArea, LABEL_AREA, textWidth, type Box} from '../lib/labels';
-import {FRAME, useStyle, type Palette} from '../style';
+import {useCanvas, type Canvas} from '../lib/canvas';
+import {insideArea, textWidth, type Box} from '../lib/labels';
+import {useStyle, type Palette} from '../style';
 
 export type MapRegion = {
   label: string;
@@ -81,18 +82,19 @@ export type MapShotProps = {
   detail?: Detail;
 };
 
-const W = FRAME.width;
-const H = FRAME.height;
 /** Участок карты из раскадровки целиком помещается сюда: внутри полей, ниже заголовка и выше субтитров. */
-const mapArea = (hasTitle: boolean) => {
-  const top = hasTitle ? 275 : LABEL_AREA.top + 20;
-  return {x: LABEL_AREA.left, y: top, w: LABEL_AREA.right - LABEL_AREA.left, h: LABEL_AREA.bottom - top};
+const mapArea = (hasTitle: boolean, c: Canvas) => {
+  const top = hasTitle ? c.safe.top + (c.vertical ? 230 : 185) : c.area.top + 20;
+  return {x: c.area.left, y: top, w: c.area.right - c.area.left, h: c.area.bottom - top};
 };
 
 type RiverRec = {n: string; r: number; c: LonLat[]};
 type LakeRec = {n: string; r: number; c: LonLat[][]};
 
 type Geo = {
+  W: number;
+  H: number;
+  area: Canvas['area'];
   proj: GeoProjection;
   camA: Camera;
   camB: Camera;
@@ -101,9 +103,10 @@ type Geo = {
   graticuleStep: number;
 };
 
-const useGeo = (view: BBox, viewTo: BBox | undefined, detail: Detail | undefined, hasTitle: boolean): Geo =>
+const useGeo = (view: BBox, viewTo: BBox | undefined, detail: Detail | undefined, hasTitle: boolean, canvas: Canvas): Geo =>
   useMemo(() => {
-    const MAP_AREA = mapArea(hasTitle);
+    const {width: W, height: H} = canvas;
+    const MAP_AREA = mapArea(hasTitle, canvas);
     const fit = viewTo ? unionBBox(view, viewTo) : view;
     const proj = makeProjection(fit, W, H);
     const camA = cameraFor(projectedRect(proj, view), MAP_AREA);
@@ -124,8 +127,8 @@ const useGeo = (view: BBox, viewTo: BBox | undefined, detail: Detail | undefined
     const tight = viewTo && spanOf(viewTo).lon < spanOf(view).lon ? viewTo : view;
     const lonSpan = spanOf(fit).lon;
     const graticuleStep = lonSpan > 120 ? 20 : lonSpan > 50 ? 10 : lonSpan > 18 ? 5 : 2;
-    return {proj, camA, camB, detail: detail ?? pickDetail(tight), clip, graticuleStep};
-  }, [view, viewTo, detail, hasTitle]);
+    return {W, H, area: canvas.area, proj, camA, camB, detail: detail ?? pickDetail(tight), clip, graticuleStep};
+  }, [view, viewTo, detail, hasTitle, canvas]);
 
 /** Положение камеры в текущем кадре: движение занимает середину кадра. */
 const useCamera = (geo: Geo, frames: number): Camera => {
@@ -357,8 +360,8 @@ type Slot = {dx: number; dy: number; w: number; h: number; show: boolean};
 const overlaps = (a: Box, b: Box, gap = 6): boolean => a.x < b.x + b.w + gap && a.x + a.w + gap > b.x && a.y < b.y + b.h + gap && a.y + a.h + gap > b.y;
 
 /** Насколько надпись видна: 1 — целиком в безопасной зоне, 0 — вышла за неё на 80 px и больше. */
-const visibility = (b: Box): number => {
-  const out = Math.max(0, LABEL_AREA.left - b.x, b.x + b.w - LABEL_AREA.right, LABEL_AREA.top - b.y, b.y + b.h - LABEL_AREA.bottom);
+const visibility = (b: Box, a: Canvas['area']): number => {
+  const out = Math.max(0, a.left - b.x, b.x + b.w - a.right, a.top - b.y, b.y + b.h - a.bottom);
   return Math.max(0, 1 - out / 80);
 };
 
@@ -385,7 +388,7 @@ const MapText: React.FC<{geo: Geo; frames: number; hasTitle: boolean} & Pick<Map
   const layout = useMemo(() => {
     const end = geo.camB;
     const taken: Box[] = hasTitle ? [{x: 0, y: 0, w: 1250, h: 262}] : [];
-    const free = (b: Box) => insideArea(b) && !taken.some((t) => overlaps(b, t));
+    const free = (b: Box) => insideArea(b, 0, geo.area) && !taken.some((t) => overlaps(b, t));
     const pick = (x: number, y: number, w: number, h: number, offsets: [number, number][]): Slot => {
       for (const [dx, dy] of offsets) {
         const b = {x: x + dx, y: y + dy, w, h};
@@ -469,7 +472,7 @@ const MapText: React.FC<{geo: Geo; frames: number; hasTitle: boolean} & Pick<Map
               fontSize: l.size ?? 44,
               letterSpacing: sea ? 10 : 6,
               color: sea ? alpha(p.light, 0.62) : alpha(p.ink, 0.72),
-              opacity: ramp(frame, 0.2 * fps, 0.8 * fps) * visibility(box),
+              opacity: ramp(frame, 0.2 * fps, 0.8 * fps) * visibility(box, geo.area),
             }}
           >
             {l.text}
@@ -490,7 +493,7 @@ const MapText: React.FC<{geo: Geo; frames: number; hasTitle: boolean} & Pick<Map
             style={{
               ...boxStyle(box),
               flexDirection: 'column',
-              opacity: ramp(frame, ((r.appearAt ?? 0.4) + 0.3) * fps, 0.7 * fps) * visibility(box),
+              opacity: ramp(frame, ((r.appearAt ?? 0.4) + 0.3) * fps, 0.7 * fps) * visibility(box, geo.area),
             }}
           >
             <div style={{fontFamily: fonts.body, fontWeight: 800, fontSize: 46, letterSpacing: 7, lineHeight: 1.15, color: p.ink, ...halo(alpha(p.paper, 0.9), 8)}}>{r.label.toUpperCase()}</div>
@@ -521,7 +524,7 @@ const MapText: React.FC<{geo: Geo; frames: number; hasTitle: boolean} & Pick<Map
               fontSize: battle ? 46 : 38,
               color: battle ? p.light : p.ink,
               ...halo(battle ? p.accent2 : p.paper, battle ? 10 : 9),
-              opacity: ramp(frame, ((pl.appearAt ?? 0.5) + 0.15) * fps, 0.5 * fps) * visibility(box),
+              opacity: ramp(frame, ((pl.appearAt ?? 0.5) + 0.15) * fps, 0.5 * fps) * visibility(box, geo.area),
             }}
           >
             {pl.name}
@@ -548,7 +551,7 @@ const MapText: React.FC<{geo: Geo; frames: number; hasTitle: boolean} & Pick<Map
               fontSize: 36,
               color: p.light,
               ...halo(alpha(p.ink, 0.85), 8),
-              opacity: ramp(frame, start, 0.5 * fps) * visibility(box),
+              opacity: ramp(frame, start, 0.5 * fps) * visibility(box, geo.area),
             }}
           >
             {r.label}
@@ -573,14 +576,14 @@ const MapArt: React.FC<MapShotProps & {geo: Geo}> = ({geo, frames, regions = [],
   return (
     <AbsoluteFill>
       <AbsoluteFill style={{background: `radial-gradient(ellipse 80% 80% at 45% 40%, ${p.sea} 0%, ${p.seaDeep} 100%)`}} />
-      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{position: 'absolute', inset: 0}}>
+      <svg width={geo.W} height={geo.H} viewBox={`0 0 ${geo.W} ${geo.H}`} style={{position: 'absolute', inset: 0}}>
         <g transform={cameraTransform(cam)}>
           <MapBase geo={geo} land={land} countries={countries} rivers={riverData} lakes={lakeData} palette={p} stroke={stroke} clipId={clipId} />
           <RegionShapes geo={geo} regions={regions} palette={p} stroke={stroke} clipId={clipId} />
         </g>
       </svg>
       <Tiled file="textures/paper.png" size={1024} opacity={treatment.paperOpacity * 0.9} blend="multiply" />
-      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{position: 'absolute', inset: 0}}>
+      <svg width={geo.W} height={geo.H} viewBox={`0 0 ${geo.W} ${geo.H}`} style={{position: 'absolute', inset: 0}}>
         <Routes geo={geo} frames={frames} routes={routes} palette={p} stroke={stroke} />
         <Places geo={geo} frames={frames} places={places} palette={p} />
       </svg>
@@ -589,7 +592,8 @@ const MapArt: React.FC<MapShotProps & {geo: Geo}> = ({geo, frames, regions = [],
 };
 
 export const MapShot: React.FC<MapShotProps> = (props) => {
-  const geo = useGeo(props.view, props.viewTo, props.detail, Boolean(props.title));
+  const canvas = useCanvas();
+  const geo = useGeo(props.view, props.viewTo, props.detail, Boolean(props.title), canvas);
   const {palette: p} = useStyle();
   return (
     <ShotFrame
@@ -599,7 +603,7 @@ export const MapShot: React.FC<MapShotProps> = (props) => {
       text={
         <>
           {props.title ? (
-            <div style={{position: 'absolute', left: 0, top: 0, width: W, height: 380, background: `linear-gradient(180deg, ${alpha(p.bg, 0.85)} 0%, ${alpha(p.bg, 0.6)} 50%, ${alpha(p.bg, 0)} 100%)`}} />
+            <div style={{position: 'absolute', left: 0, top: 0, width: geo.W, height: canvas.vertical ? 560 : 380, background: `linear-gradient(180deg, ${alpha(p.bg, 0.85)} 0%, ${alpha(p.bg, 0.6)} 50%, ${alpha(p.bg, 0)} 100%)`}} />
           ) : null}
           <MapText geo={geo} frames={props.frames} hasTitle={Boolean(props.title)} regions={props.regions} places={props.places} labels={props.labels} routes={props.routes} />
           {props.title ? <TitlePlate title={props.title} subtitle={props.subtitle} /> : null}

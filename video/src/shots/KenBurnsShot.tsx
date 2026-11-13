@@ -5,7 +5,8 @@ import {AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame} from 'remot
 import {ShotFrame} from '../components/ShotFrame';
 import {Appear} from '../components/TextBits';
 import {alpha, CLAMP, EASE} from '../lib/anim';
-import {FRAME, SAFE, useStyle} from '../style';
+import {useCanvas} from '../lib/canvas';
+import {useStyle} from '../style';
 
 /** Куда смотрит камера: точка картинки (доли 0…1) и увеличение (1 = картинка заполняет кадр). */
 export type Focus = {x: number; y: number; zoom: number};
@@ -25,13 +26,12 @@ export type KenBurnsShotProps = {
   credit?: string;
 };
 
-const W = FRAME.width;
-const H = FRAME.height;
 
 const resolveSrc = (src: string): string => (/^(https?:|file:|data:|\/)/.test(src) ? src : staticFile(src));
 
 const KenBurnsArt: React.FC<KenBurnsShotProps> = ({frames, src, width, height, from, to}) => {
   const frame = useCurrentFrame();
+  const {width: W, height: H} = useCanvas();
   const a = from ?? {x: 0.5, y: 0.5, zoom: 1.0};
   const b = to ?? {x: 0.5, y: 0.45, zoom: 1.18};
   const t = interpolate(frame, [0, frames], [0, 1], {...CLAMP, easing: EASE.inOut});
@@ -67,6 +67,7 @@ const KenBurnsArt: React.FC<KenBurnsShotProps> = ({frames, src, width, height, f
 
 const KenBurnsText: React.FC<KenBurnsShotProps> = ({title, caption, credit}) => {
   const {palette: p, fonts, radius} = useStyle();
+  const c = useCanvas();
   return (
     <AbsoluteFill>
       {title || caption ? (
@@ -74,9 +75,9 @@ const KenBurnsText: React.FC<KenBurnsShotProps> = ({title, caption, credit}) => 
           delay={0.4}
           style={{
             position: 'absolute',
-            left: SAFE.left,
-            top: SAFE.top,
-            maxWidth: 980,
+            left: c.safe.left,
+            top: c.safe.top,
+            maxWidth: Math.min(980, c.width - c.safe.left - c.safe.right),
             padding: '20px 30px 24px',
             borderRadius: radius,
             backgroundColor: alpha(p.bg, 0.84),
@@ -93,8 +94,9 @@ const KenBurnsText: React.FC<KenBurnsShotProps> = ({title, caption, credit}) => 
           rise={0}
           style={{
             position: 'absolute',
-            left: SAFE.left,
-            top: 730,
+            left: c.safe.left,
+            top: c.sourceTop - 12,
+            maxWidth: c.width - c.safe.left - c.safe.right,
             padding: '8px 18px 10px',
             borderRadius: radius,
             backgroundColor: alpha(p.bg, 0.72),

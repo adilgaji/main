@@ -3,7 +3,8 @@
 import React from 'react';
 import {AbsoluteFill, useCurrentFrame} from 'remotion';
 import {rng} from '../lib/anim';
-import {FRAME, useStyle} from '../style';
+import {useCanvas} from '../lib/canvas';
+import {useStyle} from '../style';
 
 export const Tint: React.FC = () => {
   const {treatment} = useStyle();
@@ -17,7 +18,7 @@ export const Tint: React.FC = () => {
 /** Изометрическая сетка: три семейства линий (вертикальные и под ±30°). */
 const IsoGrid: React.FC = () => {
   const {palette: p} = useStyle();
-  const {width: W, height: H} = FRAME;
+  const {width: W, height: H} = useCanvas();
   const edge = 64; // длина ребра треугольника сетки
   const gap = (edge * Math.sqrt(3)) / 2; // расстояние между вертикальными линиями
   const k = Math.tan(Math.PI / 6); // наклон диагоналей
@@ -68,7 +69,7 @@ const Spotlight: React.FC = () => {
 const Scratches: React.FC = () => {
   const frame = useCurrentFrame();
   const r = rng(Math.floor(frame / 2) * 7717 + 11);
-  const {width: W, height: H} = FRAME;
+  const {width: W, height: H} = useCanvas();
   const scratches: React.ReactNode[] = [];
   const count = r() < 0.45 ? 0 : r() < 0.35 ? 2 : 1;
   for (let i = 0; i < count; i++) {

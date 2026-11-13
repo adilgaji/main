@@ -3,7 +3,8 @@
 import React from 'react';
 import {interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import {alpha, CLAMP, EASE} from '../lib/anim';
-import {SAFE, useStyle} from '../style';
+import {useCanvas} from '../lib/canvas';
+import {useStyle} from '../style';
 
 /** Статус утверждения — так же, как в таблице фактов. */
 export type ClaimStatus = 'fact' | 'disputed' | 'legend' | 'myth' | 'claim';
@@ -49,8 +50,9 @@ export const TitlePlate: React.FC<{title: string; subtitle?: string; delay?: num
   onLight = false,
 }) => {
   const {palette: p, fonts} = useStyle();
+  const c = useCanvas();
   return (
-    <Appear delay={delay} style={{position: 'absolute', left: SAFE.left, top: SAFE.top, maxWidth: 1200}}>
+    <Appear delay={delay} style={{position: 'absolute', left: c.safe.left, top: c.safe.top, maxWidth: Math.min(1200, c.width - c.safe.left - c.safe.right)}}>
       <div
         style={{
           fontFamily: fonts.display,
@@ -113,16 +115,17 @@ export const SourceLine: React.FC<{text: string; delay?: number; onLight?: boole
   align = 'left',
 }) => {
   const {palette: p, fonts} = useStyle();
+  const c = useCanvas();
   return (
     <Appear
       delay={delay}
       rise={0}
       style={{
         position: 'absolute',
-        left: align === 'left' ? SAFE.left : undefined,
-        right: align === 'right' ? SAFE.right : undefined,
-        top: 742,
-        maxWidth: 1300,
+        left: align === 'left' ? c.safe.left : undefined,
+        right: align === 'right' ? c.safe.right : undefined,
+        top: c.sourceTop,
+        maxWidth: Math.min(1300, c.width - c.safe.left - c.safe.right),
         fontFamily: fonts.body,
         fontWeight: 600,
         fontSize: 30,

@@ -6,7 +6,8 @@ import {Backdrop, type BackdropKind} from '../components/Backdrop';
 import {ShotFrame} from '../components/ShotFrame';
 import {alpha, EASE, mix, ramp} from '../lib/anim';
 import {textWidth} from '../lib/labels';
-import {FRAME, useStyle} from '../style';
+import {useCanvas} from '../lib/canvas';
+import {useStyle} from '../style';
 
 export type QuoteShotProps = {
   frames: number;
@@ -21,8 +22,13 @@ export type QuoteShotProps = {
   seed?: number;
 };
 
-const PANEL = {x: 250, y: 150, w: 1420, h: 600};
-const PAD = {x: 110, top: 110, bottom: 150};
+/** Плашка цитаты: в горизонтальном кадре — широкая, в вертикальном — высокая. */
+const useLayout = () => {
+  const c = useCanvas();
+  return c.vertical
+    ? {PANEL: {x: 50, y: 250, w: 900, h: 880}, PAD: {x: 70, top: 110, bottom: 170}, c}
+    : {PANEL: {x: 250, y: 150, w: 1420, h: 600}, PAD: {x: 110, top: 110, bottom: 150}, c};
+};
 
 /** Подбирает самый крупный размер шрифта, при котором текст помещается в плашку. */
 const fitQuote = (text: string, fontFamily: string, maxW: number, maxH: number): {size: number; lines: string[][]} => {
@@ -48,6 +54,7 @@ const fitQuote = (text: string, fontFamily: string, maxW: number, maxH: number):
 };
 
 const QuoteArt: React.FC<QuoteShotProps> = ({backdrop, seed}) => {
+  const {PANEL, PAD, c} = useLayout();
   const {palette: p, radius} = useStyle();
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
@@ -70,7 +77,7 @@ const QuoteArt: React.FC<QuoteShotProps> = ({backdrop, seed}) => {
         }}
       />
       {/* большая открывающая кавычка */}
-      <svg width={FRAME.width} height={FRAME.height} style={{position: 'absolute', inset: 0, opacity: k}}>
+      <svg width={c.width} height={c.height} style={{position: 'absolute', inset: 0, opacity: k}}>
         <g transform={`translate(${PANEL.x + 96} ${PANEL.y - 30}) scale(1.35)`} fill={p.accent2}>
           <path d="M 0 60 C 0 26 18 6 48 0 L 54 14 C 38 20 30 30 30 44 L 52 44 L 52 92 L 0 92 Z" />
           <path d="M 70 60 C 70 26 88 6 118 0 L 124 14 C 108 20 100 30 100 44 L 122 44 L 122 92 L 70 92 Z" />
@@ -82,6 +89,7 @@ const QuoteArt: React.FC<QuoteShotProps> = ({backdrop, seed}) => {
 };
 
 const QuoteText: React.FC<QuoteShotProps> = ({frames, text, author, source, kicker}) => {
+  const {PANEL, PAD} = useLayout();
   const {palette: p, fonts} = useStyle();
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();

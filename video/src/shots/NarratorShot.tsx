@@ -5,7 +5,8 @@ import {AbsoluteFill, useCurrentFrame, useVideoConfig} from 'remotion';
 import {Narrator, type Emotion, type Pose} from '../character/Narrator';
 import {ShotFrame} from '../components/ShotFrame';
 import {alpha, EASE, mix, ramp, rng} from '../lib/anim';
-import {FRAME, useStyle, type Palette} from '../style';
+import {useCanvas} from '../lib/canvas';
+import {useStyle, type Palette} from '../style';
 
 export type NarratorBeat = {at: number; pose: Pose; emotion: Emotion};
 
@@ -22,9 +23,13 @@ export type NarratorShotProps = {
   seed?: number;
 };
 
-const W = FRAME.width;
-const H = FRAME.height;
-const BOARD = {x: 1000, y: 150, w: 790, h: 590};
+/** Раскладка: в горизонтальном кадре свиток справа, в вертикальном — сверху, рассказчик внизу. */
+const useLayout = () => {
+  const c = useCanvas();
+  return c.vertical
+    ? {W: c.width, H: c.height, BOARD: {x: 80, y: 250, w: 840, h: 560}, room: {x: 40, y: 860}, floorY: c.height - 150, person: {left: 150, top: c.height - 1010}}
+    : {W: c.width, H: c.height, BOARD: {x: 1000, y: 150, w: 790, h: 590}, room: {x: 0, y: 0}, floorY: 960, person: {left: 130, top: 78}};
+};
 
 /** Кабинет: стена, полки с книгами, тёплый свет лампы. */
 const Study: React.FC<{palette: Palette; seed: number}> = React.memo(({palette: p, seed}) => {
@@ -44,10 +49,12 @@ const Study: React.FC<{palette: Palette; seed: number}> = React.memo(({palette: 
     }
     return rows;
   }, [p, seed]);
+  const {W, H, room, floorY} = useLayout();
   return (
     <AbsoluteFill>
       <AbsoluteFill style={{background: `linear-gradient(180deg, ${mix(p.bgAlt, p.accent2, 0.12)} 0%, ${p.bg} 100%)`}} />
       <svg width={W} height={H} style={{position: 'absolute', inset: 0}}>
+        <g transform={`translate(${room.x} ${room.y})`}>
         {/* ниша с полками */}
         <rect x={20} y={70} width={950} height={770} fill={mix(p.bg, '#000000', 0.35)} />
         {books.map((b, i) => (
@@ -61,8 +68,9 @@ const Study: React.FC<{palette: Palette; seed: number}> = React.memo(({palette: 
           <rect key={y} x={20} y={y} width={950} height={22} fill={mix(p.coatShade, p.ink, 0.5)} />
         ))}
         <rect x={20} y={70} width={950} height={770} fill="none" stroke={mix(p.coatShade, p.ink, 0.5)} strokeWidth={22} />
+        </g>
         {/* пол */}
-        <rect x={0} y={960} width={W} height={120} fill={mix(p.bg, '#000000', 0.4)} />
+        <rect x={0} y={floorY} width={W} height={H - floorY} fill={mix(p.bg, '#000000', 0.4)} />
       </svg>
       {/* тёплый свет слева сверху и тень на стене за свитком */}
       <AbsoluteFill style={{background: `radial-gradient(ellipse 55% 60% at 22% 18%, ${alpha(p.accent, 0.3)} 0%, ${alpha(p.accent, 0)} 100%)`}} />
@@ -75,6 +83,7 @@ const Scroll: React.FC<{palette: Palette; radius: number}> = ({palette: p, radiu
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const k = ramp(frame, 0.2 * fps, 0.8 * fps, EASE.out);
+  const {BOARD} = useLayout();
   return (
     <>
       <div
@@ -130,11 +139,12 @@ const mouthAt = (t: number, speech: NarratorShotProps['speech']): number => {
 const NarratorArt: React.FC<NarratorShotProps> = (props) => {
   const {palette: p, radius} = useStyle();
   const {cur, prev, blend, t} = useBeat(props);
+  const {person} = useLayout();
   return (
     <AbsoluteFill>
       <Study palette={p} seed={props.seed ?? 4} />
       {props.board ? <Scroll palette={p} radius={radius} /> : null}
-      <div style={{position: 'absolute', left: 130, top: 78, width: 800, height: 1000, transformOrigin: '50% 100%', scale: 1.02}}>
+      <div style={{position: 'absolute', left: person.left, top: person.top, width: 800, height: 1000, transformOrigin: '50% 100%', scale: 1.02}}>
         <Narrator
           palette={p}
           pose={cur.pose}
@@ -155,6 +165,7 @@ const NarratorText: React.FC<NarratorShotProps> = ({board}) => {
   const {palette: p, fonts} = useStyle();
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
+  const {BOARD} = useLayout();
   if (!board) {
     return null;
   }

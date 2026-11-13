@@ -97,14 +97,14 @@ def is_done(out: Path, key: str, frames: int) -> bool:
         return False
 
 
-def _render_one(serve: Path, props_path: Path, out: Path, frames: int, key: str, concurrency: int | None, crf: int, gl: str | None) -> float:
+def _render_one(serve: Path, props_path: Path, out: Path, frames: int, key: str, concurrency: int | None, crf: int, gl: str | None, composition: str = "Chapter") -> float:
     modes = [gl] if gl else gl_modes()
     last = ""
     for attempt in range(1, TRIES + 1):
         mode = modes[min(attempt - 1, len(modes) - 1)]
         tmp = out.with_name(out.stem + ".part.mp4")
         cmd = [
-            _npx(), "remotion", "render", str(serve), "Chapter", str(tmp), f"--props={props_path}", f"--gl={mode}",
+            _npx(), "remotion", "render", str(serve), composition, str(tmp), f"--props={props_path}", f"--gl={mode}",
             "--codec=h264", f"--crf={crf}", "--pixel-format=yuv420p", "--muted", "--log=error",
         ]
         if concurrency:
@@ -157,7 +157,7 @@ def render_chapters(
 
     t0, done_frames, failed = time.time(), 0, []
     with ThreadPoolExecutor(max_workers=parallel) as pool:
-        futures = {pool.submit(_render_one, serve, Path(j["props"]), Path(j["out"]), j["frames"], j["key"], concurrency, crf, gl): j for j in todo}
+        futures = {pool.submit(_render_one, serve, Path(j["props"]), Path(j["out"]), j["frames"], j["key"], concurrency, crf, gl, j.get("composition", "Chapter")): j for j in todo}
         for fut in as_completed(futures):
             j = futures[fut]
             try:
@@ -174,3 +174,19 @@ def render_chapters(
     if failed:
         raise RenderError("\n".join(failed) + "\nГотовые главы сохранены — запустите ещё раз, рендер продолжится с упавшей главы.")
     return {"rendered": [j["id"] for j in todo], "skipped": [j["id"] for j in skipped], "seconds": time.time() - t0, "speed": speed}
+
+
+def still(serve: Path, composition: str, props_path: Path, out: Path, gl: str | None = None) -> Path:
+    """Один кадр (обложка, лист) в PNG. До 3 попыток, как и у глав."""
+    last = ""
+    for attempt, mode in enumerate(([gl] if gl else gl_modes()) * TRIES, 1):
+        if attempt > TRIES:
+            break
+        p = subprocess.run(
+            [_npx(), "remotion", "still", str(serve), composition, str(out), f"--props={props_path}", "--frame=0", f"--gl={mode}", "--log=error"],
+            cwd=VIDEO, env={**os.environ, "NODE_USE_ENV_PROXY": "1"}, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace",
+        )
+        if p.returncode == 0 and out.exists():
+            return out
+        last = (p.stdout or "").strip()[-500:]
+    raise RenderError(f"Не удалось нарисовать {out.name}: {last}")

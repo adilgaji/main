@@ -3,7 +3,7 @@
 // <Img> сам задерживает снимок кадра, пока файл не загрузился, и текстура не «мигает».
 import React from 'react';
 import {AbsoluteFill, Img, staticFile} from 'remotion';
-import {FRAME} from '../style';
+import {useCanvas} from '../lib/canvas';
 
 export const Tiled: React.FC<{
   /** Файл внутри public/ */
@@ -18,8 +18,9 @@ export const Tiled: React.FC<{
 }> = ({file, size, offsetX = 0, offsetY = 0, opacity = 1, blend}) => {
   const ox = ((offsetX % size) + size) % size;
   const oy = ((offsetY % size) + size) % size;
-  const cols = Math.ceil(FRAME.width / size) + 1;
-  const rows = Math.ceil(FRAME.height / size) + 1;
+  const {width, height} = useCanvas();
+  const cols = Math.ceil(width / size) + 1;
+  const rows = Math.ceil(height / size) + 1;
   const src = staticFile(file);
   const tiles: React.ReactNode[] = [];
   for (let r = 0; r < rows; r++) {
