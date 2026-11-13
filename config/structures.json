@@ -1,16 +1,59 @@
 {
   "about": "Виды структуры видео. recent — какие были в последних видео (первая — самая новая); их фабрика подряд не повторяет.",
   "structures": [
-    {"id": "chronicle", "name_ru": "Хроника", "hint": "events in time order, each chapter a turning point"},
-    {"id": "investigation", "name_ru": "Расследование", "hint": "a question, evidence piece by piece, what we can and cannot know"},
-    {"id": "day_in_life", "name_ru": "День из жизни", "hint": "one ordinary day of a person of the time, hour by hour"},
-    {"id": "rise_and_fall", "name_ru": "Взлёт и падение", "hint": "how something grew, peaked and collapsed, and why"},
-    {"id": "myth_vs_truth", "name_ru": "Миф против правды", "hint": "popular beliefs checked one by one against the evidence"},
-    {"id": "five_reasons", "name_ru": "5 причин…", "hint": "a numbered list of causes or answers, the strongest last"},
-    {"id": "eyewitness", "name_ru": "Глазами участника", "hint": "the story through what one real witness saw and wrote"},
-    {"id": "what_if", "name_ru": "Что если…", "hint": "a key moment, what really happened, and what historians think could have changed"},
-    {"id": "then_and_now", "name_ru": "Сравнение эпох", "hint": "the same thing then and now, side by side"},
-    {"id": "countdown", "name_ru": "Обратный отсчёт", "hint": "a countdown of the most surprising facts or objects"}
+    {
+      "id": "chronicle",
+      "name_ru": "Хроника",
+      "hint": "events in time order, each chapter a turning point"
+    },
+    {
+      "id": "investigation",
+      "name_ru": "Расследование",
+      "hint": "a question, evidence piece by piece, what we can and cannot know"
+    },
+    {
+      "id": "day_in_life",
+      "name_ru": "День из жизни",
+      "hint": "one ordinary day of a person of the time, hour by hour"
+    },
+    {
+      "id": "rise_and_fall",
+      "name_ru": "Взлёт и падение",
+      "hint": "how something grew, peaked and collapsed, and why"
+    },
+    {
+      "id": "myth_vs_truth",
+      "name_ru": "Миф против правды",
+      "hint": "popular beliefs checked one by one against the evidence"
+    },
+    {
+      "id": "five_reasons",
+      "name_ru": "5 причин…",
+      "hint": "a numbered list of causes or answers, the strongest last"
+    },
+    {
+      "id": "eyewitness",
+      "name_ru": "Глазами участника",
+      "hint": "the story through what one real witness saw and wrote"
+    },
+    {
+      "id": "what_if",
+      "name_ru": "Что если…",
+      "hint": "a key moment, what really happened, and what historians think could have changed"
+    },
+    {
+      "id": "then_and_now",
+      "name_ru": "Сравнение эпох",
+      "hint": "the same thing then and now, side by side"
+    },
+    {
+      "id": "countdown",
+      "name_ru": "Обратный отсчёт",
+      "hint": "a countdown of the most surprising facts or objects"
+    }
   ],
-  "recent": ["investigation"]
+  "recent": [
+    "myth_vs_truth",
+    "investigation"
+  ]
 }

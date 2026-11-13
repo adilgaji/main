@@ -50,17 +50,35 @@
       "say": "duh-RYE-us",
       "note": "Persian kings"
     },
+    "Ekirch": {
+      "us": "ˈikɜɹk",
+      "gb": "ˈiːkɜːk",
+      "say": "EE-kurk",
+      "note": "added by fact-checker"
+    },
     "Ephialtes": {
       "us": "ˌɛfiˈæltiz",
       "gb": "ˌɛfiˈaltiːz",
       "say": "ef-ee-AL-teez",
       "note": "man who showed the Persians the path at Thermopylae"
     },
+    "Gandhi": {
+      "us": "ɡˈɑndi",
+      "gb": "ɡˈandi",
+      "say": "GAHN-dee",
+      "note": "added by fact-checker"
+    },
     "Göbekli": {
       "us": "ɡəbˈɛkli",
       "gb": "ɡəbˈɛkli",
       "say": "guh-BEK-lee",
       "note": "Göbekli Tepe, Turkey"
+    },
+    "Hadza": {
+      "us": "hˈɑdzə",
+      "gb": "hˈadzə",
+      "say": "HAHD-zuh",
+      "note": "added by fact-checker"
     },
     "Hanseatic": {
       "us": "hˌænsiˈæTɪk",
@@ -73,6 +91,12 @@
       "gb": "wˌiːtsiːlQpˈQʧtli",
       "say": "weet-see-loh-POHCH-tlee",
       "note": "Aztec god"
+    },
+    "Jerome": {
+      "us": "ʤəɹˈOm",
+      "gb": "ʤəɹˈQm",
+      "say": "juh-ROHM",
+      "note": "added by fact-checker"
     },
     "Kublai": {
       "us": "kˈublI",
@@ -97,6 +121,12 @@
       "gb": "nˈaskə",
       "say": "NAHS-kuh",
       "note": "Nazca lines, Peru"
+    },
+    "Niall": {
+      "us": "nˈIəl",
+      "gb": "nˈIəl",
+      "say": "NYE-ul",
+      "note": "added by fact-checker"
     },
     "Pizarro": {
       "us": "pɪzˈɑɹO",
@@ -128,11 +158,23 @@
       "say": "ray-kon-KEE-stuh",
       "note": "Christian reconquest of Iberia"
     },
+    "San": {
+      "us": "sˈɑn",
+      "gb": "sˈan",
+      "say": "SAHN",
+      "note": "added by fact-checker"
+    },
     "Senenmut": {
       "us": "sˈɛnənmˌut",
       "gb": "sˈɛnənmˌuːt",
       "say": "SEN-en-moot",
       "note": "Hatshepsut's chief official"
+    },
+    "Siegel": {
+      "us": "sˈiɡᵊl",
+      "gb": "sˈiɡᵊl",
+      "say": "SEE-gul",
+      "note": "added by fact-checker"
     },
     "Tenochtitlan": {
       "us": "tɛnˌɑʧtitlˈɑn",
@@ -152,6 +194,12 @@
       "say": "THES-pee-ee",
       "note": "Greek city in Boeotia"
     },
+    "Tsimane": {
+      "us": "ʧimˈɑnA",
+      "gb": "ʧimˈanA",
+      "say": "chee-MAH-nay",
+      "note": "added by fact-checker"
+    },
     "Tutankhamun": {
       "us": "tˌutᵊnkɑmˈun",
       "gb": "tˌuːtᵊnkɑːmˈuːn",
@@ -169,6 +217,12 @@
       "gb": "zˈɜːksiːz",
       "say": "ZURK-seez",
       "note": "Persian king"
+    },
+    "Yetish": {
+      "us": "jˈɛTɪʃ",
+      "gb": "jˈɛtɪʃ",
+      "say": "YET-ish",
+      "note": "added by fact-checker"
     }
   }
 }

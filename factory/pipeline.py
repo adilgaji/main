@@ -247,11 +247,28 @@ def save_pronunciations(items: list[dict]) -> list[str]:
     saved = []
     for p in items:
         word = str(p.get("word", "")).strip()
-        if " " in word or not word or pron.check_phonemes(p["us"], "us") or pron.check_phonemes(p["gb"], "gb"):
+        # ключ словаря — одно слово из букв; формы вроде «Ekirch's» Kokoro читает сам по основе
+        if not word.isalpha() or pron.check_phonemes(p["us"], "us") or pron.check_phonemes(p["gb"], "gb"):
             continue
-        pron.save_entry(word, p["us"], p["gb"], say=p.get("say", ""), note="added by fact-checker")
+        try:
+            pron.save_entry(word, p["us"], p["gb"], say=p.get("say", ""), note="added by fact-checker")
+        except ValueError as e:
+            log.warning("Произношение «%s» не сохранено: %s", word, e)
+            continue
         saved.append(word)
     return saved
+
+
+def _fact_check(folder: Path, text: dict, outline: dict, voice: str) -> dict:
+    names = guessed_names(text["chapters"], voice)
+    fdata = {"chapters": [{"id": c["id"], "text": c["text"]} for c in text["chapters"]], "sources": outline["sources"],
+             "max_pages": 12 if len(text["chapters"]) >= 5 else 8, "guessed_names": names}
+    facts = agents.run("fact-checker", "Check the script in the input below.", fdata, schemas.FACTS,
+                       check=lambda o: check_facts(o, text["chapters"]), folder=folder)
+    added = save_pronunciations(facts.get("pronunciations", []))
+    if added:
+        log.info("В словарь произношений добавлено: %s", ", ".join(added))
+    return facts
 
 
 def step_script(folder: Path) -> dict:
@@ -263,24 +280,40 @@ def step_script(folder: Path) -> dict:
     data = {"outline": {k: outline[k] for k in ("title", "logline", "hook", "chapters")}, "sources": outline["sources"],
             "words_target": target, "words_per_chapter": dict(zip([c["id"] for c in outline["chapters"]], per)), "owner_note": _note(folder, "script")}
     chk = lambda o: check_script_answer(o, outline, target)  # noqa: E731
-    text = agents.run("scriptwriter", "Write the voice-over for the input below.", data, schemas.SCRIPT, check=chk, folder=folder)
+    # Продолжение после сбоя: сохраняется текст, номер круга и результат проверки —
+    # повторный запуск не заказывает заново то, что уже сделано.
+    ckpt = folder / "work" / "script_checkpoint.json"
+    key = json.dumps([outline, data["owner_note"], target], ensure_ascii=False, sort_keys=True)
+    st = json.loads(ckpt.read_text(encoding="utf-8")) if ckpt.exists() else {}
 
-    facts: dict = {}
-    for round_no in (1, 2):
-        names = guessed_names(text["chapters"], voice)
-        fdata = {"chapters": [{"id": c["id"], "text": c["text"]} for c in text["chapters"]], "sources": outline["sources"],
-                 "max_pages": 12 if len(text["chapters"]) >= 5 else 8, "guessed_names": names}
-        facts = agents.run("fact-checker", "Check the script in the input below.", fdata, schemas.FACTS,
-                           check=lambda o: check_facts(o, text["chapters"]), folder=folder)
-        saved = save_pronunciations(facts.get("pronunciations", []))
-        if saved:
-            log.info("В словарь произношений добавлено: %s", ", ".join(saved))
-        if not facts["problems"] or round_no == 2:
+    def save(x: dict) -> None:
+        ckpt.parent.mkdir(parents=True, exist_ok=True)
+        ckpt.write_text(json.dumps(x, ensure_ascii=False), encoding="utf-8")
+
+    if st.get("key") == key:
+        log.info("Продолжаю с сохранённого: круг %d, проверка фактов %s.", st["round"], "готова" if st.get("facts") else "ещё не сделана")
+    else:
+        st = {"key": key, "round": 1, "facts": None,
+              "text": agents.run("scriptwriter", "Write the voice-over for the input below.", data, schemas.SCRIPT, check=chk, folder=folder)}
+        save(st)
+    while True:
+        if not st.get("facts"):
+            st["facts"] = _fact_check(folder, st["text"], outline, voice)
+            save(st)
+        if not st["facts"]["problems"] or st["round"] >= 2:
             break
-        log.info("Проверка фактов нашла %d мест для исправления — сценарист исправляет.", len(facts["problems"]))
-        fix = {**data, "current": text["chapters"], "problems": facts["problems"]}
-        text = agents.run("scriptwriter", "Fix the voice-over in the input below (fix mode).", fix, schemas.SCRIPT, check=chk, folder=folder)
+        log.info("Проверка фактов нашла %d мест для исправления — сценарист исправляет.", len(st["facts"]["problems"]))
+        fix = {**data, "current": st["text"]["chapters"], "problems": st["facts"]["problems"]}
+        st = {"key": key, "round": 2, "facts": None,
+              "text": agents.run("scriptwriter", "Fix the voice-over in the input below (fix mode).", fix, schemas.SCRIPT, check=chk, folder=folder)}
+        save(st)
+    text, facts = st["text"], st["facts"]
+    ckpt.unlink(missing_ok=True)
 
+    return _save_script(folder, outline, text, facts)
+
+
+def _save_script(folder: Path, outline: dict, text: dict, facts: dict) -> dict:
     script = {
         "title": outline["title"], "structure": outline["structure"], "subgenre": read_state(folder)["topic"].get("subgenre"),
         "chapters": [{"id": c["id"], "title": c["title"], "text": c["text"].strip()} for c in text["chapters"]],
@@ -292,6 +325,31 @@ def step_script(folder: Path) -> dict:
     _write(folder, "facts.json", facts)
     (folder / "script.txt").write_text(f"{script['title']}\n\n" + "\n\n".join(f"## {c['title']}\n{c['text']}" for c in script["chapters"]) + "\n", encoding="utf-8")
     return script
+
+
+def fix_script(folder: Path, note: str = "", recheck: bool = True) -> dict:
+    """Маленький вызов: исправить только оставшиеся замечания проверки (и пожелание владельца), затем проверить снова.
+    recheck=False — без повторной проверки фактов (когда правки только смягчают или убирают утверждения)."""
+    folder = Path(folder).resolve()
+    script, outline = _read(folder, "script.json"), _read(folder, "outline.json")
+    problems = list(script.get("open_problems", []))
+    if note:
+        problems.append({"chapter": "all", "quote": "", "issue": "the owner asks", "fix": note})
+    if not problems:
+        raise PipelineError("Замечаний нет — исправлять нечего.")
+    target = words_target(folder)
+    data = {"outline": {k: outline[k] for k in ("title", "logline", "hook", "chapters")}, "sources": outline["sources"], "words_target": target,
+            "current": [{"id": c["id"], "title": c["title"], "text": c["text"]} for c in script["chapters"]], "problems": problems}
+    text = agents.run("scriptwriter", "Fix the voice-over in the input below (fix mode): change only what the problems require.", data, schemas.SCRIPT,
+                      check=lambda o: check_script_answer(o, outline, target), folder=folder)
+    if recheck:
+        facts = _fact_check(folder, text, outline, voice_of(_settings(folder)))
+    else:
+        facts = {**_read(folder, "facts.json"), "problems": []}
+        facts["summary_ru"] = (facts.get("summary_ru", "") + " Последние замечания исправлены без повторной проверки (правки только смягчали или убирали утверждения).").strip()
+    out = _save_script(folder, outline, text, facts)
+    set_step(folder, "script", WAITING, note=note)
+    return out
 
 
 # ---------------------------------------------------------------- 4. озвучка + раскадровка
@@ -512,6 +570,10 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("pick")
     p.add_argument("folder")
     p.add_argument("number", type=int)
+    fx = sub.add_parser("fix", help="исправить оставшиеся замечания проверки фактов в тексте")
+    fx.add_argument("folder")
+    fx.add_argument("--note", default="")
+    fx.add_argument("--no-recheck", action="store_true", help="без повторной проверки фактов")
     a = sub.add_parser("approve")
     a.add_argument("folder")
     a.add_argument("step")
@@ -529,6 +591,8 @@ def main(argv: list[str] | None = None) -> int:
             folder = pick_topic(folder, args.number)
         elif args.cmd == "approve":
             approve(folder, args.step)
+        elif args.cmd == "fix":
+            fix_script(folder, args.note, recheck=not args.no_recheck)
         elif args.cmd == "next":
             step = next_step(folder)
             if step in (None, "style", "topic") and (step != "topic" or not (folder / "topics.json").exists()):
