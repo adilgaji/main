@@ -87,6 +87,14 @@ def chapter_key(props_path: Path, fingerprint: str, crf: int) -> str:
     return hashlib.sha1(props_path.read_bytes() + fingerprint.encode() + str(crf).encode()).hexdigest()
 
 
+def overflow_of(out: Path) -> list[str] | None:
+    """Надписи, вышедшие за кадр при рендере этой главы (None — глава ещё не проверялась)."""
+    try:
+        return json.loads(out.with_suffix(".done.json").read_text(encoding="utf-8")).get("overflow")
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def is_done(out: Path, key: str, frames: int) -> bool:
     mark = out.with_suffix(".done.json")
     if not (out.exists() and mark.exists()):
@@ -106,7 +114,7 @@ def _render_one(serve: Path, props_path: Path, out: Path, frames: int, key: str,
         tmp = out.with_name(out.stem + ".part.mp4")
         cmd = [
             _npx(), "remotion", "render", str(serve), composition, str(tmp), f"--props={props_path}", f"--gl={mode}",
-            "--codec=h264", f"--crf={crf}", "--pixel-format=yuv420p", "--muted", "--log=error",
+            "--codec=h264", f"--crf={crf}", "--pixel-format=yuv420p", "--muted", "--log=verbose",
         ]
         if concurrency:
             cmd.append(f"--concurrency={concurrency}")
@@ -117,11 +125,14 @@ def _render_one(serve: Path, props_path: Path, out: Path, frames: int, key: str,
             got = probe_video(tmp)["frames"]
             if got == frames:
                 tmp.replace(out)
-                out.with_suffix(".done.json").write_text(json.dumps({"key": key, "frames": frames, "seconds": round(took, 1), "gl": mode}))
+                # проверка «текст не выходит за кадр» пишет такие строки прямо во время рендера
+                overflow = sorted({line.split("TEXT-OVERFLOW", 1)[1].strip()[:240] for line in p.stdout.splitlines() if "TEXT-OVERFLOW" in line})
+                out.with_suffix(".done.json").write_text(json.dumps({"key": key, "frames": frames, "seconds": round(took, 1), "gl": mode, "overflow": overflow}, ensure_ascii=False))
                 return took
             last = f"кадров {got}, а должно быть {frames}"
         else:
-            last = (p.stdout or "").strip()[-700:] or f"код завершения {p.returncode}"
+            errors = [ln for ln in (p.stdout or "").splitlines() if "error" in ln.lower() and "TEXT-OVERFLOW" not in ln]
+            last = "\n".join(errors[-8:])[-700:] or (p.stdout or "").strip()[-700:] or f"код завершения {p.returncode}"
         tmp.unlink(missing_ok=True)
         log.warning("Глава %s: попытка %d из %d не удалась (%s). %s", out.stem, attempt, TRIES, mode, "Повторяю…" if attempt < TRIES else "")
     raise RenderError(f"Глава {out.stem} не отрендерилась за {TRIES} попытки. Последняя ошибка:\n{last}")

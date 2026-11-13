@@ -4,6 +4,7 @@ import {Audio} from '@remotion/media';
 import React from 'react';
 import {AbsoluteFill, interpolate, Sequence, staticFile, useCurrentFrame, type CalculateMetadataFunction} from 'remotion';
 import {Captions, type CaptionWord} from './components/Captions';
+import {OverflowProbe} from './components/OverflowProbe';
 import {useFontsReady} from './fonts';
 import {CLAMP, EASE} from './lib/anim';
 import {Shot, type ShotSpec} from './shots';
@@ -59,7 +60,7 @@ export const TransitionLayer: React.FC<{item: TimedShot; children: React.ReactNo
     }
   }
   return (
-    <AbsoluteFill style={{opacity, translate: `${shiftX}% 0px`, scale, clipPath: clip}}>
+    <AbsoluteFill data-moving={shiftX !== 0 || scale !== 1 || clip ? '1' : undefined} style={{opacity, translate: `${shiftX}% 0px`, scale, clipPath: clip}}>
       {children}
     </AbsoluteFill>
   );
@@ -92,6 +93,7 @@ export const Stage: React.FC<{styleId?: string | null; extraFamilies?: string[];
     <StyleContext.Provider value={style}>
       <StageInner key={style.id} style={style} families={families}>
         {children}
+        <OverflowProbe />
       </StageInner>
     </StyleContext.Provider>
   );

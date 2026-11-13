@@ -101,6 +101,17 @@ def run_all(folder: Path, plan: dict) -> dict:
     bad += list(plan.get("duration_errors") or [])
     report.append(_item("Видео соответствует раскадровке; соседние кадры и фоны не повторяются", bad, f"кадров {planned}"))
 
+    from factory.render.remotion import overflow_of
+
+    bad = []
+    for ch in plan["chapters"]:
+        found = overflow_of(folder / "work" / "render" / f"{ch['id']}.mp4")
+        if found is None:
+            bad.append(f"глава {ch['id']}: проверка надписей не выполнялась (отрендерена старой версией)")
+        else:
+            bad += [f"глава {ch['id']}: {x}" for x in found[:5]]
+    report.append(_item("Текст не выходит за кадр (замер надписей при рендере)", bad, "каждый 15-й кадр"))
+
     numbers, labels = [], []
     for ch in plan["chapters"]:
         for i, s in enumerate(ch["shots"]):

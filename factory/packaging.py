@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import shutil
 from collections import Counter
 from pathlib import Path
@@ -56,7 +57,14 @@ def write_texts(folder: Path, out: dict, script: dict, plan: dict) -> None:
     archives = sorted({i["ref"].split(":")[0] for i in image_list(folder, plan)})
     holders = {"commons": "Wikimedia Commons", "met": "The Metropolitan Museum of Art", "aic": "Art Institute of Chicago",
                "smithsonian": "Smithsonian", "rijksmuseum": "Rijksmuseum", "loc": "Library of Congress"}
-    text_sources = [s.split(" (")[0] for s in script.get("sources", [])]
+    outline = folder / "outline.json"
+    if outline.exists():
+        text_sources = [s["title"] + (f" — {s['url']}" if s.get("url") else "") for s in json.loads(outline.read_text(encoding="utf-8"))["sources"]]
+    else:
+        text_sources = [s.split(" (")[0] for s in script.get("sources", [])]
+    # описание — для англоязычных зрителей: служебные русские пометки не попадают
+    text_sources = [re.sub(r"\s+—\s+[^—]*[А-Яа-яЁё].*$", "", s).strip() for s in text_sources]
+    text_sources = [s for s in text_sources if s and not re.search(r"[А-Яа-яЁё]", s)]
     desc = (
         chapters.description_block(chs) + "\n" + out["description"].strip() + "\n\n"
         + "Sources:\n" + "\n".join(f"• {s}" for s in text_sources) + "\n"
