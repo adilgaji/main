@@ -417,9 +417,17 @@ def check_storyboard(out: dict, script: dict, narration: dict, refs: set[str]) -
     err = storyboard.validate(script, out)
     if err:
         return err[:20]
+    from factory import images
+    from factory.images.store import fetch
+
     for r in storyboard.all_image_refs(out):
         if r not in refs:
             err.append(f"image {r} is not in the images list")
+            continue
+        try:  # файл скачивается сразу: архив может отказать — тогда агент берёт другую картинку до показа владельцу
+            fetch(images.get(r))
+        except (images.ArchiveUnavailable, images.LicenseRejected, images.ImageError) as e:
+            err.append(f"image {r} cannot be downloaded right now ({str(e)[:80]}); choose another image from the list")
     by_id = {c["id"]: c for c in out["chapters"]}
     for ch in narration["chapters"]:
         try:
