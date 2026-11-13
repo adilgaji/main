@@ -70,8 +70,11 @@ def checks(job: Path, log: Log) -> list[str]:
     # 4. субтитры: каждое слово внутри звука, без «обрезанных» слов
     if words[0]["startMs"] < 40:
         problems.append("Первое слово начинается слишком близко к началу (может быть обрезано)")
-    if words[-1]["endMs"] / 1000 > adur - 0.05:
-        problems.append("Последнее слово слишком близко к концу (может быть обрезано)")
+    # конец записи: после последнего звука должна быть тишина ≥ 0.06 с (иначе слово обрезано)
+    tail = run(["ffmpeg", "-hide_banner", "-i", str(job / "voice.wav"), "-af", f"atrim=start={max(0.0, adur - 1.0):.2f},silencedetect=n=-40dB:d=0.04", "-f", "null", "-"])
+    starts = [float(x) for x in re.findall(r"silence_start: ([\d.]+)", tail)]
+    if not starts or adur - starts[-1] < 0.06:
+        problems.append("В конце записи нет тишины — последнее слово может быть обрезано")
     # 5. видео соответствует подтверждённой раскадровке
     st = load_state(job)
     if st.get("storyboard_hash") and st["storyboard_hash"] != storyboard_hash(job):

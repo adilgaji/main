@@ -427,7 +427,7 @@ export const TipsT: React.FC = () => {
             const s0 = Math.min(...it.text.split(' ').map((w) => at(w, 0.3 + i * 0.2)), fb + 0.001);
             const k = ramp(t, s0 - 0.1, s0 + 0.35);
             return (
-              <div key={i} style={{opacity: k, translate: `${(1 - k) * 120}px 0px`, display: 'flex', alignItems: 'center', gap: 26, background: COLORS.bgSoft, borderRadius: 40, padding: '30px 34px', border: `6px solid ${COLORS.bgGlow}`}}>
+              <div key={i} style={{opacity: 0.3 + 0.7 * k, translate: `${(1 - k) * 60}px 0px`, display: 'flex', alignItems: 'center', gap: 26, background: COLORS.bgSoft, borderRadius: 40, padding: '30px 34px', border: `6px solid ${COLORS.bgGlow}`}}>
                 <Icon name={it.icon} size={170} />
                 <div style={{display: 'flex', flexDirection: 'column', gap: 16}}>
                   <div className="txt tx" style={{fontFamily: FONT_FAMILY, fontWeight: 900, fontSize: 64, lineHeight: 1.05, color: COLORS.ink, textTransform: 'uppercase'}}>{it.text}</div>
