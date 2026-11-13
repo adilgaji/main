@@ -142,6 +142,8 @@ def run(
     if work:
         work.mkdir(parents=True, exist_ok=True)
         (work / f"{name}.input.json").write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
+    # Схема ответа — прямо в задании: так агент чаще отвечает верно с первого раза (меньше повторов и трат).
+    task = f"{task}\n\nReturn ONLY one JSON object that matches this JSON Schema exactly (field names, enums, limits):\n{json.dumps(schema, ensure_ascii=False)}"
     for attempt in range(1, TRIES + 1):
         prompt = task
         if problems:
