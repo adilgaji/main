@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Фабрика видео</title>
+<style>
+:root {
+  --bg: #f4f2ee; --card: #ffffff; --ink: #1d1f23; --muted: #646a73; --line: #e2ded6;
+  --accent: #8a5a12; --accent-ink: #ffffff; --ok: #1f7a3d; --warn: #9a6400; --bad: #b3261e; --info: #255fa8;
+  --ok-bg: #e5f3e9; --warn-bg: #fbf0d9; --bad-bg: #fbe4e2; --info-bg: #e3edf9; --soft: #f0ece4;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15171b; --card: #1f2227; --ink: #eceae6; --muted: #a3a8b0; --line: #33373e;
+    --accent: #d9a548; --accent-ink: #1a1408; --ok: #6cc98a; --warn: #e8b85c; --bad: #f08a80; --info: #8db8f0;
+    --ok-bg: #1d3325; --warn-bg: #3a2f17; --bad-bg: #3d2120; --info-bg: #1c2a3d; --soft: #272a30;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; }
+a { color: var(--accent); }
+header.top { display: flex; align-items: center; gap: 16px; padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--card); position: sticky; top: 0; z-index: 5; }
+header.top .brand { font-weight: 700; font-size: 18px; text-decoration: none; color: var(--ink); }
+header.top nav { display: flex; gap: 6px; margin-left: auto; }
+header.top nav a { text-decoration: none; padding: 6px 12px; border-radius: 8px; color: var(--ink); }
+header.top nav a.on { background: var(--soft); font-weight: 600; }
+main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 80px; }
+h1 { font-size: 26px; margin: 4px 0 6px; line-height: 1.25; }
+h2 { font-size: 20px; margin: 22px 0 10px; }
+h3 { font-size: 17px; margin: 16px 0 6px; }
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; margin: 12px 0; }
+.grid { display: grid; gap: 12px; }
+.g2 { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+.g3 { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.g4 { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+button, .btn { font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--ink); padding: 8px 16px; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; }
+button.main, .btn.main { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+button.danger { color: var(--bad); border-color: var(--bad); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button:hover:not(:disabled) { filter: brightness(1.06); }
+input[type=text], input[type=number], input[type=password], select, textarea { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+textarea { width: 100%; min-height: 70px; resize: vertical; }
+label.f { display: block; margin: 10px 0 4px; font-weight: 600; font-size: 14px; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.pill { display: inline-block; padding: 1px 9px; border-radius: 99px; font-size: 13px; font-weight: 600; background: var(--soft); color: var(--muted); white-space: nowrap; }
+.pill.ok { background: var(--ok-bg); color: var(--ok); }
+.pill.warn { background: var(--warn-bg); color: var(--warn); }
+.pill.bad { background: var(--bad-bg); color: var(--bad); }
+.pill.info { background: var(--info-bg); color: var(--info); }
+.steps { display: flex; gap: 6px; flex-wrap: wrap; margin: 14px 0 6px; }
+.steps a { flex: 1 1 120px; text-decoration: none; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 14px; }
+.steps a.on { outline: 2px solid var(--accent); }
+.steps a b { display: block; font-size: 14px; }
+.steps a .pill { margin-top: 4px; }
+.jobbar { position: sticky; top: 57px; z-index: 4; background: var(--info-bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 12px; }
+.jobbar.done-ok { background: var(--ok-bg); }
+.jobbar.done-bad { background: var(--bad-bg); }
+.log { font: 13px/1.45 Consolas, "Cascadia Mono", monospace; white-space: pre-wrap; word-break: break-word; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; max-height: 260px; overflow: auto; margin-top: 8px; }
+.decision { border: 2px solid var(--accent); }
+.vcard { display: flex; gap: 14px; text-decoration: none; color: var(--ink); align-items: center; }
+.vcard img, .vcard .ph { width: 160px; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; background: var(--soft); flex: none; }
+.style-btn { text-align: left; padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+.style-btn .prev { width: 100%; aspect-ratio: 16/9; background-color: var(--soft); background-repeat: no-repeat; background-size: 300% 300%; }
+.style-btn .cap { padding: 8px 10px; }
+.style-btn.on { outline: 3px solid var(--accent); }
+.shot { display: grid; grid-template-columns: 58px 150px 1fr auto; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.shot img { height: 48px; border-radius: 4px; }
+.facts td, .facts th { text-align: left; vertical-align: top; padding: 6px 8px; border-top: 1px solid var(--line); font-size: 14px; }
+.facts { border-collapse: collapse; width: 100%; }
+.script p { margin: 0 0 10px; }
+pre.text { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; margin: 0; }
+main, .card { min-width: 0; overflow-wrap: anywhere; }
+video { width: 100%; max-height: 70vh; background: #000; border-radius: 8px; }
+video.vert { max-height: 520px; width: auto; max-width: 100%; }
+.thumbs img { width: 100%; border-radius: 6px; border: 1px solid var(--line); }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 8px; z-index: 10; max-width: 90vw; }
+.toast.bad { background: var(--bad); color: #fff; }
+.empty { padding: 30px; text-align: center; color: var(--muted); }
+@media (max-width: 640px) {
+  .shot { grid-template-columns: 50px 1fr; }
+  .vcard img, .vcard .ph { width: 110px; }
+  header.top { padding: 10px 12px; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="#/">🎬 Фабрика исторических видео</a>
+  <nav><a href="#/" id="nav-home">Видео</a><a href="#/settings" id="nav-settings">Настройки</a></nav>
+</header>
+<main>
+  <div id="jobbar"></div>
+  <div id="view"><div class="empty">Загрузка…</div></div>
+</main>
+<script>
+"use strict";
+// ------------------------------------------------------------------ общее
+const $ = (s) => document.querySelector(s);
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const STATUS_CLASS = {"принято": "ok", "готово": "ok", "ждёт решения": "warn", "ошибка": "bad", "переделывается": "info", "нет": ""};
+const pill = (st) => `<span class="pill ${STATUS_CLASS[st] ?? "info"}">${esc(st === "нет" ? "не начато" : st)}</span>`;
+const SHOT_RU = {map: "Карта", timeline: "Таймлайн", kenburns: "Архивное изображение", quote: "Цитата", infographic: "Инфографика",
+  narrator: "Рассказчик", compare: "Тогда / сейчас", diagram: "Схема", scene: "Сцена"};
+const FACT_RU = {fact: ["факт", "ok"], disputed: ["спорно", "warn"], legend: ["легенда", "info"], myth: ["миф", "bad"]};
+const clock = (s) => s == null ? "" : `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+const mins = (s) => s >= 90 ? `${Math.round(s / 60)} мин` : `${Math.round(s)} с`;
+
+async function api(method, url, body) {
+  const opt = {method, headers: {"X-Factory": "1"}};
+  if (body !== undefined) { opt.headers["Content-Type"] = "application/json"; opt.body = JSON.stringify(body); }
+  const r = await fetch(url, opt);
+  let data = {};
+  try { data = await r.json(); } catch (e) { /* пустой ответ */ }
+  if (!r.ok) {
+    let msg = data.error || data.detail || `Ошибка ${r.status}`;
+    if (Array.isArray(msg)) msg = "Проверьте поля формы: " + msg.map((m) => m.loc?.slice(-1)[0]).join(", ");
+    throw new Error(msg);
+  }
+  return data;
+}
+function toast(text, bad) {
+  const t = document.createElement("div");
+  t.className = "toast" + (bad ? " bad" : "");
+  t.textContent = text;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), bad ? 7000 : 3000);
+}
+async function act(fn, okText) {
+  try { const r = await fn(); if (okText) toast(okText); return r; }
+  catch (e) { toast(e.message, true); return null; }
+}
+
+// ------------------------------------------------------------------ фоновая задача
+let lastJob = null, jobTimer = null;
+function renderJob(job) {
+  const box = $("#jobbar");
+  if (!job) { box.innerHTML = ""; return; }
+  const cls = job.running ? "" : (job.ok ? "done-ok" : "done-bad");
+  const state = job.running ? `идёт ${mins(job.seconds)}` : (job.stopped ? "остановлено" : job.ok ? `готово за ${mins(job.seconds)}` : "завершилось с ошибкой");
+  const link = job.video ? ` · <a href="#/v/${encodeURIComponent(job.video)}${job.step ? "/" + job.step : ""}">открыть видео</a>` : "";
+  box.innerHTML = `<div class="jobbar ${cls}">
+    <div class="row"><b>${job.running ? "⏳" : job.ok ? "✅" : "⚠️"} ${esc(job.title)}</b><span class="muted small">${esc(state)} (начато в ${esc(job.started)})${link}</span>
+      <span style="margin-left:auto" class="row">
+        <button onclick="toggleLog()" id="logbtn">${showLog ? "Скрыть журнал" : "Показать журнал"}</button>
+        ${job.running ? `<button class="danger" onclick="stopJob()">Остановить</button>` : `<button onclick="hideJob()">Скрыть</button>`}
+      </span></div>
+    ${job.running ? `<div class="small muted" style="margin-top:4px">${esc(job.log[job.log.length - 1] || "запуск…")}</div>` : ""}
+    ${showLog ? `<div class="log" id="joblog">${esc(job.log.join("\n"))}</div>` : ""}
+  </div>`;
+  const lg = $("#joblog"); if (lg) lg.scrollTop = lg.scrollHeight;
+}
+let showLog = false, hiddenJob = null;
+function toggleLog() { showLog = !showLog; renderJob(lastJob); }
+function hideJob() { hiddenJob = lastJob && lastJob.id; renderJob(null); }
+async function stopJob() {
+  if (!confirm("Остановить задачу? Повторный запуск продолжит с места остановки.")) return;
+  const r = await act(() => api("POST", "/api/job/stop"));
+  if (r) setJob(r.job);
+}
+function setJob(job) {
+  const wasRunning = lastJob && lastJob.running;
+  lastJob = job;
+  if (job && !job.running && hiddenJob === job.id) renderJob(null); else renderJob(job);
+  clearTimeout(jobTimer);
+  if (job && job.running) jobTimer = setTimeout(pollJob, 2000);
+  if (wasRunning && job && !job.running) {
+    toast(job.ok ? `«${job.title}» — готово` : `«${job.title}» — остановилось, смотрите журнал`, !job.ok);
+    if (!job.ok) showLog = true;
+    route();
+  }
+}
+async function pollJob() {
+  try { const r = await api("GET", "/api/job"); setJob(r.job); }
+  catch (e) { jobTimer = setTimeout(pollJob, 5000); }
+}
+const busy = () => !!(lastJob && lastJob.running);
+
+// ------------------------------------------------------------------ маршруты
+async function route() {
+  const h = location.hash.replace(/^#/, "") || "/";
+  const parts = h.split("/").filter(Boolean).map(decodeURIComponent);
+  $("#nav-home").classList.toggle("on", parts[0] !== "settings");
+  $("#nav-settings").classList.toggle("on", parts[0] === "settings");
+  try {
+    if (parts[0] === "v" && parts[1]) await showVideo(parts[1], parts[2]);
+    else if (parts[0] === "settings") await showSettings();
+    else await showHome();
+  } catch (e) {
+    $("#view").innerHTML = `<div class="card"><b>Не получилось открыть страницу.</b><div class="muted">${esc(e.message)}</div><p><a href="#/">← К списку видео</a></p></div>`;
+  }
+}
+window.addEventListener("hashchange", route);
+
+// ------------------------------------------------------------------ главная
+async function showHome() {
+  const d = await api("GET", "/api/home");
+  setJob(d.job);
+  const sub = Object.entries(d.subgenres).map(([k, v]) => `<option value="${esc(k)}">${esc(v)}</option>`).join("");
+  const list = d.videos.length ? d.videos.map((v) => `
+    <a class="card vcard" href="#/v/${encodeURIComponent(v.id)}">
+      ${v.thumb ? `<img src="/files/${encodeURIComponent(v.id)}/${v.thumb}" alt="">` : `<div class="ph"></div>`}
+      <div style="min-width:0">
+        <div style="font-weight:600">${esc(v.title)}</div>
+        <div class="small muted">${esc(v.created)} · стиль: ${esc(v.style || "не выбран")} · агенты ≈ $${v.cost.toFixed(2)}</div>
+        <div class="small" style="margin-top:4px">${v.next ? `Сейчас: ${esc(v.next_name)} ${pill(v.next_status)}` : `<span class="pill ok">видео готово</span>`}</div>
+      </div>
+    </a>`).join("") : `<div class="empty">Видео пока нет. Начните первое — форма выше.</div>`;
+  $("#view").innerHTML = `
+    <h1>Видео</h1>
+    <div class="muted">Голос: ${esc(d.voice || "не выбран")} · основной стиль: ${esc(d.style || "не выбран")} — <a href="#/settings">изменить</a></div>
+    <div class="card">
+      <h2 style="margin-top:0">Новое видео</h2>
+      <div class="grid g3">
+        <div><label class="f" for="nv-sub">Направление</label><select id="nv-sub" style="width:100%"><option value="any">Любое — пусть предложат</option>${sub}</select></div>
+        <div><label class="f" for="nv-hint">Подсказка к теме (по желанию)</label><input id="nv-hint" type="text" placeholder="например: Spartans, Egypt, plague" style="width:100%"></div>
+        <div class="row" style="align-items:end">
+          <div><label class="f" for="nv-min">Минут</label><input id="nv-min" type="number" min="1" max="15" step="0.5" value="8.5" style="width:90px"></div>
+          <div><label class="f" for="nv-ch">Глав</label><select id="nv-ch"><option value="5-7" selected>5–7</option><option value="3-4">3–4 (короткое)</option><option value="4-6">4–6</option></select></div>
+        </div>
+      </div>
+      <p class="small muted">Тему на английском предложат агенты, вы выберете из списка. Первый шаг — выбор стиля.</p>
+      <button class="main" onclick="newVideo()">Начать новое видео</button>
+    </div>
+    <h2>Все видео</h2>
+    ${list}`;
+}
+async function newVideo() {
+  const [lo, hi] = $("#nv-ch").value.split("-").map(Number);
+  const r = await act(() => api("POST", "/api/videos", {subgenre: $("#nv-sub").value, hint: $("#nv-hint").value, minutes: Number($("#nv-min").value), chapters_min: lo, chapters_max: hi}));
+  if (r) location.hash = `#/v/${encodeURIComponent(r.id)}/style`;
+}
+
+// ------------------------------------------------------------------ одно видео
+let V = null;  // данные текущего видео
+async function showVideo(id, step) {
+  const d = await api("GET", `/api/videos/${encodeURIComponent(id)}`);
+  V = d;
+  setJob(d.job);
+  const cur = step || d.next || "package";
+  const steps = d.steps.map((s, i) => `<a href="#/v/${encodeURIComponent(d.id)}/${s.id}" class="${s.id === cur ? "on" : ""}"><b>${i}. ${esc(s.name)}</b>${pill(s.status)}</a>`).join("");
+  const panel = (PANELS[cur] || (() => "<div class='card'>Нет такого шага</div>"))(d);
+  $("#view").innerHTML = `
+    <div class="small"><a href="#/">← Все видео</a></div>
+    <h1>${esc(d.title)}</h1>
+    <div class="muted small">${esc(d.created)} · ${esc(d.subgenre_name)}${d.brief.minutes ? ` · ${esc(d.brief.minutes)} мин` : ""} · стиль: ${esc(d.style_name || "не выбран")} · голос: ${esc(d.voice)} · агенты потратили ≈ $${d.cost.toFixed(2)}
+      · <a href="#" onclick="openFolder();return false">открыть папку</a></div>
+    <div class="steps">${steps}</div>
+    ${panel}`;
+}
+const vid = () => encodeURIComponent(V.id);
+const stepStatus = (s) => V.steps.find((x) => x.id === s).status;
+const jobHere = (step) => busy() && lastJob.video === V.id && (!step || lastJob.step === step);
+async function openFolder() { await act(() => api("POST", `/api/videos/${vid()}/open`)); }
+
+async function runStep(step, noteId) {
+  const note = noteId ? ($(`#${noteId}`)?.value || "") : "";
+  const r = await act(() => api("POST", `/api/videos/${vid()}/run`, {step, note}), "Запущено. Ход работы — в полосе сверху.");
+  if (r) { setJob(r.job); route(); }
+}
+async function approve(step) {
+  const r = await act(() => api("POST", `/api/videos/${vid()}/approve`, {step}), "Принято");
+  if (r) location.hash = `#/v/${vid()}/${r.next || "package"}`;
+}
+function runningNote(step) {
+  return jobHere(step) ? `<div class="card"><b>⏳ Идёт работа: ${esc(lastJob.title)}</b><div class="muted small">Страница обновится сама, когда шаг закончится. Журнал — в полосе сверху.</div></div>` : "";
+}
+function decision(step, what, extra = "") {
+  if (stepStatus(step) !== "ждёт решения" || jobHere()) return "";
+  return `<div class="card decision">
+    <h3 style="margin-top:0">Ваше решение</h3>
+    <div class="row"><button class="main" onclick="approve('${step}')">Принять ${esc(what)}</button></div>
+    <label class="f" for="note-${step}">Или напишите, что изменить (можно по-русски):</label>
+    <textarea id="note-${step}" placeholder="например: короче вступление, больше про повседневную жизнь"></textarea>
+    <div class="row" style="margin-top:8px"><button onclick="redo('${step}')">Переделать с этим пожеланием</button>${extra}</div>
+  </div>`;
+}
+function redo(step) {
+  const note = $(`#note-${step}`).value.trim();
+  if (!note) { toast("Напишите, что изменить", true); return; }
+  runStep(step, `note-${step}`);
+}
+function startBox(step, title, text, label) {
+  if (jobHere()) return "";
+  const st = stepStatus(step);
+  if (st === "принято" || st === "готово") return "";
+  return `<div class="card decision"><h3 style="margin-top:0">${esc(title)}</h3><p class="muted">${text}</p>
+    ${st === "ошибка" ? `<p><span class="pill bad">прошлый запуск: ошибка</span> ${esc(V.step_info[step]?.error || "")}</p>` : ""}
+    <button class="main" onclick="runStep('${step}')" ${busy() ? "disabled" : ""}>${esc(label)}</button>
+    ${busy() ? `<div class="small muted" style="margin-top:6px">Сейчас идёт другая задача — дождитесь её окончания.</div>` : ""}</div>`;
+}
+
+const PANELS = {};
+
+PANELS.style = (d) => {
+  const s = d.styles;
+  const chosen = d.style;
+  const sheet = s.sheets.find((x) => x.kind === sheetKind) || s.sheets[0];
+  const tabs = s.sheets.length > 1 ? `<div class="row" style="margin:6px 0">${s.sheets.map((x) => `<button class="${sheet && x.kind === sheet.kind ? "main" : ""}" onclick="sheetKind='${x.kind}';route()">${esc(x.title)}</button>`).join("")}</div>` : "";
+  const cards = s.styles.map((st, i) => {
+    const pos = sheet ? `background-image:url('${sheet.url}');background-position:${(i % 3) * 50}% ${Math.floor(i / 3) * 50}%` : "";
+    return `<button class="style-btn ${st.id === chosen ? "on" : ""}" onclick="chooseStyle('${st.id}')">
+      <div class="prev" style="${pos}"></div>
+      <div class="cap"><b>${st.n}. ${esc(st.name)}</b> ${st.id === s.main ? `<span class="pill">основной</span>` : ""} ${st.id === chosen ? `<span class="pill ok">выбран</span>` : ""}<div class="small muted">${esc(st.tagline)}</div></div>
+    </button>`;
+  }).join("");
+  const locked = d.data.result.video;
+  return `<div class="card">
+    <h2 style="margin-top:0">Шаг 0. Стиль видео</h2>
+    <p>${chosen ? `Выбран стиль <b>${esc(d.style_name)}</b>. Можно сменить до производства.` : `Выберите стиль. Основной — <b>${esc(s.styles.find((x) => x.id === s.main).name)}</b>.`}</p>
+    ${locked ? `<p class="muted">Видео уже собрано — стиль не меняется.</p>` : `
+    ${!chosen ? `<button class="main" onclick="chooseStyle('${s.main}')">Оставить основной стиль</button>` : `<a class="btn main" href="#/v/${vid()}/topic">Дальше: тема →</a>`}
+    ${s.sheets.length ? tabs : `<p class="muted small">Листов-образцов ещё нет. <button onclick="drawSheets()" ${busy() ? "disabled" : ""}>Нарисовать образцы (1–3 мин)</button></p>`}
+    <div class="grid g3" style="margin-top:10px">${cards}</div>
+    ${s.sheets.length ? `<p class="small muted">Картинки — один и тот же кадр в 8 стилях. Тексты и субтитры во всех стилях чёткие. <a href="#" onclick="drawSheets();return false">перерисовать образцы</a></p>` : ""}`}
+  </div>`;
+};
+let sheetKind = "image";
+async function chooseStyle(id) {
+  const r = await act(() => api("POST", `/api/videos/${vid()}/style`, {style: id}), "Стиль выбран");
+  if (r) route();
+}
+async function drawSheets() {
+  const r = await act(() => api("POST", "/api/sheets"), "Рисую листы-образцы…");
+  if (r) setJob(r.job);
+}
+
+PANELS.topic = (d) => {
+  const t = d.data.topics;
+  const picked = d.data.topic;
+  const brief = `<div class="small muted">Направление: ${esc(d.subgenre_name)}${d.brief.hint ? ` · подсказка: «${esc(d.brief.hint)}»` : ""} · ${esc(d.brief.minutes)} мин · глав ${esc((d.brief.chapters || []).join("–"))}</div>`;
+  if (!d.style) return `<div class="card">Сначала <a href="#/v/${vid()}/style">выберите стиль</a>.</div>`;
+  if (picked) return `<div class="card"><h2 style="margin-top:0">Тема выбрана</h2><h3>${esc(picked.title)}</h3><p>${esc(picked.pitch_ru)}</p><p class="muted"><i>${esc(picked.hook)}</i></p>
+    <a class="btn main" href="#/v/${vid()}/outline">Дальше: план →</a></div>`;
+  const cards = t ? t.topics.map((x, i) => `<div class="card">
+      <div class="row"><b style="font-size:17px">${i + 1}. ${esc(x.title)}</b></div>
+      <p>${esc(x.pitch_ru)}</p>
+      <p class="small"><b>Хук:</b> <i>${esc(x.hook)}</i></p>
+      ${x.risk_ru ? `<p class="small muted"><b>Риски:</b> ${esc(x.risk_ru)}</p>` : ""}
+      <div class="small muted">Источники: ${x.sources.map((s) => s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>` : esc(s.title)).join("; ")}</div>
+      <button class="main" style="margin-top:10px" onclick="pickTopic(${i + 1})" ${jobHere() ? "disabled" : ""}>Выбрать эту тему</button>
+    </div>`).join("") : "";
+  return `${runningNote("topic")}
+    <div class="card"><h2 style="margin-top:0">Шаг 1. Тема</h2>${brief}
+      ${t ? `<p>${esc(t.summary_ru)}</p>` : ""}</div>
+    ${t ? cards + (jobHere() ? "" : `<div class="card"><label class="f" for="note-topic">Не нравится ни одна? Напишите, что хочется:</label><textarea id="note-topic"></textarea>
+       <button style="margin-top:8px" onclick="runStep('topic','note-topic')" ${busy() ? "disabled" : ""}>Предложить другие темы</button></div>`)
+       : startBox("topic", "Предложить темы", "Агент предложит 5 тем с источниками (≈ 1 минута).", "Предложить темы")}`;
+};
+async function pickTopic(n) {
+  const r = await act(() => api("POST", `/api/videos/${vid()}/pick`, {number: n}), "Тема выбрана");
+  if (r) location.hash = `#/v/${encodeURIComponent(r.id)}/outline`;
+}
+
+PANELS.outline = (d) => {
+  const o = d.data.outline;
+  const st = stepStatus("outline");
+  const body = o && st !== "нет" ? `<div class="card">
+      <h2 style="margin-top:0">${esc(o.title)}</h2>
+      <div class="small muted">Структура: <b>${esc(d.data.structure_name || o.structure)}</b></div>
+      <p>${esc(o.logline)}</p><p><b>Хук:</b> <i>${esc(o.hook)}</i></p>
+      ${o.summary_ru ? `<p class="muted">${esc(o.summary_ru)}</p>` : ""}
+    </div>
+    ${o.chapters.map((c, i) => `<div class="card"><b>Глава ${i + 1}. ${esc(c.title)}</b> <span class="small muted">≈ ${c.est_words} слов</span>
+      <div class="small muted">${esc(c.goal)}</div>
+      <ul>${c.beats.map((b) => `<li>${esc(b)}</li>`).join("")}</ul>
+      <div class="small"><b>Кульминация:</b> ${esc(c.climax)}</div><div class="small"><b>Повторный хук:</b> ${esc(c.rehook)}</div></div>`).join("")}
+    <div class="card"><h3 style="margin-top:0">Источники</h3><ul>${o.sources.map((s) => `<li>${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>` : esc(s.title)} ${s.opened ? `<span class="pill ok">открыт</span>` : `<span class="pill">не открыт</span>`}</li>`).join("")}</ul></div>` : "";
+  return `${runningNote("outline")}${!o || st === "нет" || st === "ошибка" ? startBox("outline", "Шаг 2. План", "Агент составит план глав и соберёт источники (≈ 1–2 минуты).", "Составить план") : ""}${body}${decision("outline", "план")}`;
+};
+
+PANELS.script = (d) => {
+  const s = d.data.script;
+  const st = stepStatus("script");
+  if (!s || st === "нет" || st === "ошибка") return runningNote("script") + startBox("script", "Шаг 3. Текст и проверка фактов", "Сценарист пишет текст, проверка фактов сверяет его с источниками, затем один круг исправлений (≈ 5–10 минут).", "Написать текст");
+  const words = Object.values(d.data.script_words || {}).reduce((a, b) => a + b, 0);
+  const facts = (s.facts || []).map((f) => {
+    const [ru, cls] = FACT_RU[f.status] || [f.status, ""];
+    return `<tr><td>${esc(f.chapter)}</td><td>${esc(f.claim)}</td><td><span class="pill ${cls}">${esc(ru)}</span></td><td class="small">${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.source_title)}</a>` : esc(f.source_title)}${f.opened ? "" : " <span class='pill'>не открыт</span>"}</td></tr>`;
+  }).join("");
+  const probs = (s.open_problems || []);
+  const fixBtn = probs.length ? `<button onclick="fixScript()">Исправить только замечания</button>` : "";
+  return `${runningNote("script")}
+    <div class="card"><h2 style="margin-top:0">Текст озвучки</h2>
+      <div class="small muted">Слов: ${words}${d.data.words_target ? ` (цель ≈ ${d.data.words_target})` : ""} · глав: ${s.chapters.length}</div>
+      ${s.facts_summary_ru ? `<p>${esc(s.facts_summary_ru)}</p>` : ""}${s.notes_ru ? `<p class="muted">${esc(s.notes_ru)}</p>` : ""}</div>
+    ${probs.length ? `<div class="card" style="border-color:var(--warn)"><h3 style="margin-top:0">Замечания проверки фактов (${probs.length})</h3><ul>${probs.map((p) => `<li><b>${esc(p.chapter)}</b>: «${esc(p.quote)}» — ${esc(p.issue)}. <span class="muted">Как исправить: ${esc(p.fix)}</span></li>`).join("")}</ul></div>` : ""}
+    ${s.chapters.map((c, i) => `<div class="card script"><b>Глава ${i + 1}. ${esc(c.title)}</b> <span class="small muted">${(d.data.script_words || {})[c.id] || ""} слов</span>
+      <div style="margin-top:8px">${c.text.split(/\n+/).map((p) => `<p>${esc(p)}</p>`).join("")}</div></div>`).join("")}
+    <div class="card"><h3 style="margin-top:0">Факты и их статус</h3><div style="overflow-x:auto"><table class="facts"><tr><th>Глава</th><th>Утверждение</th><th>Статус</th><th>Источник</th></tr>${facts}</table></div></div>
+    ${decision("script", "текст", fixBtn)}`;
+};
+async function fixScript() {
+  const note = $("#note-script")?.value || "";
+  const r = await act(() => api("POST", `/api/videos/${vid()}/fix`, {note, recheck: true}), "Исправляю замечания…");
+  if (r) { setJob(r.job); route(); }
+}
+
+PANELS.storyboard = (d) => {
+  const b = d.data.storyboard;
+  const st = stepStatus("storyboard");
+  if (!b || st === "нет" || st === "ошибка") return runningNote("storyboard") + startBox("storyboard", "Шаг 4. Озвучка и раскадровка", "Сначала озвучка (время каждого слова), затем поиск картинок в открытых архивах и раскадровка (≈ 5–10 минут).", "Озвучить и сделать раскадровку");
+  const n = d.data.narration;
+  const shots = b.chapters.map((ch, i) => `<div class="card"><b>Глава ${i + 1}. ${esc(ch.title)}</b> <span class="small muted">кадров: ${ch.shots.length}</span>
+    ${ch.shots.map((s) => `<div class="shot"><span class="muted">${esc(clock(s.start))}</span><span>${esc(SHOT_RU[s.type] || s.type)}${s.seconds ? ` <span class="small muted">${s.seconds} с</span>` : ""}</span>
+      <span>${esc(s.label)}${s.at ? `<div class="small muted">со слов «${esc(s.at)}…»</div>` : ""}</span>
+      <span>${s.images.map((im) => im.has ? `<img src="/image?ref=${encodeURIComponent(im.ref)}" alt="${esc(im.ref)}" loading="lazy">` : `<span class="pill">${esc(im.ref)}</span>`).join(" ")}</span></div>`).join("")}</div>`).join("");
+  return `${runningNote("storyboard")}
+    <div class="card"><h2 style="margin-top:0">Озвучка</h2>
+      ${n ? `<audio controls preload="none" style="width:100%" src="/files/${vid()}/${n.file}?v=${n.v}"></audio>
+      <div class="small muted">Движок: ${esc(n.engine)} · голос ${esc(n.voice)} · слов ${esc(n.words)} · длина ${esc(clock((n.total_frames || 0) / 30))}</div>
+      ${(n.warnings || []).length ? `<div class="small" style="color:var(--warn)">${n.warnings.map(esc).join("<br>")}</div>` : ""}` : `<span class="muted">файла озвучки нет</span>`}
+    </div>
+    <div class="card"><h2 style="margin-top:0">Раскадровка</h2><p>${esc(b.summary_ru)}</p></div>
+    ${shots}
+    ${decision("storyboard", "раскадровку")}`;
+};
+
+PANELS.production = (d) => {
+  const st = stepStatus("production");
+  const p = d.data.production;
+  const est = d.data.estimate;
+  const res = d.data.result;
+  const steps = p && p.steps ? Object.entries(p.steps).map(([k, v]) => `<li>${esc(k)} — ${pill(v.status)} ${v.problems ? `<div class="small" style="color:var(--bad)">${v.problems.map(esc).join("<br>")}</div>` : ""}</li>`).join("") : "";
+  const estText = est ? `Длина видео ≈ ${clock(est.video_seconds)}. Рендер на этом компьютере — около <b>${est.render_minutes} мин</b> (${est.fps} кадров/с${est.measured ? ", по прошлому замеру" : ", предварительная оценка"}).` : "";
+  const checks = res.checks ? `<div class="card"><h3 style="margin-top:0">Проверки ${res.checks.ok ? `<span class="pill ok">все пройдены</span>` : `<span class="pill bad">есть проблемы</span>`}</h3>
+    <ul>${res.checks.checks.map((c) => `<li>${c.ok ? "✅" : "❌"} ${esc(c.name)} <span class="small muted">${esc(c.info || "")}</span>${(c.problems || []).length ? `<div class="small" style="color:var(--bad)">${c.problems.map(esc).join("<br>")}</div>` : ""}</li>`).join("")}</ul></div>` : "";
+  const can = stepStatus("storyboard") === "принято";
+  return `${runningNote("production")}
+    ${!can ? `<div class="card">Сначала нужно принять <a href="#/v/${vid()}/storyboard">раскадровку</a>.</div>` : ""}
+    ${can && st !== "готово" && !jobHere() ? `<div class="card decision"><h2 style="margin-top:0">Шаг 5. Производство</h2>
+      <p>Картинки, озвучка, рендер по главам, склейка и проверки — без остановок. ${estText}</p>
+      ${st === "ошибка" ? `<p><span class="pill bad">прошлый запуск не прошёл проверки или прервался</span> Повторный запуск продолжит с места сбоя: готовые главы не рендерятся заново.</p>` : ""}
+      <button class="main" onclick="runStep('production')" ${busy() ? "disabled" : ""}>${st === "ошибка" ? "Запустить снова" : "Запустить производство"}</button></div>` : ""}
+    ${steps ? `<div class="card"><h3 style="margin-top:0">Ход производства</h3><ul>${steps}</ul></div>` : ""}
+    ${res.video ? `<div class="card"><h2 style="margin-top:0">Видео</h2><video controls preload="metadata" src="/files/${vid()}/video.mp4?v=${Date.now()}"></video><div class="small muted">${res.video_mb} МБ</div>
+      ${st === "готово" ? `<a class="btn main" style="margin-top:10px" href="#/v/${vid()}/package">Дальше: упаковка и Shorts →</a>` : ""}</div>` : ""}
+    ${checks}`;
+};
+
+PANELS.package = (d) => {
+  const st = stepStatus("package");
+  const r = d.data.result;
+  const rv = r.review;
+  if (st === "нет" || st === "ошибка") return runningNote("package") + (stepStatus("production") === "готово"
+    ? startBox("package", "Шаг 6. Упаковка и Shorts", "Названия, описание с главами, теги, 3 обложки, 3–5 Shorts и итоговая проверка (≈ 10–20 минут).", "Сделать упаковку")
+    : `<div class="card">Сначала нужно <a href="#/v/${vid()}/production">производство</a>.</div>`);
+  return `${runningNote("package")}
+    ${st === "принято" ? `<div class="card" style="border-color:var(--ok)"><h2 style="margin-top:0">✅ Видео готово</h2><p>Все файлы — в папке видео. Загрузка на YouTube — вручную.</p><button class="main" onclick="openFolder()">Открыть папку</button></div>` : ""}
+    ${rv ? `<div class="card"><h2 style="margin-top:0">Итоговая проверка ${rv.verdict === "ready" ? `<span class="pill ok">готово к загрузке</span>` : `<span class="pill warn">нужны правки</span>`}</h2>
+      <p>${esc(rv.summary_ru)}</p><ul>${rv.items.map((i) => `<li>${i.ok ? "✅" : "⚠️"} <b>${esc(i.area)}</b> — <span class="small">${esc(i.note)}</span></li>`).join("")}</ul>
+      ${(rv.fixes || []).length ? `<h3>Что поправить</h3><ul>${rv.fixes.map((f) => `<li>${esc(f)}</li>`).join("")}</ul>` : ""}</div>` : ""}
+    <div class="card"><h2 style="margin-top:0">Названия (3 варианта)</h2><ol>${r.titles.map((t) => `<li>${esc(t)}</li>`).join("")}</ol></div>
+    <div class="card"><h2 style="margin-top:0">Обложки</h2><div class="grid g3 thumbs">${r.thumbnails.map((t) => `<a href="/files/${vid()}/${t}" target="_blank"><img src="/files/${vid()}/${t}?v=${Date.now()}" alt="${t}"></a>`).join("")}</div></div>
+    <div class="card"><h2 style="margin-top:0">Описание</h2><pre class="text">${esc(r.description || "")}</pre><h3>Теги</h3><div class="small">${esc(r.tags)}</div></div>
+    <div class="card"><h2 style="margin-top:0">Shorts (${r.shorts.length})</h2><div class="grid g3">${r.shorts.map((s) => `<div><video class="vert" controls preload="metadata" src="/files/${vid()}/${s.file}"></video><div style="font-weight:600">${esc(s.title)}</div></div>`).join("")}</div></div>
+    <div class="card"><h3 style="margin-top:0">Файлы в папке</h3><div class="small">${r.files.map((f) => `<a href="/files/${vid()}/${encodeURIComponent(f)}" target="_blank">${esc(f)}</a>`).join(" · ")}</div></div>
+    ${decision("package", "— видео готово")}`;
+};
+
+// ------------------------------------------------------------------ настройки
+async function showSettings() {
+  const d = await api("GET", "/api/settings");
+  setJob(d.job);
+  const v = d.voice;
+  const voices = v.voices.map((x) => `<label class="card row" style="margin:6px 0;cursor:pointer">
+      <input type="radio" name="voice" value="${x.id}" ${x.id === v.current ? "checked" : ""}>
+      <span style="min-width:180px"><b>${esc(x.name)}</b> <span class="small muted">${esc(x.label)}${x.wpm ? `, ${x.wpm} слов/мин` : ""}</span></span>
+      ${x.sample ? `<audio controls preload="none" src="${x.sample}" style="height:34px;max-width:100%"></audio>` : `<span class="small muted">образца нет</span>`}
+    </label>`).join("");
+  const styles = d.styles.styles.map((s) => `<option value="${s.id}" ${s.id === d.styles.main ? "selected" : ""}>${s.n}. ${esc(s.name)} — ${esc(s.tagline)}</option>`).join("");
+  const env = d.env_report;
+  const MARK = {ok: ["✅", ""], warn: ["⚠️", ""], fail: ["❌", "color:var(--bad)"], info: ["ℹ️", ""]};
+  const envList = env ? `<div class="small muted">Проверено: ${esc(env.time)}</div><ul>${env.results.map((r) => {
+      const [m, css] = MARK[r.status] || ["•", ""];
+      return `<li style="${css}">${m} <b>${esc(r.name)}</b> — ${esc(r.detail)}${r.fix ? `<div class="small muted">${esc(r.fix)}</div>` : ""}</li>`;
+    }).join("")}</ul>` : `<p class="muted">Проверки ещё не было.</p>`;
+  $("#view").innerHTML = `
+    <h1>Настройки</h1>
+    <div class="card"><h2 style="margin-top:0">Голос озвучки</h2><p class="small muted">Образец: «${esc(v.sample_text.slice(0, 120))}…»</p>${voices}
+      <label class="f" for="speed">Скорость речи: <span id="speed-v">${d.voice_speed}</span></label>
+      <input id="speed" type="range" min="0.85" max="1.15" step="0.05" value="${d.voice_speed}" oninput="$('#speed-v').textContent=this.value" style="width:260px">
+    </div>
+    <div class="card"><h2 style="margin-top:0">Основной стиль</h2><p class="small muted">Предлагается первым при каждом новом видео; для отдельного видео можно выбрать другой.</p>
+      <select id="mainstyle" style="max-width:100%">${styles}</select></div>
+    <div class="card"><h2 style="margin-top:0">Архив Smithsonian</h2>
+      <p class="small muted">Бесплатный личный ключ: <a href="https://api.data.gov/signup/" target="_blank" rel="noopener">api.data.gov/signup</a> (без ключа этот архив почти всегда отказывает). Остальные архивы работают без ключа.</p>
+      <input id="sikey" type="password" placeholder="${d.smithsonian_key_set ? "ключ сохранён — вставьте новый, чтобы заменить" : "вставьте ключ"}" style="width:100%;max-width:420px"></div>
+    <button class="main" onclick="saveSettings()">Сохранить настройки</button>
+    <div class="card" style="margin-top:24px"><h2 style="margin-top:0">Проверка компьютера</h2><p class="small muted">Ничего не меняет — только смотрит, всё ли установлено.</p>
+      <button onclick="checkEnv()" ${busy() ? "disabled" : ""}>Проверить сейчас</button>${envList}</div>`;
+}
+async function saveSettings() {
+  const voice = document.querySelector("input[name=voice]:checked")?.value;
+  const body = {voice, voice_speed: Number($("#speed").value), style: $("#mainstyle").value};
+  const key = $("#sikey").value.trim();
+  if (key) body.smithsonian_api_key = key;
+  const r = await act(() => api("POST", "/api/settings", body), "Настройки сохранены");
+  if (r) route();
+}
+async function checkEnv() {
+  const r = await act(() => api("POST", "/api/check-env"), "Проверяю компьютер…");
+  if (r) setJob(r.job);
+}
+
+route();
+</script>
+</body>
+</html>

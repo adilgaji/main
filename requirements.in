@@ -16,3 +16,7 @@ en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_
 # --- Запасные голоса (если Kokoro не запустится) ---
 piper-tts==1.8.0         # локально, без интернета; модель ≈ 60 МБ (scripts/download_models.py --piper)
 edge-tts==7.3.1          # онлайн-голос Microsoft, последний резерв
+
+# --- Веб-страница (start.bat) ---
+fastapi==0.162.6
+uvicorn==0.54.0
