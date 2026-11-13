@@ -14,6 +14,7 @@ export const ENV_KINDS: EnvKind[] = ['muscle', 'blood', 'neural', 'cells', 'mole
 let W: number = VIDEO.width;
 let H: number = VIDEO.height;
 /** Размер кадра для фонов (вертикальный Shorts или горизонтальное видео). */
+export const getSize = () => ({W, H});
 export const setEnvSize = (w: number, h: number) => {
   W = w;
   H = h;

@@ -1,6 +1,6 @@
 # Структуры роликов и петля (endless loop)
 
-Каждый ролик — НОВАЯ структура. Фабрика помнит последние структуры (`output/_history.json`)
+Каждый ролик — НОВАЯ структура. Баланс содержания — docs/PRACTICAL.md (≈40% объяснение, ≈60% советы). Фабрика помнит последние структуры (`output/_history.json`)
 и передаёт сценаристу список запрещённых (последние 4). Хук тоже по разной формуле (docs/HOOKS.md).
 
 ## Структуры (id — для script.json → "structure")
@@ -16,6 +16,11 @@
 | `versus` | Сравнение A и B (сон vs без сна, до vs после), что меняется внутри | «Your muscle after 8 hours of sleep vs none» |
 | `mystery` | Загадка в начале → подсказки → разгадка в конце (связана с началом — идеально для петли) | «Why does it hurt two days later, not today?» |
 | `zoom_story` | Последовательный зум: тело → орган → клетка → молекула, на каждом уровне одна мысль | «Zoom into a sore leg…» |
+| `mistakes_fixes` | 3 частые ошибки → почему они вредят (коротко) → как исправить (подробно) | «3 recovery mistakes you make after the gym» |
+| `routine` | Простой распорядок шаг за шагом (утро/вечер/после тренировки) с объяснением каждого шага | «Your 10-minute after-workout routine» |
+| `try_tonight` | Челлендж: «сделай это сегодня» → что почувствуешь → почему работает | «Try this tonight and wake up less sore» |
+| `habit_stack` | Маленькие привычки, которые вместе дают результат | «4 tiny habits that make muscles recover faster» |
+| `do_dont` | Делай / не делай, с причиной для каждого пункта | «Do this, not that, after training» |
 | `question_chain` | Цепочка «почему?»: каждый ответ рождает следующий вопрос | «Why do muscles grow? Because… Why? Because…» |
 
 ## Петля (endless loop) — обязательно

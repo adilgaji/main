@@ -182,6 +182,15 @@ export const Stickman: React.FC<StickmanProps> = ({
       height={size}
       style={{overflow: 'visible', ...style}}
     >
+      {/* контур цветом фона — гид виден и на тёмной, и на белой доске */}
+      <g fill="none" stroke={COLORS.bg} strokeOpacity={0.85} strokeWidth={sw + 9} strokeLinecap="round" strokeLinejoin="round">
+        <path d={line([hipX, hipY], rK, rF)} />
+        <path d={line([hipX, hipY], lK, lF)} />
+        <line x1={hipX} y1={hipY} x2={nx} y2={ny} />
+        <path d={line([nx, ny + 6], rE, rH)} />
+        <path d={line([nx, ny + 6], lE, lH)} />
+      </g>
+      <circle cx={head[0]} cy={head[1]} r={48} fill={COLORS.bg} opacity={0.85} />
       <g fill="none" stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
         {/* ноги */}
         <path d={line([hipX, hipY], rK, rF)} />

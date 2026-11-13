@@ -18,6 +18,7 @@ Check and score each item (ok / fix):
 5. Licenses: every non-code asset (fonts, music, images) is listed with a license in sources.txt.
 6. Hook (docs/HOOKS.md): the first sentence speaks to the viewer, is ≤ 10 words, hits a relatable pain/desire/surprise,
    and the video honestly answers it. A weak/generic or misleading hook → fix (file script.json).
+6b. Usefulness (docs/PRACTICAL.md): about 60% of the script is concrete, evidence-based, actionable tips; no complex terms.
 7. Loop & variety (docs/STRUCTURES.md): the last sentence flows into the first (no goodbye); the structure is
    not one of the previous ones listed in output/_history.json.
 8. Packaging: titles ≤ 60 chars, no false promises; description has sources and "Educational, not medical advice".

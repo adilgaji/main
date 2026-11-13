@@ -138,7 +138,11 @@ def produce(job: Path, log: Log | None = None) -> Path:
     from job import fmt_of
 
     fmt = fmt_of(job)
-    props = {"words": words, "shots": sb["shots"], "total": sb["total"], "music": None, "style": load_state(job).get("style", "classic")}
+    from job import location_for
+
+    st = load_state(job)
+    props = {"words": words, "shots": sb["shots"], "total": sb["total"], "music": None, "style": st.get("style", "classic"),
+             "location": sb.get("location") or st.get("location") or location_for(st.get("topic", ""))}
     write_srt(job)
     if fmt == "long":
         props["chapters"] = compute_chapters(job)

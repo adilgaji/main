@@ -29,6 +29,7 @@ Make a storyboard:
 - Headlines ≤ 5 words, uppercase-friendly, may contain one *keyword*. On-screen text uses plain words
   (docs/PLAIN_LANGUAGE.md): prefer "CLEANUP CELLS" over "MACROPHAGES" unless the term is being introduced.
 
+Tips get their own shots: use templates tips, steps (numbered checklist) and do_dont (✓ / ✗ columns) — see docs/PRACTICAL.md.
 Honesty rules for visuals (a quality reviewer checks them):
 - Charts must be proportional to the numbers in the sources (claims/notes in script.json); if there is no number,
   keep the shape qualitative and modest. Never exaggerate an effect.

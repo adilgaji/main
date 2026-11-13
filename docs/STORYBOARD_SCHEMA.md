@@ -106,3 +106,15 @@ satellite (клетки-сателлиты сливаются с волокно�
 ```json
 {"number": 2, "title": "The *repair* crew"}
 ```
+
+### steps — чек-лист по шагам (советы)
+```json
+{"title": "After the gym", "steps": [{"icon": "water", "text": "Drink water"}, {"icon": "food", "text": "Eat protein"}, {"icon": "sleep", "text": "Sleep 7-9 h"}]}
+```
+2–4 шага, текст ≤ 18 символов, пункты появляются под голос.
+
+### do_dont — делай / не делай
+```json
+{"title": "Recovery", "do": ["Sleep 7-9 hours", "Walk the next day"], "dont": ["Skip meals", "Train sore muscles hard"]}
+```
+По 1–3 пункта в колонке, ≤ 22 символов.

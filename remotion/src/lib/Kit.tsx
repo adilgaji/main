@@ -39,12 +39,14 @@ export const Headline: React.FC<{text: string; top?: number; size?: number; dela
         lineHeight: 1.12,
         color: COLORS.ink,
         textTransform: 'uppercase',
+        // контур цветом фона: заголовок читается и на тёмной, и на белой доске
+        textShadow: `0 0 6px ${COLORS.bg}, 0 0 14px ${COLORS.bg}, 0 5px 0 ${COLORS.bg}`,
         ...enter,
       }}
     >
       {parts.map((p, i) =>
         p.startsWith('*') ? (
-          <span key={i} style={keywordStyle}>
+          <span key={i} style={{...keywordStyle, textShadow: 'none'}}>
             {p.slice(1, -1)}
           </span>
         ) : (

@@ -58,6 +58,22 @@ STYLES = ["classic", "glass", "pixel", "paper", "watercolour", "terminal", "isom
 FORMATS = {"short": (30, 55), "long": (330, 450)}  # допустимая длина (сек) для каждого формата
 
 
+def location_for(topic: str) -> str:
+    """Локация-фон ролика по ТЕМЕ (не по всему тексту): та же логика, что в remotion/src/lib/Scenes.tsx."""
+    t = topic.lower()
+    rules = [
+        (r"sleep|night|bed|dream|tired|insomnia", "bedroom"),
+        (r"food|eat|meal|protein|diet|sugar|digest|stomach|water|drink|coffee|caffeine", "kitchen"),
+        (r"muscle|train|workout|gym|lift|exercise|strength|run", "gym"),
+        (r"hormone|cell|dna|molecule|lab|blood", "lab"),
+        (r"brain|stress|nervous|focus|memory|learn|mood", "classroom"),
+    ]
+    for pat, loc in rules:
+        if re.search(pat, t):
+            return loc
+    return "classroom"
+
+
 def fmt_of(job: Path) -> str:
     return load_state(job).get("format", "short")
 
@@ -172,8 +188,25 @@ def step_script(job: Path, remarks: str = "", log: Log | None = None) -> dict:
         sj = json.loads((job / "script.json").read_text(encoding="utf-8"))
         a = analyze(sj["script"])
         log(f"После упрощения: уровень {a['grade']} класса")
+    # доля практических советов (docs/PRACTICAL.md): по словам фраз с kind = "tip"
+    def tip_share(d: dict) -> float:
+        cl = d.get("claims") or []
+        tot = sum(len(c["sentence"].split()) for c in cl) or 1
+        return sum(len(c["sentence"].split()) for c in cl if c.get("kind") == "tip") / tot
+
+    share = tip_share(sj)
+    log(f"Доля практических советов: {share:.0%}")
+    if share < 0.5 and any("kind" in c for c in sj.get("claims", [])):
+        log("Советов мало — прошу сценариста сделать ролик полезнее (≈60% советов)")
+        more = ("Make the video more practical (docs/PRACTICAL.md): about 40% simple explanation and about 60% concrete, "
+                f"evidence-based tips (what to do, when, how). Current tip share is {share:.0%}. Keep the hook, structure, loop and sources.")
+        retry("польза", run_agent, log, name="scriptwriter", prompt=f"Job folder: {rel}\nTopic: {st['topic']}\n" + format_note(job) + more, log=log)
+        retry("проверка фактов", run_agent, log, name="fact-checker", prompt=f"Job folder: {rel}\nCheck {rel}/script.json.", log=log)
+        sj = json.loads((job / "script.json").read_text(encoding="utf-8"))
+        log(f"После доработки доля советов: {tip_share(sj):.0%}")
     sj = write_script_txt(job)
     sj["readability"] = analyze(sj["script"])
+    sj["tip_share"] = round(tip_share(sj), 2)
     (job / "script.json").write_text(json.dumps(sj, ensure_ascii=False, indent=2), encoding="utf-8")
     words = len(re.sub(r"[*]", "", sj["script"]).split())
     if sj.get("structure"):

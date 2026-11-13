@@ -16,6 +16,7 @@ import {BarChart, EvidenceBadge, Evidence, FlowChain, Icon, IconName, LineGraph,
 import {MuscleFiber, FiberState} from '../lib/MuscleFiber';
 import {Env, EnvKind, envFor} from '../lib/Env';
 import {StyleLayer} from '../styles/StyleLayer';
+import {Board, Location, LocationKind, boardFor} from '../lib/Scenes';
 import {Breadcrumb, colorOf, ramp, useShot} from './shot';
 
 const HEAD_TOP = SAFE.top + 30;
@@ -24,8 +25,26 @@ const abs = (left: number, top: number, extra: React.CSSProperties = {}): React.
 
 /** Кадр в стиле видео. */
 const Frame: React.FC<{env: EnvKind; fg: React.ReactNode; actor?: React.ReactNode; ui?: React.ReactNode}> = ({env, fg, actor, ui}) => {
-  const {style, env: picked, shot} = useShot();
-  // фон выбирается для каждого кадра заранее (соседние кадры — разные фоны); env шаблона — запасной вариант
+  const {style, env: picked, shot, location, variant} = useShot();
+  // фон — настоящая локация (класс, аудитория, лаборатория…) в вариации этого кадра; схема — «на доске»
+  if (location) {
+    const loc = location as LocationKind;
+    return (
+      <StyleLayer
+        style={style}
+        seed={shot.id}
+        bg={<Location kind={loc} variant={variant} />}
+        fg={
+          <>
+            <Board kind={boardFor(loc, variant)} />
+            {fg}
+          </>
+        }
+        actor={actor}
+        ui={ui}
+      />
+    );
+  }
   return <StyleLayer style={style} seed={shot.id} bg={<Env kind={(picked as EnvKind) ?? env} seed={shot.id} />} fg={fg} actor={actor} ui={ui} />;
 };
 
@@ -477,6 +496,60 @@ export const OutroT: React.FC = () => {
   );
 };
 
+/* ---------------------------------- STEPS -------------------------------- */
+/** Чек-лист по шагам: каждый пункт появляется, когда звучит его слово. */
+export const StepsT: React.FC = () => {
+  const {t, dur, at, p} = useShot();
+  const steps: {icon: IconName; text: string}[] = p.steps ?? [];
+  return (
+    <Frame
+      env="soft"
+      fg={
+        <div style={abs(110, 500, {width: 860, display: 'flex', flexDirection: 'column', gap: 26})}>
+          {steps.map((st, i) => {
+            const fb = (0.15 + (i * 0.75) / Math.max(1, steps.length)) * dur;
+            const s0 = Math.min(...st.text.split(' ').map((w) => at(w, fb / dur)), fb + 0.001);
+            const k = ramp(t, s0 - 0.1, s0 + 0.35);
+            return (
+              <div key={i} style={{opacity: 0.25 + 0.75 * k, translate: `${(1 - k) * 80}px 0px`, display: 'flex', alignItems: 'center', gap: 24, background: COLORS.bgSoft, borderRadius: 30, padding: '18px 26px', border: `5px solid ${k > 0.5 ? COLORS.proven : COLORS.bgGlow}`}}>
+                <div className="txt" style={{width: 74, height: 74, borderRadius: '50%', background: COLORS.accent, color: COLORS.accentInk, fontFamily: FONT_FAMILY, fontWeight: 900, fontSize: 46, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0}}>{k > 0.5 ? '✓' : i + 1}</div>
+                <Icon name={st.icon} size={96} />
+                <div className="txt tx" style={{fontFamily: FONT_FAMILY, fontWeight: 900, fontSize: 54, lineHeight: 1.05, color: COLORS.ink, textTransform: 'uppercase'}}>{st.text}</div>
+              </div>
+            );
+          })}
+        </div>
+      }
+      ui={p.title && <Headline text={p.title} top={HEAD_TOP} />}
+    />
+  );
+};
+
+/* --------------------------------- DO / DON'T ----------------------------- */
+export const DoDontT: React.FC = () => {
+  const {t, dur, p} = useShot();
+  const col = (items: string[], good: boolean, delay: number) => (
+    <div style={{flex: 1, display: 'flex', flexDirection: 'column', gap: 18, background: COLORS.bgSoft, borderRadius: 32, padding: 24, border: `7px solid ${good ? COLORS.proven : COLORS.myth}`, opacity: ramp(t, delay, delay + 0.4)}}>
+      <div className="txt" style={{fontFamily: FONT_FAMILY, fontWeight: 900, fontSize: 52, color: good ? COLORS.proven : COLORS.myth, textAlign: 'center'}}>{good ? '✓ DO' : "✗ DON'T"}</div>
+      {items.map((it, i) => (
+        <div key={i} className="txt mx" style={{fontFamily: FONT_FAMILY, fontWeight: 800, fontSize: 40, lineHeight: 1.12, color: COLORS.ink, opacity: ramp(t, delay + 0.3 + i * 0.4, delay + 0.6 + i * 0.4)}}>{it}</div>
+      ))}
+    </div>
+  );
+  return (
+    <Frame
+      env="soft"
+      fg={
+        <div style={abs(90, 500, {width: 900, display: 'flex', gap: 24})}>
+          {col(p.do ?? [], true, 0.1)}
+          {col(p.dont ?? [], false, dur * 0.45)}
+        </div>
+      }
+      ui={p.title && <Headline text={p.title} top={HEAD_TOP} />}
+    />
+  );
+};
+
 /* --------------------------------- CHAPTER ------------------------------- */
 /** Титульный кадр главы (для длинных видео): большой номер и название. */
 export const ChapterT: React.FC = () => {
@@ -497,6 +570,8 @@ export const ChapterT: React.FC = () => {
 
 export const TEMPLATES: Record<string, React.FC> = {
   chapter: ChapterT,
+  steps: StepsT,
+  do_dont: DoDontT,
   hook: HookT,
   guide: GuideT,
   body: BodyT,

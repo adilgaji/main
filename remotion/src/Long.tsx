@@ -13,11 +13,12 @@ import {GuideT, TEMPLATES} from './templates/Templates';
 import {StyleId, applyTheme} from './styles/themes';
 import {StyleOverlay, setFrame} from './styles/StyleLayer';
 import {pickEnvs, setEnvSize} from './lib/Env';
+import {LocationKind, locationFor, pickVariants} from './lib/Scenes';
 
 loadFonts();
 
 export type Chapter = {title: string; start: number};
-export type LongProps = {audio: string; words: Word[]; shots: Shot[]; total: number; chapters: Chapter[]; style?: StyleId};
+export type LongProps = {audio: string; words: Word[]; shots: Shot[]; total: number; chapters: Chapter[]; style?: StyleId; location?: LocationKind | null};
 
 export const LONG = {width: 1920, height: 1080};
 // сцена 1080x1920 (зона y 220–1140) вписывается в левые ~1270 px кадра
@@ -60,12 +61,14 @@ const Panel: React.FC<{chapters: Chapter[]; total: number}> = ({chapters, total}
   );
 };
 
-export const Long: React.FC<LongProps> = ({audio, words, shots, chapters, total, style = 'classic'}) => {
+export const Long: React.FC<LongProps> = ({audio, words, shots, chapters, total, style = 'classic', location}) => {
   const {fps} = useVideoConfig();
   applyTheme(style);
   setEnvSize(LONG.width, LONG.height);
   setFrame(LONG.width, LONG.height, STAGE);
   const envs = pickEnvs(shots);
+  const loc = location ?? locationFor(words.map((w) => w.text).join(' '));
+  const variants = pickVariants(shots.length);
   const last = shots[shots.length - 1];
   return (
     <AbsoluteFill style={{background: COLORS.bg}}>
@@ -75,7 +78,7 @@ export const Long: React.FC<LongProps> = ({audio, words, shots, chapters, total,
         const to = Math.round(s.end * fps);
         return (
           <Sequence key={s.id} name={`${s.id}. ${s.template} · ${envs[i]}`} from={from} durationInFrames={Math.max(1, to - from)}>
-            <ShotCtx.Provider value={{shot: s, words, style, env: envs[i]}}>
+            <ShotCtx.Provider value={{shot: s, words, style, env: envs[i], location: loc, variant: variants[i]}}>
               <ShotTransition transition={s.transition}>
                 <T />
               </ShotTransition>

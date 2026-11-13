@@ -13,11 +13,12 @@ import {GuideT, TEMPLATES} from './templates/Templates';
 import {StyleId, applyTheme} from './styles/themes';
 import {StyleOverlay, setFrame} from './styles/StyleLayer';
 import {pickEnvs, setEnvSize} from './lib/Env';
+import {LocationKind, locationFor, pickVariants} from './lib/Scenes';
 import {FONT_FAMILY, COLORS as C, TYPE} from './style';
 
 loadFonts();
 
-export type ShortProps = {audio: string; words: Word[]; shots: Shot[]; total: number; music?: string | null; style?: StyleId};
+export type ShortProps = {audio: string; words: Word[]; shots: Shot[]; total: number; music?: string | null; style?: StyleId; location?: LocationKind | null};
 
 export const calcShort: CalculateMetadataFunction<ShortProps> = ({props}) => ({
   durationInFrames: Math.max(1, Math.round((props.total || 10) * VIDEO.fps)),
@@ -39,12 +40,15 @@ const Disclaimer: React.FC = () => (
   </div>
 );
 
-export const Short: React.FC<ShortProps> = ({audio, words, shots, music, style = 'classic'}) => {
+export const Short: React.FC<ShortProps> = ({audio, words, shots, music, style = 'classic', location}) => {
   const {fps, durationInFrames} = useVideoConfig();
   applyTheme(style); // палитра стиля — до отрисовки всех кадров
   setEnvSize(VIDEO.width, VIDEO.height);
   setFrame(VIDEO.width, VIDEO.height, null);
   const envs = pickEnvs(shots);
+  // фон — настоящая локация (одна на ролик), в каждом кадре своя вариация
+  const loc = location ?? locationFor(words.map((w) => w.text).join(' '));
+  const variants = pickVariants(shots.length);
   const first = shots[0];
   const FirstT = first ? TEMPLATES[first.template] ?? GuideT : null;
   const loopFrom = durationInFrames - Math.round(LOOP_SEC * fps);
@@ -59,7 +63,7 @@ export const Short: React.FC<ShortProps> = ({audio, words, shots, music, style =
         const shot = i === 0 ? {...s, transition: 'cut' as const} : s;
         return (
           <Sequence key={s.id} name={`${s.id}. ${s.template} · ${envs[i]}`} from={from} durationInFrames={Math.max(1, to - from)}>
-            <ShotCtx.Provider value={{shot, words, style, env: envs[i]}}>
+            <ShotCtx.Provider value={{shot, words, style, env: envs[i], location: loc, variant: variants[i]}}>
               <ShotTransition transition={shot.transition}>
                 <T />
               </ShotTransition>
@@ -71,7 +75,7 @@ export const Short: React.FC<ShortProps> = ({audio, words, shots, music, style =
         <Sequence name="loop → начало" from={loopFrom} durationInFrames={durationInFrames - loopFrom}>
           <LoopBack>
             <Freeze frame={0}>
-              <ShotCtx.Provider value={{shot: {...first, transition: 'cut'}, words, style, env: envs[0]}}>
+              <ShotCtx.Provider value={{shot: {...first, transition: 'cut'}, words, style, env: envs[0], location: loc, variant: variants[0]}}>
                 <FirstT />
               </ShotCtx.Provider>
             </Freeze>
