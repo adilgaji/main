@@ -22,3 +22,5 @@ table{width:100%;border-collapse:collapse}td,th{padding:5px 4px;border-top:1px s
 input,select,textarea{font:inherit;width:100%;padding:11px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
 .big{font-size:34px;font-weight:700}.tag{display:inline-block;padding:1px 8px;border-radius:8px;background:var(--acc2);color:var(--acc);font-size:12px;margin-right:4px}
 .diff-del{background:#ffd9d6;color:#000;border-radius:3px;padding:0 2px}.diff-ins{background:#fff3c4;color:#000;border-radius:3px;padding:0 2px}
+
+.opt.sel{outline:2px solid var(--acc);background:var(--acc2)}.chip{padding:8px 12px}

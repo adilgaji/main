@@ -14,6 +14,7 @@
 - `content/words.json` — 1950 слов (собирается `tools/build_vocab.py` из `data/raw/` + `content/ru/*.tsv` (русские переводы, писал Claude) + `content/en_fix.tsv`). `content/src/` — примеры и аудирование (вручную/по `/hsk-refill`).
 - `app/grammar.py` — грамматика, письмо, очередь `queue` (на `/hsk-check`). Контент: `content/src/grammar_src.tsv` → `tools/build_grammar.py`, `content/src/writing_src.txt` → `tools/build_writing.py`.
 - `app/speaking.py`, `app/stt.py` — говорение (faster-whisper); `tools/make_cert.py` (https для телефона), `tools/fetch_whisper.py`, `tools/build_speaking.py`. Не обновлять `av` выше 16 (ломает faster-whisper).
+- `app/reading.py`, `app/mock.py` — чтение и пробники (`FORMAT`/`SCALE` — допущения, не официально). После любых новых заданий с вариантами: `tools/balance_answers.py`.
 - `tools/` — `build_vocab.py`, `validate_content.py`, `build_audio.py` (edge-tts, запускается на ноутбуке пользователя), `report.py`.
 - `.claude/commands/` — `/hsk-check`, `/hsk-refill`, `/hsk-week`.
 - `hsk.db`, `audio/*.mp3` — не в git.

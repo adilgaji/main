@@ -116,3 +116,52 @@ def test_speaking_flow(monkeypatch):
     for k in ('retell', 'monologue'): assert client.get(f'/api/speaking/next?kind={k}').json()['kind'] == k
     assert client.get('/api/today').json()['forecast']['components']['speaking'] is not None
     assert any(x['kind'] == 'speaking' for x in client.get('/api/queue').json())
+
+def test_reading_flow():
+    it = client.get('/api/reading/next?kind=cloze').json(); assert it['type'] == 'cloze' and 'answer' not in it
+    r = client.post('/api/reading/answer', json={'item_id': it['id'], 'answer': 0}).json(); assert 'correct' in r and r['explain']
+    o = client.get('/api/reading/next?kind=order').json(); assert o['sentences']
+    assert client.post('/api/reading/answer', json={'item_id': 'RO002', 'answer': 'BCA'}).json()['correct'] is True
+    rc = next(i for i in json.load(open(ROOT / 'content/src/reading_001.json', encoding='utf-8')) if i['id'] == 'RC001')
+    assert client.post('/api/reading/answer', json={'item_id': 'RC001', 'q': 1, 'answer': rc['questions'][1]['answer']}).json()['correct'] is True
+    # ошибка в пункте с тегом g попадает в грамматику
+    n0 = C.execute("SELECT COUNT(*) n FROM g_attempts WHERE kind='reading'").fetchone()['n']
+    rk = next(i for i in json.load(open(ROOT / 'content/src/reading_001.json', encoding='utf-8')) if i['id'] == 'RK003'); wrong = (rk['answer'] + 1) % 4
+    client.post('/api/reading/answer', json={'item_id': 'RK003', 'answer': wrong}); assert C.execute("SELECT COUNT(*) n FROM g_attempts WHERE kind='reading'").fetchone()['n'] == n0 + 1
+def test_mock_full_flow():
+    s = client.post('/api/mock/start', json={'kind': 'full'}).json(); mid = s['id']; assert s['minutes'] == {'listening': 20, 'reading': 30, 'writing': 25}
+    answers = {}
+    for name in ('listening', 'reading', 'writing'):
+        sec = client.get(f'/api/mock/{mid}/section/{name}').json(); assert sec['items']
+        a = {}
+        for x in sec['items']:
+            assert 'answer' not in x
+            if name == 'listening': a[x['key']] = 0
+            elif name == 'reading': a[x['key']] = 0 if x['type'] == 'cloze' else ('ABC' if x['type'] == 'order' else 0)
+            elif x['type'] == 'order': a[x['key']] = ''.join(x['parts'])
+            else: a[x['key']] = '我想申请奖学金。'
+        assert client.post(f'/api/mock/{mid}/submit', json={'section': name, 'answers': a, 'secs_used': 60}).json()['ok']
+    res = client.post(f'/api/mock/{mid}/finish').json()
+    assert set(res['sections']) == {'listening', 'reading', 'writing'} and 0 <= res['total_scaled'] <= 300 and res['review']
+    assert res['queued'] >= 1 and 'scale_note' in res and isinstance(res['words_to_review'], list)
+    assert client.post(f'/api/mock/{mid}/submit', json={'section': 'reading', 'answers': {}}).status_code == 400  # завершённый пробник не изменить
+    h = client.get('/api/mock/history').json(); assert h and h[-1]['id'] == mid
+    assert client.get('/api/today').json()['forecast']['last_mock']['pct'] == res['pct']
+def test_mock_scheduled_from_week_7():
+    from datetime import date, timedelta
+    st = client.get('/api/state').json()['plan']
+    C.execute("DELETE FROM mocks"); C.commit()
+    client.post('/api/settings', json={'start': (date.today() - timedelta(days=60)).isoformat(), 'exam': (date.today() + timedelta(days=50)).isoformat()})
+    t = client.get('/api/today').json(); assert any(b['key'] == 'mock' for b in t['blocks'])
+    client.post('/api/settings', json={'start': (date.today() - timedelta(days=5)).isoformat()})
+    assert not any(b['key'] == 'mock' for b in client.get('/api/today').json()['blocks'])
+    client.post('/api/settings', json={'start': st['start'], 'exam': st['exam']})
+
+def test_answer_positions_balanced():
+    import collections
+    for f in ('listening_001.json', 'reading_001.json'):
+        d = json.load(open(ROOT / 'content/src' / f, encoding='utf-8')); pos = collections.Counter()
+        for it in d:
+            if it['type'] == 'passage' and 'questions' in it: pos.update(q['answer'] for q in it['questions'])
+            elif 'answer' in it and it['type'] != 'order': pos[it['answer']] += 1
+        assert max(pos.values()) - min(pos.values()) <= 3, (f, pos)

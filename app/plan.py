@@ -41,6 +41,12 @@ def acc(c, table_sql, args=()):
 def listening_accuracy(c, days=14):
     since = db.iso(db.now() - timedelta(days=days))
     return acc(c, "SELECT SUM(correct) c, COUNT(*) n FROM l_attempts WHERE mode!='dictation' AND ts>=?", (since,))
+def mock_due(c, week, today):
+    """расписание пробников: с 7-й недели мини раз в 7 дней; с 14-й недели полный раз в 3-4 дня. -> None | 'mini' | 'full'"""
+    if week < 7: return None
+    last = c.execute("SELECT ts FROM mocks WHERE status='done' ORDER BY id DESC LIMIT 1").fetchone()
+    gap = (today - db.parse(last['ts']).astimezone().date()).days if last else 99
+    return 'full' if (week >= 14 and gap >= 3) else ('mini' if (7 <= week < 14 and gap >= 7) else None)
 def build_today(c):
     s = settings(c); start = db.parse(s['start'] + 'T00:00:00+00:00').date(); exam = db.parse(s['exam'] + 'T00:00:00+00:00').date()
     t = db.today(); day = (t - start).days + 1; week = max(1, math.ceil(day / 7)); days_left = (exam - t).days
@@ -49,9 +55,12 @@ def build_today(c):
     triage_today = min(p['triage'], max(40, math.ceil(p['triage'] / max(1, min(7, intro_days))))) if p['triage'] else 0
     due = c.execute('SELECT COUNT(*) n FROM cards WHERE due<=?', (end_of_today_utc(),)).fetchone()['n']
     la = listening_accuracy(c)
-    budget = s['minutes']; blocks = []
+    budget = s['minutes']; blocks = []; mk = mock_due(c, week, t) if 'mock' in AVAILABLE else None
+    done_mock = c.execute("SELECT COUNT(*) n FROM mocks WHERE status='done' AND ts>=?", (db.iso(datetime.combine(t, time(0, 0)).astimezone()),)).fetchone()['n']
+    if mk: mm = 90 if mk == 'full' else 50; budget -= mm
     def add(key, title, minutes, target, unit, route, hint=''):
         blocks.append({'key': key, 'title': title, 'minutes': round(minutes), 'target': target, 'unit': unit, 'route': route, 'hint': hint, 'available': True})
+    if mk: blocks.append({'key': 'mock', 'title': 'Пробный экзамен (' + ('полный' if mk == 'full' else 'мини') + ')', 'minutes': mm, 'target': 1, 'unit': 'пробник', 'route': '#/mock', 'hint': 'формат не подтверждён официально — см. EXAM_SPEC.md', 'available': True})
     review_min = min(55, due * 0.22); add('review', 'Повторение карточек', review_min, due, 'карт', '#/review', 'FSRS: сначала то, что вот-вот забудется')
     if triage_today: add('triage', 'Сортировка слов старого HSK 3 (знаю / не знаю)', triage_today * 0.17, triage_today, 'слов', '#/triage', 'быстро отсеять знакомое; незнакомое пойдёт в изучение')
     if new_per_day: add('new', 'Новые слова', min(35, new_per_day * 1.3), new_per_day, 'слов', '#/new', 'знакомство со словом: значение, звук, пример')
@@ -67,7 +76,7 @@ def build_today(c):
             add(k, v[0], m, max(1, round(m / 1.5)), 'заданий', v[2], v[3])
         else:
             blocks.append({'key': k, 'title': v[0], 'minutes': 0, 'target': 0, 'unit': '', 'route': v[2], 'hint': 'модуль ещё не готов — минуты отданы другим блокам', 'available': False})
-    done = done_today(c); dmap = {'speaking': done['speaking'], 'grammar': done['grammar'], 'review': done['review'], 'new': done['new'], 'triage': done['triage'], 'listening': done['listening'] + done['dictation']}
+    done = done_today(c); dmap = {'mock': done_mock, 'reading': c.execute("SELECT COUNT(*) n FROM r_attempts WHERE ts>=? AND mode='practice'", (db.iso(datetime.combine(t, time(0, 0)).astimezone()),)).fetchone()['n'], 'speaking': done['speaking'], 'grammar': done['grammar'], 'review': done['review'], 'new': done['new'], 'triage': done['triage'], 'listening': done['listening'] + done['dictation']}
     for b in blocks: b['done'] = dmap.get(b['key'], 0)
     total_min = sum(b['minutes'] for b in blocks)
     return {'date': t.isoformat(), 'day': day, 'week': week, 'weeks_total': 16, 'phase': phase_of(min(week, 16)), 'days_left': days_left,
@@ -118,13 +127,18 @@ def forecast(c):
     ga, cov = grammar_acc(c); ws = writing_score(c)
     gparts = [x for x in (None if ga is None else ga * cov, ws) if x is not None]
     sp = c.execute("SELECT AVG(score) a, COUNT(*) n FROM s_attempts WHERE ts>=?", (db.iso(db.now() - timedelta(days=30)),)).fetchone(); sp_pct = sp['a'] if sp['n'] else None
-    comp = {'vocab': vocab_pct, 'listening': la, 'grammar': (sum(gparts) / len(gparts)) if gparts else None, 'reading': None, 'speaking': sp_pct}
+    rd = acc(c, "SELECT SUM(correct) c, COUNT(*) n FROM r_attempts WHERE ts>=?", (db.iso(db.now() - timedelta(days=30)),))
+    comp = {'vocab': vocab_pct, 'listening': la, 'grammar': (sum(gparts) / len(gparts)) if gparts else None, 'reading': rd, 'speaking': sp_pct}
     have = {k: v for k, v in comp.items() if v is not None}; wsum = sum(W[k] for k in have)
     ready = sum(W[k] * have[k] for k in have) / wsum if wsum else 0
     need_rate = max(0, (target - st['known']) / max(1, left - 14)) if left > 14 else None
     msgs = []
+    lm = c.execute("SELECT json FROM mocks WHERE status='done' ORDER BY id DESC LIMIT 1").fetchone(); last_mock = None
+    if lm:
+        r_ = json.loads(lm['json'])['result']; last_mock = {'pct': r_['pct'], 'scaled': r_['total_scaled'], 'passed_provisional': r_['passed_provisional']}
     if st['known'] < target and need_rate is not None and rate < need_rate: msgs.append(f'Темп слов: {rate:.1f}/день, нужно {need_rate:.1f}/день до рубежа за 14 дней до экзамена.')
     if la is not None and la < 0.75: msgs.append(f'Аудирование: {la*100:.0f}% верных (цель ≥75%).')
+    if last_mock and last_mock['pct'] < ready * 100 - 10: msgs.append(f"Последний пробник ({last_mock['pct']}%) ниже прогноза ({round(ready*100)}%) на {round(ready*100)-last_mock['pct']} п.п. — ориентируйся на пробник.")
     if la is None: msgs.append('Аудирование: нет данных — сделай задания.')
     if ga is not None and ga < 0.75: msgs.append(f'Грамматика: {ga*100:.0f}% верных (цель ≥75%), охвачено {cov*100:.0f}% пунктов.')
     if ga is None: msgs.append('Грамматика и письмо: нет данных.')
@@ -132,7 +146,7 @@ def forecast(c):
     if pend: msgs.append(f'На проверке у Claude: {pend} письменных ответов — запусти /hsk-check.')
     return {'ready_pct': round(ready * 100), 'covered_weight': round(wsum * 100), 'components': {k: (None if v is None else round(v * 100)) for k, v in comp.items()},
             'grammar': {'acc': None if ga is None else round(ga * 100), 'covered_pct': round(cov * 100), 'writing_score_pct': None if ws is None else round(ws * 100)}, 'words': {**st, 'target': round(target), 'projected': round(projected), 'rate_per_day': round(rate, 1), 'need_rate': None if need_rate is None else round(need_rate, 1)},
-            'days_left': left, 'messages': msgs, 'note': f'Оценка по доступным навыкам (вес {round(wsum*100)}% от экзамена). Чтение — пока без данных; говорение — автооценка по расшифровке (грубо).'}
+            'days_left': left, 'last_mock': last_mock, 'messages': msgs, 'note': f'Оценка по доступным навыкам (вес {round(wsum*100)}% от экзамена). Говорение — автооценка по расшифровке (грубо); пробники — условная шкала.'}
 def stats(c):
     since = db.iso(db.now() - timedelta(days=30))
     kinds = c.execute('SELECT kind, SUM(correct) c, COUNT(*) n FROM reviews WHERE ts>=? GROUP BY kind', (since,)).fetchall()
@@ -140,6 +154,7 @@ def stats(c):
     week = sum(d['minutes'] for d in days[-7:])
     hard = c.execute("SELECT w.hanzi, w.pinyin, w.ru, SUM(1-r.correct) bad, COUNT(*) n FROM reviews r JOIN words w ON w.id=r.word_id GROUP BY r.word_id HAVING bad>0 ORDER BY bad DESC, n DESC LIMIT 15").fetchall()
     lbad = c.execute("SELECT item_id, SUM(1-correct) bad, COUNT(*) n FROM l_attempts GROUP BY item_id HAVING bad>0 ORDER BY bad DESC LIMIT 10").fetchall()
+    mocks = [{'ts': r['ts'][:10], 'kind': r['kind'], 'scaled': json.loads(r['json'])['result']['total_scaled'], 'pct': json.loads(r['json'])['result']['pct']} for r in c.execute("SELECT ts, kind, json FROM mocks WHERE status='done' ORDER BY id")]
     gw = c.execute("SELECT point_id, SUM(1-correct) bad, COUNT(*) n FROM g_attempts WHERE point_id LIKE 'G%' GROUP BY point_id HAVING bad>0 ORDER BY bad DESC LIMIT 10").fetchall()
-    return {'grammar_weak': [dict(r) for r in gw], 'queue_pending': c.execute("SELECT COUNT(*) n FROM queue WHERE status='pending'").fetchone()['n'], 'words': srs.word_status(c), 'accuracy': {r['kind']: round(100 * r['c'] / r['n']) for r in kinds if r['n']}, 'listening_acc': listening_accuracy(c, 30),
+    return {'mocks': mocks, 'grammar_weak': [dict(r) for r in gw], 'queue_pending': c.execute("SELECT COUNT(*) n FROM queue WHERE status='pending'").fetchone()['n'], 'words': srs.word_status(c), 'accuracy': {r['kind']: round(100 * r['c'] / r['n']) for r in kinds if r['n']}, 'listening_acc': listening_accuracy(c, 30),
             'minutes_by_day': days, 'minutes_week': round(week), 'streak': streak(c), 'hard_words': [dict(r) for r in hard], 'hard_listening': [dict(r) for r in lbad]}

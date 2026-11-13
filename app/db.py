@@ -17,6 +17,9 @@ CREATE TABLE IF NOT EXISTS placement(id INTEGER PRIMARY KEY AUTOINCREMENT, ts TE
 CREATE TABLE IF NOT EXISTS grammar(id TEXT PRIMARY KEY, no INT, json TEXT);
 CREATE TABLE IF NOT EXISTS g_attempts(id INTEGER PRIMARY KEY AUTOINCREMENT, point_id TEXT, kind TEXT, ts TEXT, correct INT, ms INT, answer TEXT);
 CREATE TABLE IF NOT EXISTS s_attempts(id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, kind TEXT, task_id TEXT, score REAL, transcript TEXT, audio TEXT);
+CREATE TABLE IF NOT EXISTS reading(id TEXT PRIMARY KEY, type TEXT, json TEXT);
+CREATE TABLE IF NOT EXISTS r_attempts(id INTEGER PRIMARY KEY AUTOINCREMENT, item_id TEXT, ts TEXT, mode TEXT, correct INT, ms INT, answer TEXT);
+CREATE TABLE IF NOT EXISTS mocks(id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, kind TEXT, status TEXT, json TEXT);
 CREATE TABLE IF NOT EXISTS queue(id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, kind TEXT, payload TEXT, status TEXT DEFAULT 'pending', feedback TEXT);
 """
 def now(): return datetime.now(timezone.utc)
@@ -51,6 +54,8 @@ def sync_content(c):
     gf = CONTENT / 'grammar.json'
     if gf.exists():
         for g in json.load(open(gf, encoding='utf-8')): c.execute('INSERT OR REPLACE INTO grammar(id,no,json) VALUES(?,?,?)', (g['id'], g['no'], json.dumps(g, ensure_ascii=False)))
+    for f in sorted((CONTENT / 'src').glob('reading_*.json')):
+        for it in json.load(open(f, encoding='utf-8')): c.execute('INSERT OR REPLACE INTO reading(id,type,json) VALUES(?,?,?)', (it['id'], it['type'], json.dumps(it, ensure_ascii=False)))
     for f in sorted((CONTENT / 'src').glob('listening_*.json')):
         for it in json.load(open(f, encoding='utf-8')):
             c.execute('INSERT OR REPLACE INTO listening(id,type,level,json) VALUES(?,?,?,?)', (it['id'], it['type'], it.get('level', 3), json.dumps(it, ensure_ascii=False)))

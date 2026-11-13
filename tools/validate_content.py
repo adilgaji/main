@@ -72,6 +72,16 @@ def check_all(verbose=True):
             iss = validate_sentence(e['zh'], e.get('w'))
             if not e.get('ru'): iss.append('нет русского перевода')
             if iss: bad += 1; verbose and print(f'{f.name}:{n} {e["zh"]} -> {iss}')
+    for f in sorted((ROOT/'content/src').glob('reading_*.json')):
+        for it in json.load(open(f, encoding='utf-8')):
+            if it['type'] == 'cloze': texts = [it['text'].replace('____', it['options'][it['answer']])] + [o for o in it['options']]
+            elif it['type'] == 'order':
+                texts = it['sentences']
+                if sorted(it['answer']) != sorted('ABCDEFG'[:len(texts)]): bad += 1; print(it['id'], 'неверный ответ упорядочивания')
+            else: texts = [it['text']] + [q['q'] for q in it['questions']] + [o for q in it['questions'] for o in q['options']]
+            for s in texts:
+                seen += 1; iss = validate_sentence(s, grammar='g' in it)
+                if iss: bad += 1; verbose and print(f'{f.name}:{it["id"]} {s} -> {iss}')
     for f in sorted((ROOT/'content/src').glob('listening_*.json')):
         for it in json.load(open(f, encoding='utf-8')):
             texts = [t['zh'] for t in it.get('turns', [])] + [it.get('question', '')] + it.get('options', [])
