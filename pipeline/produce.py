@@ -16,7 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import Log, ffprobe_duration, retry, run  # noqa: E402
 from job import compute_times, load_state, make_voice, update_state  # noqa: E402
-from render import render  # noqa: E402
+from render import render, render_intro  # noqa: E402
 
 
 def storyboard_hash(job: Path) -> str:
@@ -108,10 +108,13 @@ def compute_chapters(job: Path) -> list[dict]:
     return out
 
 
-def write_srt(job: Path):
-    """Субтитры .srt для загрузки в YouTube (фразы по 6–8 слов)."""
+def write_srt(job: Path, shift_at: float | None = None, shift: float = 0.0):
+    """Субтитры .srt для загрузки в YouTube (фразы по 6–8 слов).
+    shift_at/shift — после вставки интро всё, что позже shift_at секунд, сдвигается на shift."""
     words = json.loads((job / "words.json").read_text(encoding="utf-8"))
-    ts = lambda ms: f"{ms // 3600000:02d}:{ms // 60000 % 60:02d}:{ms // 1000 % 60:02d},{ms % 1000:03d}"  # noqa: E731
+    add = int(round(shift * 1000))
+    fix = lambda ms: ms + add if shift_at is not None and ms >= shift_at * 1000 else ms  # noqa: E731
+    ts = lambda ms: (lambda m: f"{m // 3600000:02d}:{m // 60000 % 60:02d}:{m // 1000 % 60:02d},{m % 1000:03d}")(fix(ms))  # noqa: E731
     lines, cue, n = [], [], 1
     for i, w in enumerate(words):
         cue.append(w)
@@ -122,6 +125,57 @@ def write_srt(job: Path):
             n += 1
             cue = []
     (job / "captions.srt").write_text("\n".join(lines), encoding="utf-8")
+
+
+def intro_point(job: Path) -> float:
+    """Куда вставить интро: сразу после хука — конец первого кадра, который закончился
+    на конце предложения в промежутке 9–25 с (можно задать вручную: storyboard.json → "intro_after_shot")."""
+    sb = json.loads((job / "storyboard.json").read_text(encoding="utf-8"))
+    shots = sb["shots"]
+    if sb.get("intro_after_shot"):
+        return next(s["end"] for s in shots if s["id"] == sb["intro_after_shot"])
+    for s in shots:
+        if 9 <= s["end"] <= 25 and re.search(r"[.!?]\W*$", s.get("text", "").strip()):
+            return s["end"]
+    return next((s["end"] for s in shots if s["end"] >= 6), shots[0]["end"])
+
+
+def insert_intro(job: Path, log: Log) -> list[str]:
+    """Вставить интро канала после хука. Исходник без интро сохраняется как video_main.mp4."""
+    intro = render_intro(log)
+    video, main = job / "video.mp4", job / "video_main.mp4"
+    video.replace(main)
+    at = intro_point(job)
+    d = ffprobe_duration(intro)
+    log(f"Вставляю интро канала ({d:.1f} с) после хука, на {at:.2f} с")
+    au = "aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo"
+    vf = "fps=30,scale=1920:1080,setsar=1,format=yuv420p"
+    graph = (f"[0:v]trim=end={at},setpts=PTS-STARTPTS,{vf}[v0];[0:a]atrim=end={at},asetpts=PTS-STARTPTS,{au}[a0];"
+             f"[1:v]setpts=PTS-STARTPTS,{vf}[v1];[1:a]asetpts=PTS-STARTPTS,{au}[a1];"
+             f"[0:v]trim=start={at},setpts=PTS-STARTPTS,{vf}[v2];[0:a]atrim=start={at},asetpts=PTS-STARTPTS,{au}[a2];"
+             "[v0][a0][v1][a1][v2][a2]concat=n=3:v=1:a=1[v][a]")
+    run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(main), "-i", str(intro), "-filter_complex", graph,
+         "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-profile:v", "high",
+         "-level", "4.2", "-pix_fmt", "yuv420p", "-color_range", "tv", "-colorspace", "bt709", "-color_primaries", "bt709",
+         "-color_trc", "bt709", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(video)])
+    # главы и субтитры — по времени готового видео
+    ch_file = job / "chapters.json"
+    if ch_file.exists():
+        chs = json.loads(ch_file.read_text(encoding="utf-8"))
+        for c in chs:
+            if c["start"] >= at:
+                c["start"] = round(c["start"] + d, 2)
+        ch_file.write_text(json.dumps(chs, ensure_ascii=False, indent=1), encoding="utf-8")
+    write_srt(job, shift_at=at, shift=d)
+    update_state(job, intro={"variant": "pulse", "at": round(at, 2), "duration": round(d, 2)})
+    problems = []
+    total, need = ffprobe_duration(video), ffprobe_duration(main) + d
+    if abs(total - need) > 0.2:
+        problems.append(f"После вставки интро длина {total:.2f} с ≠ {need:.2f} с")
+    ld = loudness(video)
+    if not -17.5 <= ld["I"] <= -12.5 or ld["peak"] > -0.5:
+        problems.append(f"Громкость после вставки интро вне нормы: {ld['I']} LUFS, пик {ld['peak']}")
+    return problems
 
 
 def produce(job: Path, log: Log | None = None) -> Path:
@@ -153,6 +207,8 @@ def produce(job: Path, log: Log | None = None) -> Path:
     composition = "Long" if fmt == "long" else "Short"
     retry("рендер", render, log, composition=composition, job_dir=job, props=props, out_mp4=job / "video.mp4", log=log)
     problems = checks(job, log)
+    if fmt == "long" and not problems:
+        problems = insert_intro(job, log)
     if problems:
         for p in problems:
             log("ПРОВЕРКА НЕ ПРОЙДЕНА: " + p)

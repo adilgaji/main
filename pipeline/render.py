@@ -77,7 +77,37 @@ def render(composition: str, job_dir: Path, props: dict, out_mp4: Path, log: Log
     raise RuntimeError(f"Рендер не удался: {last}")
 
 
+INTRO_VARIANT = "pulse"  # выбран пользователем
+INTRO_MP4 = REMOTION / "public" / "brand" / "intro.mp4"
+
+
+def render_intro(log: Log | None = None, force: bool = False) -> Path:
+    """Интро канала (1920×1080, 9 с) — рендерится один раз и потом только вставляется в длинные видео.
+    Перерендер — если файла нет или поменялся код интро/озвучка."""
+    log = log or Log()
+    src = [REMOTION / "src" / "brand" / "Intro.tsx", REMOTION / "public" / "brand" / "intro_voice.wav"]
+    if INTRO_MP4.exists() and not force and INTRO_MP4.stat().st_mtime >= max(f.stat().st_mtime for f in src):
+        return INTRO_MP4
+    gl_modes = ["angle", "swiftshader", "swangle"] if platform.system() == "Windows" else ["swiftshader", "egl", "swangle"]
+    last = None
+    for gl in gl_modes:
+        try:
+            log(f"Рендер интро канала ({INTRO_VARIANT}), режим графики {gl}")
+            run([NPX, "remotion", "render", "src/index.ts", f"Intro-{INTRO_VARIANT}", str(INTRO_MP4.resolve()),
+                 f"--gl={gl}", "--codec=h264", "--crf=18", "--audio-codec=aac", "--audio-bitrate=192k",
+                 "--pixel-format=yuv420p", "--log=error"], cwd=REMOTION, env=browser_env())
+            finalize(INTRO_MP4)
+            return INTRO_MP4
+        except Exception as e:  # noqa: BLE001
+            last = e
+            log(f"Рендер интро в режиме {gl} не удался: {str(e)[:300]}")
+    raise RuntimeError(f"Рендер интро не удался: {last}")
+
+
 if __name__ == "__main__":
+    if sys.argv[1:2] == ["intro"]:
+        print(render_intro(force=True))
+        sys.exit()
     ap = argparse.ArgumentParser()
     ap.add_argument("composition")
     ap.add_argument("job_dir")
