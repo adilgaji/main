@@ -14,7 +14,7 @@ import {Brain, Heart, Muscle} from '../lib/Organs';
 import {Cell, Molecule, MoleculeKind} from '../lib/CellAndMolecules';
 import {BarChart, EvidenceBadge, Evidence, FlowChain, Icon, IconName, LineGraph, ProcessArrow} from '../lib/Diagram';
 import {MuscleFiber, FiberState} from '../lib/MuscleFiber';
-import {Env, EnvKind, envFor} from '../lib/Env';
+import {Env, EnvKind, envFor, getSize} from '../lib/Env';
 import {StyleLayer} from '../styles/StyleLayer';
 import {Board, Location, LocationKind, boardFor} from '../lib/Scenes';
 import {Breadcrumb, colorOf, ramp, useShot} from './shot';
@@ -48,8 +48,11 @@ const Frame: React.FC<{env: EnvKind; fg: React.ReactNode; actor?: React.ReactNod
   return <StyleLayer style={style} seed={shot.id} bg={<Env kind={(picked as EnvKind) ?? env} seed={shot.id} />} fg={fg} actor={actor} ui={ui} />;
 };
 
+// В горизонтальном видео сцена 1080×1920 показывается с масштабом 1.17 и видна только до y≈1143:
+// поднимаем гида, чтобы ноги не обрезались краем кадра.
+const LONG_VISIBLE_BOTTOM = 1115;
 const Guide: React.FC<{left: number; top: number; size: number; pose?: string; emotion?: string; toPose?: string; poseT?: number}> = ({left, top, size, pose = 'point', emotion = 'happy', toPose, poseT}) => (
-  <div style={abs(left, top)}>
+  <div style={abs(left, getSize().W > getSize().H ? Math.min(top, LONG_VISIBLE_BOTTOM - size) : top)}>
     <Stickman pose={pose as PoseName} emotion={emotion as Emotion} size={size} toPose={toPose as PoseName | undefined} poseT={poseT} />
   </div>
 );
