@@ -140,24 +140,28 @@ def intro_point(job: Path) -> float:
     return next((s["end"] for s in shots if s["end"] >= 6), shots[0]["end"])
 
 
-def insert_intro(job: Path, log: Log) -> list[str]:
-    """Вставить интро канала после хука. Исходник без интро сохраняется как video_main.mp4."""
+def insert_intro(job: Path, log: Log, reuse_main: bool = False) -> list[str]:
+    """Вставить интро канала после хука. Исходник без интро сохраняется как video_main.mp4.
+    reuse_main=True — взять уже готовый video_main.mp4 (повторная вставка без рендера)."""
     intro = render_intro(log)
     video, main = job / "video.mp4", job / "video_main.mp4"
-    video.replace(main)
+    if not reuse_main:
+        video.replace(main)
     at = intro_point(job)
     d = ffprobe_duration(intro)
     log(f"Вставляю интро канала ({d:.1f} с) после хука, на {at:.2f} с")
     au = "aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo"
     vf = "fps=30,scale=1920:1080,setsar=1,format=yuv420p"
-    graph = (f"[0:v]trim=end={at},setpts=PTS-STARTPTS,{vf}[v0];[0:a]atrim=end={at},asetpts=PTS-STARTPTS,{au}[a0];"
+    # три отдельных входа (начало, интро, остальное) — ffmpeg читает их по очереди и не держит видео в памяти
+    graph = (f"[0:v]setpts=PTS-STARTPTS,{vf}[v0];[0:a]asetpts=PTS-STARTPTS,{au}[a0];"
              f"[1:v]setpts=PTS-STARTPTS,{vf}[v1];[1:a]asetpts=PTS-STARTPTS,{au}[a1];"
-             f"[0:v]trim=start={at},setpts=PTS-STARTPTS,{vf}[v2];[0:a]atrim=start={at},asetpts=PTS-STARTPTS,{au}[a2];"
+             f"[2:v]setpts=PTS-STARTPTS,{vf}[v2];[2:a]asetpts=PTS-STARTPTS,{au}[a2];"
              "[v0][a0][v1][a1][v2][a2]concat=n=3:v=1:a=1[v][a]")
-    run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(main), "-i", str(intro), "-filter_complex", graph,
+    run(["ffmpeg", "-y", "-loglevel", "error", "-t", f"{at:.3f}", "-i", str(main), "-i", str(intro),
+         "-ss", f"{at:.3f}", "-i", str(main), "-filter_complex", graph,
          "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-profile:v", "high",
          "-level", "4.2", "-pix_fmt", "yuv420p", "-color_range", "tv", "-colorspace", "bt709", "-color_primaries", "bt709",
-         "-color_trc", "bt709", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(video)])
+         "-color_trc", "bt709", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", "-threads", "4", str(video)])
     # главы и субтитры — по времени готового видео
     ch_file = job / "chapters.json"
     if ch_file.exists():
