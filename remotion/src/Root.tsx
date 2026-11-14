@@ -1,5 +1,6 @@
 import React from 'react';
 import {Composition, Still} from 'remotion';
+import {Intro, INTRO, INTRO_VARIANTS} from './brand/Intro';
 import {VIDEO} from './style';
 import {TestScene, calcTestScene} from './scenes/TestScene';
 import {Short, calcShort} from './Short';
@@ -15,6 +16,9 @@ import {LibraryMotion, SheetAnatomy, SheetDiagrams, SheetGuide} from './sheets/S
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {INTRO_VARIANTS.map((v) => (
+        <Composition key={v} id={`Intro-${v}`} component={Intro} durationInFrames={INTRO.seconds * VIDEO.fps} fps={VIDEO.fps} width={INTRO.width} height={INTRO.height} defaultProps={{variant: v, withVoice: true}} />
+      ))}
       <Still id="SheetGuide" component={SheetGuide} width={VIDEO.width} height={VIDEO.height} defaultProps={{showSafe: true}} />
       <Still id="SheetAnatomy" component={SheetAnatomy} width={VIDEO.width} height={VIDEO.height} />
       <Still id="SheetDiagrams" component={SheetDiagrams} width={VIDEO.width} height={VIDEO.height} />
