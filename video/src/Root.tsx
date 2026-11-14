@@ -9,6 +9,7 @@ import {Shot, type ShotSpec} from './shots';
 import {calculateShortMetadata, Short, type ShortProps} from './Short';
 import {Thumbnail, THUMB, type ThumbnailProps} from './Thumbnail';
 import {FONT_SERVICE, FRAME, getStyle, STYLE_LIST, StyleContext, useStyle} from './style';
+import {calculateIntroMetadata, Intro, INTRO_SHEET, IntroSheet, type IntroProps, type IntroWord} from './Intro';
 
 type DemoShot = {id: string; narration: string; shot: ShotSpec};
 const SHOTS = library.shots as unknown as DemoShot[];
@@ -200,6 +201,8 @@ const defaultShort: ShortProps = {
 
 const defaultThumbnail: ThumbnailProps = {styleId: null, text: 'Can we trust it?', kicker: '480 BC', image: null, icon: 'hoplite', side: 'left'};
 
+const defaultIntro: IntroProps = {styleId: null, variant: 'book', channel: 'True Tales of the Past', audio: null, words: []};
+
 export const RemotionRoot: React.FC = () => {
   return (
     <>
@@ -224,6 +227,17 @@ export const RemotionRoot: React.FC = () => {
         width={1080}
         height={1920}
         defaultProps={defaultShort}
+      />
+      {/* Интро канала (после хука) и лист «4 варианта интро» для выбора владельцем */}
+      <Composition id="Intro" component={Intro} calculateMetadata={calculateIntroMetadata} durationInFrames={180} fps={FRAME.fps} width={FRAME.width} height={FRAME.height} defaultProps={defaultIntro} />
+      <Composition
+        id="Intro-Sheet"
+        component={IntroSheet}
+        durationInFrames={1}
+        fps={FRAME.fps}
+        width={INTRO_SHEET.width}
+        height={INTRO_SHEET.height}
+        defaultProps={{styleId: null as string | null, channel: 'True Tales of the Past', words: [] as IntroWord[]}}
       />
       <Composition id="Thumbnail" component={Thumbnail} durationInFrames={1} fps={FRAME.fps} width={THUMB.width} height={THUMB.height} defaultProps={defaultThumbnail} />
       <Folder name="Styles">
