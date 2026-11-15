@@ -37,7 +37,7 @@ export const paginate = (words: Word[], maxWords = 3, maxChars = 16): Word[][] =
 export type CaptionLayout = {left: number; width: number; top: number; minHeight: number; fontSize: number; maxWords: number; maxChars: number};
 
 export const KaraokeCaptions: React.FC<{words: Word[]; top?: number; layout?: Partial<CaptionLayout>}> = ({words, top = 1130, layout = {}}) => {
-  const L: CaptionLayout = {left: SAFE.left, width: VIDEO.width - SAFE.left - SAFE.right, top, minHeight: 260, fontSize: TYPE.caption, maxWords: 3, maxChars: 16, ...layout};
+  const L: CaptionLayout = {left: 170, width: VIDEO.width - 340, top, minHeight: 260, fontSize: TYPE.caption, maxWords: 3, maxChars: 16, ...layout};
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const ms = (frame / fps) * 1000;
@@ -59,6 +59,7 @@ export const KaraokeCaptions: React.FC<{words: Word[]; top?: number; layout?: Pa
 
   return (
     <div
+      className="cap"
       style={{
         position: 'absolute',
         top: L.top,
@@ -90,7 +91,7 @@ export const KaraokeCaptions: React.FC<{words: Word[]; top?: number; layout?: Pa
               fontSize: L.fontSize,
               lineHeight: 1.15,
               textTransform: 'uppercase',
-              color: isKw && spoken ? COLORS.accentInk : active ? COLORS.accent : COLORS.ink,
+              color: isKw && spoken ? COLORS.accentInk : active ? COLORS.accentText : COLORS.ink,
               background: isKw && spoken ? COLORS.accent : 'transparent',
               borderRadius: 16,
               padding: '0 12px',

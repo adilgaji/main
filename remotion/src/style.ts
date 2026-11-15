@@ -32,6 +32,7 @@ export const COLORS = {
   // выделение ключевых слов
   accent: '#FFC845',
   accentInk: '#0E1A2B',
+  accentText: '#FFC845', // цвет звучащего слова в субтитрах (на светлых фонах — тёмный)
   // тело
   bodyFill: '#2A4468',
   bodyEdge: '#3D5E8C',

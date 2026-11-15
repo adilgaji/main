@@ -27,6 +27,8 @@ sys.path.insert(0, str(ROOT / "pipeline"))
 
 from common import OUTPUT, Log  # noqa: E402
 from job import (  # noqa: E402
+    DEFAULT_STYLE,
+    STYLE_INFO,
     compute_times,
     load_state,
     new_job,
@@ -43,17 +45,7 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory=str(Path(__file__).resolve().parent / "static")), name="static")
 
 # стили видео (картинки-примеры: web/static/styles/<id>.jpg)
-STYLE_LIST = [
-    {"id": "classic", "name": "Classic", "ru": "Текущий стиль канала"},
-    {"id": "glass", "name": "Glass mosaic", "ru": "Витраж: яркие «стёкла» в тёмной окантовке"},
-    {"id": "pixel", "name": "Pixel explainer", "ru": "Пиксельная графика, как в ретро-игре"},
-    {"id": "paper", "name": "Paper-cut", "ru": "Слои цветной бумаги с тенями"},
-    {"id": "watercolour", "name": "Watercolour", "ru": "Акварель: мягкие края, прозрачные краски"},
-    {"id": "terminal", "name": "Retro terminal", "ru": "Зелёный экран старого компьютера"},
-    {"id": "isometric", "name": "Isometric", "ru": "Объёмные «макеты» под углом, как инфографика"},
-    {"id": "thermal", "name": "Thermal cam", "ru": "Тепловизор: горячее — жёлтое, холодное — фиолетовое"},
-    {"id": "clay", "name": "Claymation", "ru": "Пластилин: мягкие объёмные формы"},
-]
+STYLE_LIST = [{"id": i, "name": n, "ru": r} for i, n, r in STYLE_INFO]
 
 
 @app.get("/api/styles")
@@ -153,7 +145,7 @@ def create_job(data: dict = Body(...)):
     topic = (data.get("topic") or "").strip()
     if len(topic) < 5:
         raise HTTPException(400, "Введите тему (хотя бы несколько слов)")
-    job = new_job(topic, data.get("style") or "classic", data.get("format") or "short")
+    job = new_job(topic, data.get("style") or DEFAULT_STYLE, data.get("format") or "short")
     if data.get("angle"):
         update_state(job, angle=data["angle"])
     background(job.name, job, step_script, job)

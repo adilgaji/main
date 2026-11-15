@@ -91,7 +91,9 @@ const stepsBar = (i) => `<div class="steps">${STEPS.map((s, k) => `<span class="
 
 /* ---------------- стиль видео ---------------- */
 let STYLES = [];
-const getStyle = () => { try { return localStorage.getItem('style') || 'classic'; } catch (e) { return window._style || 'classic'; } };
+const LEGACY = {classic: 'cosmic', glass: 'mosaic', pixel: 'comic', paper: 'papercut', terminal: 'xray', isometric: 'glossy', thermal: 'xray', clay: 'glossy'};
+const normStyle = (id) => (STYLES.length && !STYLES.find((x) => x.id === id)) ? (LEGACY[id] || 'cosmic') : (LEGACY[id] || id || 'cosmic');
+const getStyle = () => { let v; try { v = localStorage.getItem('style'); } catch (e) { v = window._style; } return normStyle(v || 'cosmic'); };
 const setStyle = (id) => { window._style = id; try { localStorage.setItem('style', id); } catch (e) {} document.querySelectorAll('.style-card').forEach((c) => c.classList.toggle('on', c.dataset.id === id)); const n = $('#styleName'); if (n) n.textContent = (STYLES.find((x) => x.id === id) || {}).name || id; };
 const styleById = (id) => STYLES.find((x) => x.id === id) || {id, name: id, ru: ''};
 const FORMATS = {short: {name: 'Shorts', ru: 'Вертикально 9:16 · 30–55 секунд · бесконечная петля', w: 27, h: 48},
@@ -183,7 +185,7 @@ async function job(id) {
   const st = d.state;
   const i = stepIndex(st);
   if (!STYLES.length) STYLES = await api('/api/styles');
-  const sty = styleById(st.style || 'classic');
+  const sty = styleById(normStyle(st.style || 'cosmic'));
   let html = `${stepsBar(i)}<h2>${esc(st.topic)}</h2><p><span class="style-chip">${esc((FORMATS[st.format || 'short'] || FORMATS.short).name)}</span> <span class="style-chip"><img src="/static/styles/${sty.id}.jpg" alt="">Стиль: <b>${esc(sty.name)}</b></span></p>`;
   if (st.status === 'error' && !st.running) {
     html += `<div class="card err"><h3>Шаг не удался (после 3 попыток)</h3><pre>${esc(st.error)}</pre>

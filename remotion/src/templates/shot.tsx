@@ -74,8 +74,8 @@ export const Breadcrumb: React.FC<{items: string[]; level: number}> = ({items, l
     style={{
       position: 'absolute',
       top: 250,
-      left: 70,
-      width: VIDEO.width - 70 - 170,
+      left: 80,
+      width: VIDEO.width - 160,
       display: 'flex',
       justifyContent: 'center',
       gap: 16,

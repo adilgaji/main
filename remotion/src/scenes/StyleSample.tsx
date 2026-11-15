@@ -11,6 +11,8 @@ import {Stickman} from '../lib/Stickman';
 import {Headline} from '../lib/Kit';
 import {KaraokeCaptions, Word} from '../lib/Captions';
 import {StyleLayer} from '../styles/StyleLayer';
+import {Backdrop, setFocus} from '../styles/Backdrops';
+import {setEnvSize} from '../lib/Env';
 import {STYLE_IDS, StyleId, THEMES, applyTheme} from '../styles/themes';
 
 loadFonts();
@@ -113,10 +115,12 @@ const WORDS: Word[] = [
 
 export const StyleSample: React.FC<{style: StyleId}> = ({style}) => {
   applyTheme(style); // палитра до построения кадра
+  setEnvSize(1080, 1920);
+  setFocus(null);
   return (
     <StyleLayer
       style={style}
-      bg={<Tissue />}
+      bg={<Backdrop style={style} seed={3} />}
       fg={<Diagram />}
       actor={
         <div style={{position: 'absolute', left: 20, top: 690}}>
@@ -134,9 +138,9 @@ export const StyleSample: React.FC<{style: StyleId}> = ({style}) => {
   );
 };
 
-/* Лист из 9 образцов: текущий стиль + 8 новых. */
+/* Лист образцов всех стилей. */
 export const StyleSampleSheet: React.FC = () => (
-  <AbsoluteFill style={{background: '#101010', padding: 30, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 26}}>
+  <AbsoluteFill style={{background: '#101010', padding: 30, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 26}}>
     {STYLE_IDS.map((id, i) => (
       <div key={id} style={{display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center'}}>
         <div style={{width: 324, height: 576, overflow: 'hidden', borderRadius: 14}}>
@@ -144,7 +148,7 @@ export const StyleSampleSheet: React.FC = () => (
             <StyleSample style={id} />
           </div>
         </div>
-        <div style={{fontFamily: 'system-ui', fontWeight: 800, fontSize: 26, color: '#fff'}}>{i === 0 ? 'Classic (сейчас)' : `${i}. ${THEMES[id].name}`}</div>
+        <div style={{fontFamily: 'system-ui', fontWeight: 800, fontSize: 26, color: '#fff'}}>{`${i + 1}. ${THEMES[id].name}`}</div>
         <div style={{fontFamily: 'system-ui', fontSize: 17, color: '#aaa', textAlign: 'center', width: 330}}>{THEMES[id].ru}</div>
       </div>
     ))}

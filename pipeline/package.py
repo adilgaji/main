@@ -80,7 +80,7 @@ def build_files(job: Path, pk: dict):
 
 
 def render_thumbnail(job: Path, pk: dict, log: Log):
-    th = {**pk["thumbnail"], "style": json.loads((job / "state.json").read_text(encoding="utf-8")).get("style", "classic")}
+    th = {**pk["thumbnail"], "style": json.loads((job / "state.json").read_text(encoding="utf-8")).get("style", "cosmic")}
     props = job / "thumb_props.json"
     props.write_text(json.dumps(th, ensure_ascii=False), encoding="utf-8")
     from job import fmt_of

@@ -272,7 +272,7 @@ const IntroClassroom: React.FC = () => {
 };
 
 export const Intro: React.FC<{variant: IntroVariant; withVoice?: boolean}> = ({variant, withVoice = true}) => {
-  applyTheme(variant === 'classroom' ? 'paper' : 'classic');
+  applyTheme(variant === 'classroom' ? 'papercut' : 'cosmic');
   const V = {pulse: IntroPulse, blueprint: IntroBlueprint, zoom: IntroZoom, classroom: IntroClassroom}[variant];
   return (
     <AbsoluteFill style={{background: '#000'}}>

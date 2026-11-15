@@ -52,7 +52,34 @@ def slugify(s: str) -> str:
     return s[:48].rstrip("-") or "video"
 
 
-STYLES = ["classic", "glass", "pixel", "paper", "watercolour", "terminal", "isometric", "thermal", "clay"]
+# стили видео — те же id, что в remotion/src/styles/themes.ts (картинки-примеры: web/static/styles/<id>.jpg)
+STYLE_INFO = [
+    ("watercolour", "Watercolour", "Акварель: мягкие прозрачные пятна на бумаге"),
+    ("mosaic", "Roman mosaic", "Римская мозаика: камешки, терракота, лазурь"),
+    ("sumie", "Sumi-e ink", "Японская тушь: мазки кистью, красная печать"),
+    ("impasto", "Impasto oil", "Масло густыми мазками, рельеф краски"),
+    ("gouache", "Nocturne gouache", "Ночная гуашь: матовые краски, уютная ночь"),
+    ("botanical", "Botanical plate", "Старинный атлас: тонкие линии и подписи"),
+    ("papercut", "Paper cut", "Слои цветной бумаги с тенями"),
+    ("nouveau", "Art nouveau", "Модерн: арка, золотой ореол, лозы"),
+    ("golden", "Golden hour", "Закат: тёплый свет и длинные лучи"),
+    ("anime", "Anime painting", "Рисованная анимация: небо, облака, холмы"),
+    ("xray", "X-ray hologram", "Светящееся «сканирование» тела"),
+    ("cosmic", "Flat cosmic", "Яркая плоская графика на «космосе»"),
+    ("comic", "Comic halftone", "Комикс: жирный контур, точки, лучи"),
+    ("notebook", "Notebook doodle", "Рисунок ручкой в тетради, стикеры"),
+    ("riso", "Risograph", "Печать двумя красками, зерно"),
+    ("glossy", "Glossy 3D", "Объёмные блестящие фигуры, студийный свет"),
+]
+STYLES = [s[0] for s in STYLE_INFO]
+DEFAULT_STYLE = "cosmic"
+# старые стили → новые (для роликов, сделанных раньше)
+LEGACY_STYLES = {"classic": "cosmic", "glass": "mosaic", "pixel": "comic", "paper": "papercut", "terminal": "xray",
+                 "isometric": "glossy", "thermal": "xray", "clay": "glossy"}
+
+
+def norm_style(style: str | None) -> str:
+    return style if style in STYLES else LEGACY_STYLES.get(style or "", DEFAULT_STYLE)
 
 
 FORMATS = {"short": (30, 55), "long": (330, 450)}  # допустимая длина (сек) для каждого формата
@@ -82,10 +109,10 @@ def limits(job: Path) -> tuple[int, int]:
     return FORMATS.get(fmt_of(job), FORMATS["short"])
 
 
-def new_job(topic: str, style: str = "classic", fmt: str = "short") -> Path:
+def new_job(topic: str, style: str = DEFAULT_STYLE, fmt: str = "short") -> Path:
     job = OUTPUT / f"{dt.date.today():%Y-%m-%d}_{slugify(topic)}"
     job.mkdir(parents=True, exist_ok=True)
-    style = style if style in STYLES else "classic"
+    style = norm_style(style)
     fmt = fmt if fmt in FORMATS else "short"
     save_state(job, {"topic": topic, "style": style, "format": fmt, "step": "script", "status": "new", "created": dt.datetime.now().isoformat(timespec="seconds"), "history": []})
     return job
@@ -304,7 +331,7 @@ if __name__ == "__main__":
     ap.add_argument("cmd", choices=["new", "script", "storyboard"])
     ap.add_argument("arg")
     ap.add_argument("--remarks", default="")
-    ap.add_argument("--style", default="classic")
+    ap.add_argument("--style", default=DEFAULT_STYLE)
     ap.add_argument("--format", default="short", choices=["short", "long"])
     a = ap.parse_args()
     if a.cmd == "new":

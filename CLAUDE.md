@@ -6,7 +6,7 @@
 - `web/` — страница (FastAPI + index.html). 5 шагов, каждый ждёт решения человека. Состояние — `output/<дата>_<тема>/state.json`.
 - `pipeline/` — СКРИПТЫ (не агенты): `tts.py` (Kokoro → Piper → edge-tts, GPU → CPU), `captions.py` (faster-whisper, пословные тайминги, сверка с текстом), `render.py` (Remotion, `--gl=angle` → `swangle`), `produce.py` (шаг 4 + проверки), `package.py` (шаг 5), `job.py` (шаги 2–3, вызов агентов через `claude -p --agent`), `readability.py`.
 - `.claude/agents/` — субагенты с минимумом инструментов: idea-researcher, scriptwriter, fact-checker, storyboard-agent, quality-reviewer. Они **никогда не задают вопросов** пользователю — только через страницу.
-- `remotion/` — видео. `src/style.ts` — единая палитра/шрифты/безопасная зона. `src/lib/` — визуальная библиотека (SVG кодом). `src/templates/` — шаблоны кадров (типы из `docs/STORYBOARD_SCHEMA.md`). `src/Short.tsx` — ролик по раскадровке. `src/Thumbnail.tsx` — обложка.
+- `remotion/` — видео. `src/style.ts` — единая палитра/шрифты/безопасная зона. `src/lib/` — визуальная библиотека (SVG кодом). `src/templates/` — шаблоны кадров (типы из `docs/STORYBOARD_SCHEMA.md`). `src/Short.tsx` — ролик по раскадровке. `src/Thumbnail.tsx` — обложка. Стили (16): `src/styles/themes.ts` (палитра, шрифт), `src/styles/Backdrops.tsx` (фон-«мир», своя вариация в каждом кадре), `src/styles/StyleLayer.tsx` (фильтры/текстуры). Главное в кадре — строго по центру (x = 540).
 
 ## Нерушимые правила
 1. Медицинский контент — строго по `docs/MEDICAL_RULES.md`: только обучение, источник у каждого факта (обзоры/мета-анализы PubMed, NIH, WHO, Mayo, учебники), без дозировок/добавок/препаратов, метки proven/early/myth, дисклеймер «Educational, not medical advice».

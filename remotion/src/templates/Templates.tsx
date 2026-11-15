@@ -14,38 +14,20 @@ import {Brain, Heart, Muscle} from '../lib/Organs';
 import {Cell, Molecule, MoleculeKind} from '../lib/CellAndMolecules';
 import {BarChart, EvidenceBadge, Evidence, FlowChain, Icon, IconName, LineGraph, ProcessArrow} from '../lib/Diagram';
 import {MuscleFiber, FiberState} from '../lib/MuscleFiber';
-import {Env, EnvKind, envFor, getSize} from '../lib/Env';
+import {EnvKind, envFor, getSize} from '../lib/Env';
 import {StyleLayer} from '../styles/StyleLayer';
-import {Board, Location, LocationKind, boardFor} from '../lib/Scenes';
+import {Backdrop} from '../styles/Backdrops';
+import {normalizeStyle} from '../styles/themes';
 import {Breadcrumb, colorOf, ramp, useShot} from './shot';
 
 const HEAD_TOP = SAFE.top + 30;
-const CX = (SAFE.left + VIDEO.width - SAFE.right) / 2; // центр безопасной зоны по X (≈ 490)
+const CX = VIDEO.width / 2; // всё главное — строго по центру кадра (540)
 const abs = (left: number, top: number, extra: React.CSSProperties = {}): React.CSSProperties => ({position: 'absolute', left, top, ...extra});
 
-/** Кадр в стиле видео. */
-const Frame: React.FC<{env: EnvKind; fg: React.ReactNode; actor?: React.ReactNode; ui?: React.ReactNode}> = ({env, fg, actor, ui}) => {
-  const {style, env: picked, shot, location, variant} = useShot();
-  // фон — настоящая локация (класс, аудитория, лаборатория…) в вариации этого кадра; схема — «на доске»
-  if (location) {
-    const loc = location as LocationKind;
-    return (
-      <StyleLayer
-        style={style}
-        seed={shot.id}
-        bg={<Location kind={loc} variant={variant} />}
-        fg={
-          <>
-            <Board kind={boardFor(loc, variant)} />
-            {fg}
-          </>
-        }
-        actor={actor}
-        ui={ui}
-      />
-    );
-  }
-  return <StyleLayer style={style} seed={shot.id} bg={<Env kind={(picked as EnvKind) ?? env} seed={shot.id} />} fg={fg} actor={actor} ui={ui} />;
+/** Кадр в стиле видео: фон — «мир» стиля (в каждом кадре своя вариация), схема и гид — по центру. */
+const Frame: React.FC<{env: EnvKind; fg: React.ReactNode; actor?: React.ReactNode; ui?: React.ReactNode}> = ({fg, actor, ui}) => {
+  const {style, shot} = useShot();
+  return <StyleLayer style={style} seed={shot.id} bg={<Backdrop style={normalizeStyle(style)} seed={shot.id} />} fg={fg} actor={actor} ui={ui} />;
 };
 
 // В горизонтальном видео сцена 1080×1920 показывается с масштабом 1.17 и видна только до y≈1143:
@@ -90,7 +72,7 @@ export const HookT: React.FC = () => {
     <Frame
       env={envFor(p.visual)}
       fg={
-        <div style={abs(wide ? 90 : 250, 420, {width: wide ? 900 : 720, height: 660, display: 'flex', alignItems: 'center', justifyContent: 'center', scale: String(zoom)})}>
+        <div style={abs(wide ? 90 : CX - 360, 420, {width: wide ? 900 : 720, height: 660, display: 'flex', alignItems: 'center', justifyContent: 'center', scale: String(zoom)})}>
           <Visual kind={p.visual ?? 'heart'} params={p.visual_params} k={k} />
         </div>
       }
@@ -313,7 +295,7 @@ export const FiberT: React.FC = () => {
 /* ---------------------------------- CELL --------------------------------- */
 export const CellT: React.FC = () => {
   const {t, dur, p} = useShot();
-  const C = {x: CX + 30, y: 740, size: 720};
+  const C = {x: CX, y: 740, size: 720};
   const angles = [-60, 10, 80, 150, 220];
   const inside = p.receptors === 'nuclear';
   return (
@@ -362,7 +344,7 @@ export const GraphT: React.FC = () => {
     <Frame
       env="soft"
       fg={
-        <Card x={40} y={320} w={W + 40} h={H + 60}>
+        <Card x={CX - (W + 40) / 2} y={360} w={W + 40} h={H + 60}>
           <div style={abs(20, 30)}>
             <LineGraph width={W} height={H} title={p.title} data={data} xLabels={p.x_labels ?? []} yLabel={p.y_label} progress={prog} />
             {hi != null && prog > hi / (data.length - 1) && (
@@ -385,7 +367,7 @@ export const BarsT: React.FC = () => {
     <Frame
       env="soft"
       fg={
-        <Card x={60} y={420} w={900} h={660}>
+        <Card x={CX - 450} y={420} w={900} h={660}>
           <div style={abs(30, 20)}>
             <BarChart width={840} height={620} bars={bars} />
           </div>
@@ -407,7 +389,7 @@ export const FlowT: React.FC = () => {
     <Frame
       env="cells"
       fg={
-        <div style={abs(260, 340)}>
+        <div style={abs(CX - 330 + 60, 340)}>
           <FlowChain width={660} progress={Math.max(0.01, prog)} steps={steps.map((s: any) => ({label: s.label, color: colorOf(s.color)}))} />
         </div>
       }
@@ -424,16 +406,16 @@ export const TipsT: React.FC = () => {
     <Frame
       env="soft"
       fg={
-        <div style={abs(300, 470, {width: 620, display: 'flex', flexDirection: 'column', gap: 40})}>
+        <div style={abs(CX - 390, 450, {width: 780, display: 'flex', flexDirection: 'column', gap: 34})}>
           {items.map((it, i) => {
             const fb = (0.3 + i * 0.2) * dur;
             const s0 = Math.min(...it.text.split(' ').map((w) => at(w, 0.3 + i * 0.2)), fb + 0.001);
             const k = ramp(t, s0 - 0.1, s0 + 0.35);
             return (
               <div key={i} style={{opacity: 0.3 + 0.7 * k, translate: `${(1 - k) * 60}px 0px`, display: 'flex', alignItems: 'center', gap: 26, background: COLORS.bgSoft, borderRadius: 40, padding: '30px 34px', border: `6px solid ${COLORS.bgGlow}`}}>
-                <Icon name={it.icon} size={170} />
-                <div style={{display: 'flex', flexDirection: 'column', gap: 16}}>
-                  <div className="txt tx" style={{fontFamily: FONT_FAMILY, fontWeight: 900, fontSize: 64, lineHeight: 1.05, color: COLORS.ink, textTransform: 'uppercase'}}>{it.text}</div>
+                <Icon name={it.icon} size={150} />
+                <div style={{display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0}}>
+                  <div className="txt tx" style={{fontFamily: FONT_FAMILY, fontWeight: 900, fontSize: 58, overflowWrap: 'break-word', lineHeight: 1.05, color: COLORS.ink, textTransform: 'uppercase'}}>{it.text}</div>
                   <EvidenceBadge kind={it.evidence ?? 'proven'} scale={0.85} />
                 </div>
               </div>
@@ -441,7 +423,6 @@ export const TipsT: React.FC = () => {
           })}
         </div>
       }
-      actor={<Guide left={-30} top={560} size={500} pose="present" emotion="happy" />}
       ui={p.headline && <Headline text={p.headline} top={HEAD_TOP} />}
     />
   );
@@ -466,15 +447,15 @@ export const MythT: React.FC = () => {
       env="cells"
       fg={
         <>
-          <MythCard title="CLAIM" text={p.myth ?? ''} color={COLORS.myth} style={{left: SAFE.left + 10, top: 320, paddingBottom: 60, opacity: ramp(t, 0, 0.3)}}>
+          <MythCard title="CLAIM" text={p.myth ?? ''} color={COLORS.myth} style={{left: CX - 360, top: 330, width: 720, paddingBottom: 60, opacity: ramp(t, 0, 0.3)}}>
             <div className="txt" style={{position: 'absolute', right: 26, bottom: -38, opacity: stamp, scale: String(1.8 - 0.8 * stamp), rotate: '-12deg', fontFamily: FONT_FAMILY, fontWeight: 900, fontSize: 72, color: COLORS.myth, background: COLORS.bgSoft, border: `8px solid ${COLORS.myth}`, borderRadius: 16, padding: '0 18px'}}>
               MYTH
             </div>
           </MythCard>
-          <MythCard title="SCIENCE SAYS" text={p.fact ?? ''} color={COLORS.proven} style={{left: SAFE.left + 10, top: 680, opacity: factIn, translate: `0px ${(1 - factIn) * 60}px`}} />
+          <MythCard title="SCIENCE SAYS" text={p.fact ?? ''} color={COLORS.proven} style={{left: CX - 360, top: 700, width: 720, opacity: factIn, translate: `0px ${(1 - factIn) * 60}px`}} />
         </>
       }
-      actor={<Guide left={640} top={760} size={370} pose={p.pose ?? 'shrug'} emotion={t > tMyth ? 'happy' : 'worried'} />}
+      actor={<Guide left={CX + 200} top={790} size={330} pose={p.pose ?? 'shrug'} emotion={t > tMyth ? 'happy' : 'worried'} />}
     />
   );
 };
@@ -490,7 +471,7 @@ export const OutroT: React.FC = () => {
       ui={
         <>
           <Headline text={p.headline ?? ''} top={HEAD_TOP} delay={0.2} />
-          <div style={abs(SAFE.left, 1060, {width: VIDEO.width - SAFE.left - SAFE.right, textAlign: 'center', opacity: ramp(t, 0.3, 0.8)})}>
+          <div style={abs(0, 1060, {width: VIDEO.width, textAlign: 'center', opacity: ramp(t, 0.3, 0.8)})}>
             <span style={{fontFamily: FONT_FAMILY, fontWeight: 700, fontSize: TYPE.small, color: COLORS.ink, background: COLORS.bgSoft, borderRadius: 999, padding: '10px 28px'}}>Educational, not medical advice</span>
           </div>
         </>
@@ -508,7 +489,7 @@ export const StepsT: React.FC = () => {
     <Frame
       env="soft"
       fg={
-        <div style={abs(110, 500, {width: 860, display: 'flex', flexDirection: 'column', gap: 26})}>
+        <div style={abs(CX - 430, 480, {width: 860, display: 'flex', flexDirection: 'column', gap: 26})}>
           {steps.map((st, i) => {
             const fb = (0.15 + (i * 0.75) / Math.max(1, steps.length)) * dur;
             const s0 = Math.min(...st.text.split(' ').map((w) => at(w, fb / dur)), fb + 0.001);
@@ -543,7 +524,7 @@ export const DoDontT: React.FC = () => {
     <Frame
       env="soft"
       fg={
-        <div style={abs(90, 500, {width: 900, display: 'flex', gap: 24})}>
+        <div style={abs(CX - 450, 480, {width: 900, display: 'flex', gap: 24})}>
           {col(p.do ?? [], true, 0.1)}
           {col(p.dont ?? [], false, dur * 0.45)}
         </div>

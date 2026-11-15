@@ -30,8 +30,8 @@ export const Headline: React.FC<{text: string; top?: number; size?: number; dela
       style={{
         position: 'absolute',
         top,
-        left: SAFE.left,
-        width: VIDEO.width - SAFE.left - SAFE.right,
+        left: 80,
+        width: VIDEO.width - 160, // по центру кадра (540); справа под заголовком кнопок Shorts нет
         textAlign: 'center',
         fontFamily: FONT_FAMILY,
         fontWeight: 900,

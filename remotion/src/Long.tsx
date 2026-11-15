@@ -10,8 +10,9 @@ import {COLORS, FONT_FAMILY, loadFonts} from './style';
 import {KaraokeCaptions, Word} from './lib/Captions';
 import {Shot, ShotCtx, ShotTransition} from './templates/shot';
 import {GuideT, TEMPLATES} from './templates/Templates';
-import {StyleId, applyTheme} from './styles/themes';
+import {StyleId, applyTheme, normalizeStyle} from './styles/themes';
 import {StyleOverlay, setFrame} from './styles/StyleLayer';
+import {setFocus} from './styles/Backdrops';
 import {pickEnvs, setEnvSize} from './lib/Env';
 import {LocationKind, locationFor, pickVariants} from './lib/Scenes';
 
@@ -61,7 +62,9 @@ const Panel: React.FC<{chapters: Chapter[]; total: number}> = ({chapters, total}
   );
 };
 
-export const Long: React.FC<LongProps> = ({audio, words, shots, chapters, total, style = 'classic', location}) => {
+export const Long: React.FC<LongProps> = ({audio, words, shots, chapters, total, style: rawStyle, location}) => {
+  const style = normalizeStyle(rawStyle);
+  setFocus(null);
   const {fps} = useVideoConfig();
   applyTheme(style);
   setEnvSize(LONG.width, LONG.height);

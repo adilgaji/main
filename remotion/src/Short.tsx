@@ -10,8 +10,9 @@ import {COLORS, VIDEO, loadFonts} from './style';
 import {KaraokeCaptions, Word} from './lib/Captions';
 import {Shot, ShotCtx, ShotTransition} from './templates/shot';
 import {GuideT, TEMPLATES} from './templates/Templates';
-import {StyleId, applyTheme} from './styles/themes';
+import {StyleId, applyTheme, normalizeStyle} from './styles/themes';
 import {StyleOverlay, setFrame} from './styles/StyleLayer';
+import {setFocus} from './styles/Backdrops';
 import {pickEnvs, setEnvSize} from './lib/Env';
 import {LocationKind, locationFor, pickVariants} from './lib/Scenes';
 import {FONT_FAMILY, COLORS as C, TYPE} from './style';
@@ -40,7 +41,9 @@ const Disclaimer: React.FC = () => (
   </div>
 );
 
-export const Short: React.FC<ShortProps> = ({audio, words, shots, music, style = 'classic', location}) => {
+export const Short: React.FC<ShortProps> = ({audio, words, shots, music, style: rawStyle, location}) => {
+  const style = normalizeStyle(rawStyle);
+  setFocus(null);
   const {fps, durationInFrames} = useVideoConfig();
   applyTheme(style); // палитра стиля — до отрисовки всех кадров
   setEnvSize(VIDEO.width, VIDEO.height);

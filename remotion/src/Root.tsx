@@ -25,7 +25,7 @@ export const RemotionRoot: React.FC = () => {
       <Still id="SheetAnatomy" component={SheetAnatomy} width={VIDEO.width} height={VIDEO.height} />
       <Still id="SheetDiagrams" component={SheetDiagrams} width={VIDEO.width} height={VIDEO.height} />
       <Composition id="LibraryMotion" component={LibraryMotion} durationInFrames={6 * VIDEO.fps} fps={VIDEO.fps} width={VIDEO.width} height={VIDEO.height} />
-      <Composition id="StyleSample" component={StyleSample} durationInFrames={60} fps={VIDEO.fps} width={VIDEO.width} height={VIDEO.height} defaultProps={{style: 'classic' as const}} />
+      <Composition id="StyleSample" component={StyleSample} durationInFrames={60} fps={VIDEO.fps} width={VIDEO.width} height={VIDEO.height} defaultProps={{style: 'cosmic' as const}} />
       <Composition id="StyleSampleSheet" component={StyleSampleSheet} durationInFrames={60} fps={VIDEO.fps} width={1090} height={2080} />
       <Still id="BlueprintPairSheet" component={BlueprintPairSheet} width={1620} height={1250} />
       <Still id="WmPulseNavy" component={WmPulseNavy} width={800} height={800} />
@@ -60,9 +60,9 @@ export const RemotionRoot: React.FC = () => {
         fps={VIDEO.fps}
         width={1920}
         height={1080}
-        defaultProps={{audio: 'jobs/test/voice.wav', words: [], shots: [], total: 10, chapters: [], style: 'classic' as const}}
+        defaultProps={{audio: 'jobs/test/voice.wav', words: [], shots: [], total: 10, chapters: [], style: 'cosmic' as const}}
       />
-      <Still id="ThumbnailWide" component={ThumbnailWide} width={1280} height={720} defaultProps={{text: 'WHY MUSCLES *GROW*', visual: 'muscle', visual_params: {repair: 1}, pose: 'think', emotion: 'surprised', style: 'classic' as const}} />
+      <Still id="ThumbnailWide" component={ThumbnailWide} width={1280} height={720} defaultProps={{text: 'WHY MUSCLES *GROW*', visual: 'muscle', visual_params: {repair: 1}, pose: 'think', emotion: 'surprised', style: 'cosmic' as const}} />
       <Still id="Thumbnail" component={Thumbnail} width={VIDEO.width} height={VIDEO.height} defaultProps={{text: 'WHY MUSCLES *GROW*', visual: 'muscle', visual_params: {repair: 1}, pose: 'think', emotion: 'surprised'}} />
       <Composition
         id="Short"
@@ -72,7 +72,7 @@ export const RemotionRoot: React.FC = () => {
         fps={VIDEO.fps}
         width={VIDEO.width}
         height={VIDEO.height}
-        defaultProps={{audio: 'jobs/test/voice.wav', words: [], shots: [], total: 10, music: null, style: 'classic' as const}}
+        defaultProps={{audio: 'jobs/test/voice.wav', words: [], shots: [], total: 10, music: null, style: 'cosmic' as const}}
       />
       <Composition
         id="TestScene"

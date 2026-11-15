@@ -12,7 +12,8 @@ import {MuscleFiber} from './lib/MuscleFiber';
 import {Icon} from './lib/Diagram';
 import {Env, envFor, setEnvSize} from './lib/Env';
 import {StyleLayer, setFrame} from './styles/StyleLayer';
-import {StyleId, applyTheme} from './styles/themes';
+import {Backdrop, setFocus} from './styles/Backdrops';
+import {StyleId, applyTheme, normalizeStyle} from './styles/themes';
 
 loadFonts();
 
@@ -41,17 +42,19 @@ const Big: React.FC<{visual: string; vp: any}> = ({visual, vp = {}}) => {
   }
 };
 
-export const Thumbnail: React.FC<ThumbProps> = ({text, visual, visual_params, pose = 'point', emotion = 'surprised', style = 'classic'}) => {
+export const Thumbnail: React.FC<ThumbProps> = ({text, visual, visual_params, pose = 'point', emotion = 'surprised', style: rawStyle}) => {
+  const style = normalizeStyle(rawStyle);
   applyTheme(style);
   setEnvSize(VIDEO.width, VIDEO.height);
   setFrame(VIDEO.width, VIDEO.height, null);
+  setFocus({x: 540, y: 960, r: 430});
   const parts = text.split(/(\*[^*]+\*)/).filter(Boolean);
   return (
     <StyleLayer
       style={style}
-      bg={<Env kind={envFor(visual)} />}
+      bg={<Backdrop style={style} seed={7} />}
       fg={
-        <div style={{position: 'absolute', left: SAFE.left, width: VIDEO.width - SAFE.left - SAFE.right, top: 680, height: 560, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+        <div style={{position: 'absolute', left: 0, width: VIDEO.width, top: 680, height: 560, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
           <Big visual={visual} vp={visual_params} />
         </div>
       }
@@ -94,15 +97,17 @@ export const Thumbnail: React.FC<ThumbProps> = ({text, visual, visual_params, po
 };
 
 /** Горизонтальная обложка 1280x720 для длинного видео: текст слева, визуал и гид справа. */
-export const ThumbnailWide: React.FC<ThumbProps> = ({text, visual, visual_params, pose = 'point', emotion = 'surprised', style = 'classic'}) => {
+export const ThumbnailWide: React.FC<ThumbProps> = ({text, visual, visual_params, pose = 'point', emotion = 'surprised', style: rawStyle}) => {
+  const style = normalizeStyle(rawStyle);
   applyTheme(style);
   setEnvSize(1280, 720);
   setFrame(1280, 720, {x: 470, y: -560 * 0.78, scale: 0.78});
+  setFocus({x: 891, y: 300, r: 260});
   const parts = text.split(/(\*[^*]+\*)/).filter(Boolean);
   return (
     <StyleLayer
       style={style}
-      bg={<Env kind={envFor(visual)} />}
+      bg={<Backdrop style={style} seed={7} />}
       fg={
         <div style={{position: 'absolute', left: 0, width: VIDEO.width, top: 640, height: 600, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
           <Big visual={visual} vp={visual_params} />
