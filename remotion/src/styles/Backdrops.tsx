@@ -395,7 +395,7 @@ const Cosmic: React.FC<BP> = ({seed}) => {
         <ellipse cx={f.x} cy={f.y} rx={f.r * 1.15} ry={f.r * 0.3} fill="none" stroke="#7A68E0" strokeWidth={4} opacity={0.6} transform={`rotate(${-20 + r('o') * 40} ${f.x} ${f.y})`} />
         {[0, 1].map((i) => {
           const x = W * (i === 0 ? 0.08 + r('p0') * 0.15 : 0.77 + r('p1') * 0.15);
-          const y = H * (i === 0 ? 0.68 + r('q0') * 0.1 : 0.15 + r('q1') * 0.12);
+          const y = H * (i === 0 ? 0.84 + r('q0') * 0.06 : 0.76 + r('q1') * 0.06); // внизу, ниже субтитров — не мешают тексту
           const rr = 40 + r(`s${i}`) * 70;
           return (
             <g key={i}>

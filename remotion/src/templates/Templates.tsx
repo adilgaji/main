@@ -83,31 +83,42 @@ export const HookT: React.FC = () => {
 };
 
 /* --------------------------------- GUIDE -------------------------------- */
+/**
+ * Гид объясняет: гид слева, справа — крупные карточки-иконки (видны почти сразу, по очереди «оживают»).
+ * Если иконка одна — она крупная; если иконок нет — крупный знак вопроса/идеи, чтобы кадр не был пустым.
+ */
 export const GuideT: React.FC = () => {
   const {t, dur, p} = useShot();
-  const icons: IconName[] = p.icons ?? [];
-  const spots = [
-    {x: 700, y: 600},
-    {x: 560, y: 820},
-    {x: 760, y: 1010},
-  ];
+  const icons: IconName[] = (p.icons ?? []).slice(0, 3);
+  const n = icons.length;
+  const size = n <= 1 ? 360 : n === 2 ? 260 : 200;
+  const colX = 700; // центр колонки карточек
+  const top0 = n <= 1 ? 600 : n === 2 ? 520 : 500; // ниже заголовка, выше субтитров (≤ 1130)
+  const gap = n === 2 ? 300 : 215;
   return (
     <Frame
       env="soft"
       fg={
         <>
-          {icons.map((n, i) => {
-            const s = spots[i];
-            const k = ramp(t, 0.2 + (i * dur) / 4, 0.55 + (i * dur) / 4);
+          {/* мягкий ореол за карточками — объединяет их в одну группу */}
+          <div style={abs(colX - 220, 470, {width: 440, height: 690, borderRadius: 220, background: COLORS.bgGlow, opacity: 0.35})} />
+          {n === 0 && (
+            <div className="txt" style={abs(colX - 180, 600, {width: 360, height: 360, borderRadius: '50%', background: COLORS.bgSoft, border: `10px solid ${COLORS.accent}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT_FAMILY, fontWeight: 900, fontSize: 240, color: COLORS.accent, opacity: ramp(t, 0, 0.3)})}>?</div>
+          )}
+          {icons.map((name, i) => {
+            const k = ramp(t, 0.05 + i * 0.18, 0.4 + i * 0.18); // все карточки на экране уже к ~0.8 с
+            const lit = ramp(t, (dur * (i + 0.3)) / Math.max(1, n), (dur * (i + 0.3)) / Math.max(1, n) + 0.3); // «оживают» по очереди
+            const y = n <= 1 ? top0 : top0 + i * gap;
+            const bob = Math.sin(t * 2.2 + i) * 6;
             return (
-              <div key={n} style={abs(s.x - 120, s.y - 120, {width: 240, height: 240, borderRadius: '50%', background: COLORS.bgSoft, border: `8px solid ${COLORS.accent}`, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: k, scale: String(0.7 + 0.3 * k)})}>
-                <Icon name={n} size={160} />
+              <div key={name} style={abs(colX - size / 2, y + bob, {width: size, height: size, borderRadius: '50%', background: COLORS.bgSoft, border: `${n <= 1 ? 12 : 9}px solid ${lit > 0.5 ? COLORS.accent : COLORS.bgGlow}`, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: k, scale: String((0.7 + 0.3 * k) * (1 + lit * 0.06))})}>
+                <Icon name={name} size={size * 0.66} />
               </div>
             );
           })}
         </>
       }
-      actor={<Guide left={10} top={430} size={680} pose={p.pose ?? 'present'} emotion={p.emotion ?? 'happy'} />}
+      actor={<Guide left={20} top={470} size={600} pose={p.pose ?? 'present'} emotion={p.emotion ?? 'happy'} />}
       ui={<Headline text={p.headline ?? ''} top={HEAD_TOP} />}
     />
   );
