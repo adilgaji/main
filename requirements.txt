@@ -8,3 +8,4 @@ edge-tts
 numpy<2.3
 fastapi
 uvicorn
+segno==1.6.1  # QR-код для открытия страницы на телефоне

@@ -2,6 +2,10 @@
 
 Запуск:  python web/server.py   (или start.bat / start.sh) → http://localhost:8765
 
+Телефон: страница доступна в домашней Wi-Fi по секретной ссылке (адрес ноутбука + ключ доступа).
+Ссылку и QR-код показывает страница http://localhost:8765/phone на ноутбуке и окно start.bat.
+Без ключа с других устройств ничего не открыть. Только для ноутбука: переменная LOCAL_ONLY=1.
+
 Каждый шаг ждёт решения человека. Состояние — output/<дата>_<тема>/state.json.
 Долгие шаги (агенты, озвучка, рендер) идут в фоне; страница опрашивает состояние.
 """
@@ -11,6 +15,8 @@ import datetime as dt
 import json
 import os
 import platform
+import secrets
+import socket
 import subprocess
 import sys
 import threading
@@ -18,8 +24,8 @@ import traceback
 import webbrowser
 from pathlib import Path
 
-from fastapi import Body, FastAPI, HTTPException
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi import Body, FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -86,6 +92,81 @@ def job_dir(job_id: str) -> Path:
 
 def read_json(p: Path):
     return json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
+
+
+# ------------------------------------------------------------------ доступ с телефона
+PORT = int(os.environ.get("PORT", 8765))
+KEY_FILE = OUTPUT / "_phone_key.txt"
+LOCAL = {"127.0.0.1", "::1", "localhost"}
+
+
+def phone_key() -> str:
+    """Секретный ключ доступа с других устройств (создаётся один раз, хранится на ноутбуке)."""
+    if not KEY_FILE.exists():
+        KEY_FILE.parent.mkdir(parents=True, exist_ok=True)
+        KEY_FILE.write_text(secrets.token_urlsafe(9), encoding="utf-8")
+    return KEY_FILE.read_text(encoding="utf-8").strip()
+
+
+def lan_ip() -> str:
+    """Адрес ноутбука в домашней сети (например 192.168.1.23)."""
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("10.255.255.255", 1))  # ничего не отправляется — только выбирается сетевая карта
+        return s.getsockname()[0]
+    except OSError:
+        return "127.0.0.1"
+    finally:
+        s.close()
+
+
+def phone_url() -> str:
+    return f"http://{lan_ip()}:{PORT}/?key={phone_key()}"
+
+
+DENIED = """<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<body style="font-family:system-ui;background:#0E1A2B;color:#F5F1E8;padding:24px"><h2>🔒 Нужна ссылка с ключом</h2>
+<p>Откройте на ноутбуке страницу фабрики → «📱 Телефон» и отсканируйте QR-код камерой телефона.</p></body>"""
+
+
+@app.middleware("http")
+async def guard(request: Request, call_next):
+    host = request.client.host if request.client else ""
+    if host in LOCAL:
+        return await call_next(request)
+    key = phone_key()
+    q = request.query_params.get("key")
+    if q and secrets.compare_digest(q, key):
+        # ключ запоминается в телефоне (cookie на год), адрес — без ключа
+        resp = RedirectResponse(str(request.url.remove_query_params("key")), status_code=303)
+        resp.set_cookie("atm_key", key, max_age=365 * 24 * 3600, httponly=True, samesite="lax")
+        return resp
+    if secrets.compare_digest(request.cookies.get("atm_key", ""), key):
+        return await call_next(request)
+    return HTMLResponse(DENIED, status_code=401)
+
+
+@app.get("/phone", response_class=HTMLResponse)
+def phone(request: Request):
+    """Страница для ноутбука: QR-код и ссылка, чтобы открыть фабрику на телефоне."""
+    if (request.client.host if request.client else "") not in LOCAL:
+        raise HTTPException(403, "Эта страница открывается только на ноутбуке")
+    import segno
+
+    url = phone_url()
+    svg = segno.make(url, error="m").svg_inline(scale=8, dark="#0E1A2B", light="#FFFFFF")
+    local_only = os.environ.get("LOCAL_ONLY")
+    return f"""<!doctype html><meta charset=utf-8><title>Фабрика на телефоне</title>
+<body style="font-family:system-ui;background:#0E1A2B;color:#F5F1E8;max-width:640px;margin:30px auto;padding:0 16px;line-height:1.5">
+<h2>📱 Открыть фабрику на телефоне</h2>
+{"<p style='color:#FF6B6B'>Сейчас включён режим «только ноутбук» (LOCAL_ONLY). Уберите его, чтобы открыть с телефона.</p>" if local_only else ""}
+<ol><li>Телефон должен быть подключён к <b>той же Wi-Fi</b>, что и ноутбук.</li>
+<li>Наведите камеру телефона на QR-код и нажмите на появившуюся ссылку.</li>
+<li>Добавьте страницу на главный экран (в браузере: «Поделиться» → «На экран Домой»).</li></ol>
+<div style="background:#fff;display:inline-block;padding:16px;border-radius:16px">{svg}</div>
+<p>Или наберите вручную: <br><code style="font-size:18px;color:#FFC845">{url}</code></p>
+<p style="color:#8FA3BF">Ноутбук должен быть включён, а окно фабрики (start.bat) — открыто. Не пересылайте ссылку другим: в ней ключ доступа.</p>
+<p><a href="/" style="color:#FFC845">← назад к фабрике</a></p></body>"""
 
 
 # ------------------------------------------------------------------ страница
@@ -172,7 +253,7 @@ def job_info(job_id: str):
 
 @app.get("/api/jobs/{job_id}/file/{name}")
 def job_file(job_id: str, name: str):
-    if name not in {"voice.wav", "video.mp4", "thumbnail.png"}:
+    if name not in {"voice.wav", "video.mp4", "thumbnail.png", "captions.srt"}:
         raise HTTPException(404)
     p = job_dir(job_id) / name
     if not p.exists():
@@ -277,8 +358,19 @@ def retry_step(job_id: str):
 if __name__ == "__main__":
     import uvicorn
 
-    port = int(os.environ.get("PORT", 8765))
+    port = PORT
+    local_only = bool(os.environ.get("LOCAL_ONLY"))
     print(f"\n  Фабрика Shorts: http://localhost:{port}\n  (закройте это окно, чтобы остановить)\n")
+    if not local_only:
+        print(f"  📱 С телефона (та же Wi-Fi): {phone_url()}")
+        try:
+            import segno
+
+            print("  или отсканируйте QR-код камерой телефона:\n")
+            segno.make(phone_url(), error="m").terminal(compact=True)
+        except Exception:  # noqa: BLE001
+            print("  QR-код — на странице http://localhost:%d/phone" % port)
+        print()
     if not os.environ.get("NO_BROWSER"):
         threading.Timer(1.5, lambda: webbrowser.open(f"http://localhost:{port}")).start()
-    uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")
+    uvicorn.run(app, host="127.0.0.1" if local_only else "0.0.0.0", port=port, log_level="warning")

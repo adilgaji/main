@@ -59,6 +59,21 @@
   .fmt-card span { font-size: 13px; color: var(--muted); }
   .style-chip { display: inline-flex; align-items: center; gap: 8px; background: var(--panel2); border-radius: 999px; padding: 4px 12px 4px 4px; font-size: 14px; }
   .style-chip img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+  .grid2 > div { min-width: 0; }
+  pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+  /* телефон */
+  @media (max-width: 600px) {
+    header { flex-wrap: wrap; gap: 8px; padding: 12px; }
+    header h1 { font-size: 17px; flex-basis: 100%; }
+    main { padding: 12px 10px 60px; }
+    .card { padding: 14px; border-radius: 12px; }
+    button.big { font-size: 18px; padding: 14px 20px; width: 100%; }
+    .script { font-size: 17px; }
+    table { display: block; overflow-x: auto; white-space: normal; }
+    th, td { min-width: 110px; }
+    .styles { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .style-card span { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -66,10 +81,12 @@
   <h1>🧬 Фабрика Shorts · биология тела</h1>
   <button onclick="go('#/')">Мои ролики</button>
   <button class="primary" onclick="go('#/')">＋ Новый ролик</button>
+  <a id="phoneBtn" href="/phone" style="display:none"><button>📱 Телефон</button></a>
 </header>
 <main id="app"></main>
 
 <script>
+if (['localhost', '127.0.0.1'].includes(location.hostname)) document.getElementById('phoneBtn').style.display = '';
 const $ = (s) => document.querySelector(s);
 const api = async (url, opts = {}) => {
   const r = await fetch(url, {headers: {'Content-Type': 'application/json'}, ...opts});
@@ -283,7 +300,11 @@ function resultView(d) {
         <div class="card"><b>Описание</b><pre class="muted">${esc(d.description)}</pre></div>
         <div class="card"><b>Теги</b><pre class="muted">${esc(d.tags)}</pre></div>
         <div class="card"><b>Обложка</b>${d.files['thumbnail.png'] ? `<img class="thumb" style="max-width:240px;display:block;margin-top:8px" src="/api/jobs/${d.id}/file/thumbnail.png?t=${Date.now()}">` : ''}</div>
-        <button class="primary big" onclick="act('${d.id}','open')">📂 Открыть папку</button>
+        ${['localhost', '127.0.0.1'].includes(location.hostname)
+          ? `<button class="primary big" onclick="act('${d.id}','open')">📂 Открыть папку</button>`
+          : `<div class="row"><a href="/api/jobs/${d.id}/file/video.mp4" download="video.mp4"><button class="primary big">⬇️ Скачать видео</button></a>
+             <a href="/api/jobs/${d.id}/file/thumbnail.png" download="thumbnail.png"><button>⬇️ Обложка</button></a>
+             <a href="/api/jobs/${d.id}/file/captions.srt" download="captions.srt"><button>⬇️ Субтитры .srt</button></a></div>`}
         <p class="muted">Автозагрузки нет: посмотрите ролик и загрузите сами.</p>
       </div></div>${logBox(d)}`;
 }
