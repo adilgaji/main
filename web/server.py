@@ -124,6 +124,24 @@ def phone_url() -> str:
     return f"http://{lan_ip()}:{PORT}/?key={phone_key()}"
 
 
+def tailscale_ip() -> str | None:
+    """Адрес ноутбука в Tailscale (личная сеть ваших устройств через интернет), если Tailscale установлен и включён."""
+    exe = "tailscale"
+    if platform.system() == "Windows":
+        cand = Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "Tailscale" / "tailscale.exe"
+        exe = str(cand) if cand.exists() else exe
+    try:
+        out = subprocess.run([exe, "ip", "-4"], capture_output=True, text=True, timeout=5).stdout.strip().splitlines()
+        return out[0].strip() if out and out[0].startswith("100.") else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def away_url() -> str | None:
+    ip = tailscale_ip()
+    return f"http://{ip}:{PORT}/?key={phone_key()}" if ip else None
+
+
 DENIED = """<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
 <body style="font-family:system-ui;background:#0E1A2B;color:#F5F1E8;padding:24px"><h2>🔒 Нужна ссылка с ключом</h2>
 <p>Откройте на ноутбуке страницу фабрики → «📱 Телефон» и отсканируйте QR-код камерой телефона.</p></body>"""
@@ -156,9 +174,22 @@ def phone(request: Request):
     url = phone_url()
     svg = segno.make(url, error="m").svg_inline(scale=8, dark="#0E1A2B", light="#FFFFFF")
     local_only = os.environ.get("LOCAL_ONLY")
+    away = away_url()
+    if away:
+        away_svg = segno.make(away, error="m").svg_inline(scale=8, dark="#0E1A2B", light="#FFFFFF")
+        away_html = f"""<h2>🌍 Вне дома (через Tailscale)</h2>
+<p>Работает откуда угодно — через мобильный интернет или чужую Wi-Fi. На телефоне должно быть включено приложение Tailscale
+(тот же аккаунт, что на ноутбуке).</p>
+<div style="background:#fff;display:inline-block;padding:16px;border-radius:16px">{away_svg}</div>
+<p>Ссылка: <br><code style="font-size:18px;color:#FFC845">{away}</code></p>
+<p style="color:#8FA3BF">Эта ссылка работает и дома — можно сохранить на главный экран только её.</p>"""
+    else:
+        away_html = """<h2>🌍 Вне дома</h2><p>Чтобы открывать фабрику не только дома, установите бесплатную программу Tailscale
+на ноутбук и на телефон (один и тот же аккаунт, например Google) и перезапустите start.bat — здесь появится второй QR-код.
+Подробно — в README, раздел «Открыть на телефоне вне дома».</p>"""
     return f"""<!doctype html><meta charset=utf-8><title>Фабрика на телефоне</title>
 <body style="font-family:system-ui;background:#0E1A2B;color:#F5F1E8;max-width:640px;margin:30px auto;padding:0 16px;line-height:1.5">
-<h2>📱 Открыть фабрику на телефоне</h2>
+<h2>📱 Дома (та же Wi-Fi)</h2>
 {"<p style='color:#FF6B6B'>Сейчас включён режим «только ноутбук» (LOCAL_ONLY). Уберите его, чтобы открыть с телефона.</p>" if local_only else ""}
 <ol><li>Телефон должен быть подключён к <b>той же Wi-Fi</b>, что и ноутбук.</li>
 <li>Наведите камеру телефона на QR-код и нажмите на появившуюся ссылку.</li>
@@ -166,6 +197,7 @@ def phone(request: Request):
 <div style="background:#fff;display:inline-block;padding:16px;border-radius:16px">{svg}</div>
 <p>Или наберите вручную: <br><code style="font-size:18px;color:#FFC845">{url}</code></p>
 <p style="color:#8FA3BF">Ноутбук должен быть включён, а окно фабрики (start.bat) — открыто. Не пересылайте ссылку другим: в ней ключ доступа.</p>
+{away_html}
 <p><a href="/" style="color:#FFC845">← назад к фабрике</a></p></body>"""
 
 
@@ -370,6 +402,8 @@ if __name__ == "__main__":
             segno.make(phone_url(), error="m").terminal(compact=True)
         except Exception:  # noqa: BLE001
             print("  QR-код — на странице http://localhost:%d/phone" % port)
+        away = away_url()
+        print(f"\n  🌍 Вне дома (Tailscale): {away}" if away else "\n  🌍 Вне дома: установите Tailscale (см. README) — QR-код появится здесь и на странице /phone")
         print()
     if not os.environ.get("NO_BROWSER"):
         threading.Timer(1.5, lambda: webbrowser.open(f"http://localhost:{port}")).start()
