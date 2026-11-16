@@ -23,6 +23,7 @@ import time
 from pathlib import Path
 
 from factory import agents, production, schemas, storyboard, structures, textcheck
+from factory import intro as intro_cfg
 from factory.console import setup_console
 from factory.paths import OUTPUT_DIR, ROOT
 from factory.settings import effective, load_settings, voice_of
@@ -207,6 +208,8 @@ def check_script_answer(out: dict, outline: dict, target: int) -> list[str]:
     if [c.get("id") for c in out.get("chapters", [])] != ids:
         err.append(f"chapters must be exactly {ids} in this order")
     e, _ = textcheck.check_script(out.get("chapters", []), target)
+    if intro_cfg.load():
+        e += textcheck.hook_problems(out.get("chapters", []))
     return err + e
 
 
@@ -430,14 +433,33 @@ def check_storyboard(out: dict, script: dict, narration: dict, refs: set[str]) -
             err.append(f"image {r} cannot be downloaded right now ({str(e)[:80]}); choose another image from the list")
     by_id = {c["id"]: c for c in out["chapters"]}
     for ch in narration["chapters"]:
+        intro = ch.get("intro")
         try:
-            timed = storyboard.plan_chapter(ch["words"], by_id[ch["id"]]["shots"], ch["frames"])
+            if intro:
+                idx = storyboard.anchors([w["text"] for w in ch["words"]], by_id[ch["id"]]["shots"])
+                if intro["word"] not in idx:
+                    after = " ".join(w["text"] for w in ch["words"][intro["word"]:intro["word"] + 5])
+                    err.append(f"chapter {ch['id']}: the channel intro plays after the hook, so a new shot must start exactly at «{after}» (at = these words)")
+            timed = storyboard.plan_with_intro(ch["words"], by_id[ch["id"]]["shots"], ch["frames"], intro)
         except ValueError as e:
             err.append(str(e))
             continue
         e, _ = storyboard.duration_problems(timed, ch["id"])
         err += [x.replace("глава", "chapter").replace("кадр", "shot").replace("длится", "lasts").replace("допустимо от", "allowed").replace(" до ", "–").replace(" с", " s") for x in e]
     return err
+
+
+def _chapter_for_board(ch: dict) -> dict:
+    """Глава для агента раскадровки: время без интро (агент считает длину кадров по голосу главы)."""
+    intro = ch.get("intro")
+    words, frames = ch["words"], ch["frames"]
+    out: dict = {"id": ch["id"]}
+    if intro:
+        shift = intro["frames"] / 30
+        words = words[:intro["word"]] + [{**w, "start": w["start"] - shift, "end": w["end"] - shift} for w in words[intro["word"]:]]
+        frames -= intro["frames"]
+        out["intro_break"] = " ".join(w["text"] for w in words[intro["word"]:intro["word"] + 5])
+    return {**out, "seconds": round(frames / 30, 1), "sentences": sentences_with_times(words)}
 
 
 def step_storyboard(folder: Path) -> dict:
@@ -456,9 +478,10 @@ def step_storyboard(folder: Path) -> dict:
     log.info("  найдено с проверенной лицензией: %d", len(candidates))
 
     data = {
-        "chapters": [{"id": ch["id"], "seconds": round(ch["frames"] / 30, 1), "sentences": sentences_with_times(ch["words"])} for ch in narration["chapters"]],
+        "chapters": [_chapter_for_board(ch) for ch in narration["chapters"]],
         "shot_types": shot_catalog(), "images": candidates, "owner_note": _note(folder, "storyboard"),
-        "rules": "4–8 s per shot (hard limits 2–10 s); neighbours differ in type, backdrop and image; images only by ref; first shot of a chapter has at=''.",
+        "rules": "4–8 s per shot (hard limits 2–10 s); neighbours differ in type, backdrop and image; images only by ref; first shot of a chapter has at=''."
+                 + " Where a chapter has intro_break, the channel intro is inserted there: a new shot must start exactly at those words.",
     }
     refs = {c["ref"] for c in candidates}
     out = agents.run("storyboard-agent", "Make the storyboard for the input below.", data, schemas.STORYBOARD,

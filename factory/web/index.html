@@ -104,7 +104,7 @@ const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<
 const STATUS_CLASS = {"принято": "ok", "готово": "ok", "ждёт решения": "warn", "ошибка": "bad", "переделывается": "info", "нет": ""};
 const pill = (st) => `<span class="pill ${STATUS_CLASS[st] ?? "info"}">${esc(st === "нет" ? "не начато" : st)}</span>`;
 const SHOT_RU = {map: "Карта", timeline: "Таймлайн", kenburns: "Архивное изображение", quote: "Цитата", infographic: "Инфографика",
-  narrator: "Рассказчик", compare: "Тогда / сейчас", diagram: "Схема", scene: "Сцена"};
+  narrator: "Рассказчик", compare: "Тогда / сейчас", diagram: "Схема", scene: "Сцена", intro: "Интро канала"};
 const FACT_RU = {fact: ["факт", "ok"], disputed: ["спорно", "warn"], legend: ["легенда", "info"], myth: ["миф", "bad"]};
 const clock = (s) => s == null ? "" : `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 const mins = (s) => s >= 90 ? `${Math.round(s / 60)} мин` : `${Math.round(s)} с`;

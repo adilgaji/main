@@ -70,6 +70,10 @@ def check_answer(out: dict, chapters: dict[str, dict]) -> list[str]:
         if not MIN_S + 1 <= sec <= MAX_S - 1:
             err.append(f"short {i}: about {sec:.0f} s with the hook — it must be {MIN_S:.0f}–{MAX_S:.0f} s")
         a, b = locate(chapters[s["chapter"]]["words"], s["start"], s["end"])
+        intro = chapters[s["chapter"]].get("intro")
+        if intro and a < intro["word"] <= b:
+            after = " ".join(w["text"] for w in chapters[s["chapter"]]["words"][intro["word"]:intro["word"] + 5])
+            err.append(f"short {i}: the channel intro plays before «{after}» — the excerpt must end before it or start at it")
         for c, x, y in spans:
             if c == s["chapter"] and not (b < x or a > y):
                 err.append(f"short {i} overlaps another short")

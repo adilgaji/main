@@ -82,3 +82,21 @@ def check_script(chapters: list[dict], target: int, tolerance: float = 0.12) -> 
         if re.search(r"[\[\]*#_<>{}]|\(music|\(sound", c.get("text", ""), re.I):
             errors.append(f"chapter {c.get('id')}: no markup, brackets or stage directions in the voice-over")
     return errors, {"words": total, "grade": g, "target": target}
+
+
+HOOK_MIN_WORDS, HOOK_MAX_WORDS = 12, 45  # хук ≈ 5–15 секунд
+
+
+def hook_problems(chapters: list[dict]) -> list[str]:
+    """Хук — первый абзац главы 1: после него играет интро канала."""
+    from factory.tts.text import split_paragraphs
+
+    if not chapters:
+        return []
+    paras = split_paragraphs(chapters[0].get("text", ""))
+    if len(paras) < 2:
+        return [f"chapter {chapters[0].get('id')}: the hook must be its own first paragraph (a blank line after it) — the channel intro plays right after the hook"]
+    n = len(words(paras[0]))
+    if not HOOK_MIN_WORDS <= n <= HOOK_MAX_WORDS:
+        return [f"chapter {chapters[0].get('id')}: the hook (first paragraph) has {n} words — it must be {HOOK_MIN_WORDS}–{HOOK_MAX_WORDS} words (at most 15 seconds)"]
+    return []

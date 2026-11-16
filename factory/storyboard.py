@@ -302,6 +302,37 @@ def plan_chapter(words: list[dict], shots: list[dict], total_frames: int, fps: i
     return out
 
 
+def plan_with_intro(words: list[dict], shots: list[dict], total_frames: int, intro: dict | None = None, fps: int = FPS) -> list[dict]:
+    """plan_chapter для главы, в звук которой вставлено интро канала (factory/intro.py).
+
+    words — слова уже со сдвигом (как в озвучке). Глава раскладывается двумя половинами:
+    до интро (хук) и после; вторая половина сдвигается на длину интро. Кадр, который начинается
+    на первом слове после интро, открывает вторую половину. Если такого кадра нет, кадр,
+    внутри которого кончился хук, продолжается после интро (помечен continued).
+    """
+    if not intro:
+        return plan_chapter(words, shots, total_frames, fps)
+    j, at, n = intro["word"], intro["at_frame"], intro["frames"]
+    back = (at + n) / fps
+    head = words[:j]
+    rest = [{**w, "start": w["start"] - back, "end": w["end"] - back} for w in words[j:]]
+    idx = anchors([w["text"] for w in words], shots)
+    s2 = next((k for k, a in enumerate(idx) if a == j), None)
+    if s2:
+        first, second, cont = shots[:s2], [{**shots[s2], "at": ""}, *shots[s2 + 1:]], False
+    else:
+        k = max(i for i, a in enumerate(idx) if a < j)
+        first, second, cont = shots[:k + 1], [{**shots[k], "at": ""}, *shots[k + 1:]], True
+    out = plan_chapter(head, first, at, fps)
+    tail = plan_chapter(rest, second, total_frames - at - n, fps)
+    for t in tail:
+        t["start"] += at + n
+        t["nominal"] = [t["nominal"][0] + at + n, t["nominal"][1] + at + n]
+    if cont:
+        tail[0]["continued"] = True
+    return out + tail
+
+
 def duration_problems(timed: list[dict], chapter_id: str, fps: int = FPS) -> tuple[list[str], list[str]]:
     """(ошибки, замечания) о длине кадров: жёсткие границы 2–10 с, желательные 4–8 с."""
     errors, notes = [], []

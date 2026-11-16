@@ -16,7 +16,9 @@ Rules:
   no music or sound cues, no emojis, no bullet points.
 - Total words within ±8% of `words_target`. Short sentences (mostly 8–18 words, never over 30).
   A 12–15 year old must understand everything: explain names and terms at once ("a pharaoh — Egypt's king").
-- The first 15 seconds are the hook from the outline. Every chapter ends with its re-hook. The last chapter
+- The hook from the outline is the FIRST PARAGRAPH of chapter c1 on its own (12–45 words, at most 15 seconds), then a
+  blank line: the channel intro plays right after it, so the next paragraph must flow on after a short break.
+  The hook comes first. Every chapter ends with its re-hook. The last chapter
   gives the conclusion and a bridge to the next topic. Never ask viewers to subscribe or like.
 - Facts only from the sources. Every number as a range when sources differ ("between 100,000 and 300,000").
   Say plainly what is disputed ("historians disagree"), what is a legend ("the story goes") and what is a myth.

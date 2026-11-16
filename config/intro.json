@@ -1,0 +1,9 @@
+{
+  "about": "Интро канала: играет в каждом видео сразу после хука (первого абзаца главы 1). Голос — тот же, что у видео, но медленнее. Цвета и шрифты — из стиля видео.",
+  "enabled": true,
+  "channel": "True Tales of the Past",
+  "phrases": ["Welcome to True Tales of the Past.", "Pull up a chair — history has a story for you."],
+  "pause": 0.7,
+  "voice_speed": 0.75,
+  "variant": "ages"
+}

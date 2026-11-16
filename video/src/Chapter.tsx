@@ -8,6 +8,7 @@ import {OverflowProbe} from './components/OverflowProbe';
 import {useFontsReady} from './fonts';
 import {CLAMP, EASE} from './lib/anim';
 import {Shot, type ShotSpec} from './shots';
+import {IntroBody, type IntroVariant, type IntroWord} from './Intro';
 import {FONT, FRAME, getStyle, StyleContext, type StyleDef} from './style';
 
 /** Переход между кадрами. Длительность и вид задаёт сборщик главы (factory/storyboard.py). */
@@ -66,6 +67,9 @@ export const TransitionLayer: React.FC<{item: TimedShot; children: React.ReactNo
   );
 };
 
+/** Интро канала внутри главы 1 (после хука): кадры start…start+frames, звук уже в озвучке. */
+export type ChapterIntro = {start: number; frames: number; variant: IntroVariant; channel: string; words: IntroWord[]};
+
 export type ChapterProps = {
   styleId?: string | null;
   /** Файл озвучки внутри public/ (или null — без звука) */
@@ -75,6 +79,7 @@ export type ChapterProps = {
   shots: TimedShot[];
   captions?: boolean;
   totalFrames?: number;
+  intro?: ChapterIntro | null;
 };
 
 const StageInner: React.FC<{style: StyleDef; families: string[]; children: React.ReactNode}> = ({style, families, children}) => {
@@ -109,7 +114,20 @@ export const calculateChapterMetadata: CalculateMetadataFunction<ChapterProps> =
   height: FRAME.height,
 });
 
-export const Chapter: React.FC<ChapterProps> = ({styleId, audio, words, shots, captions = true}) => (
+/** Субтитры главы; пока идёт интро канала, их нет. */
+const ChapterCaptions: React.FC<{words: CaptionWord[]; intro?: ChapterIntro | null}> = ({words, intro}) => {
+  const frame = useCurrentFrame();
+  if (intro && frame >= intro.start && frame < intro.start + intro.frames) {
+    return null;
+  }
+  return (
+    <AbsoluteFill>
+      <Captions words={words} />
+    </AbsoluteFill>
+  );
+};
+
+export const Chapter: React.FC<ChapterProps> = ({styleId, audio, words, shots, captions = true, intro}) => (
   <Stage styleId={styleId}>
     {shots.map((s, i) => (
       <Sequence key={i} from={s.start} durationInFrames={s.frames} name={`${i + 1}. ${s.shot.type}`}>
@@ -118,11 +136,12 @@ export const Chapter: React.FC<ChapterProps> = ({styleId, audio, words, shots, c
         </TransitionLayer>
       </Sequence>
     ))}
-    {captions && words?.length ? (
-      <AbsoluteFill>
-        <Captions words={words} />
-      </AbsoluteFill>
+    {intro ? (
+      <Sequence from={intro.start} durationInFrames={intro.frames} name="Интро канала">
+        <IntroBody variant={intro.variant} channel={intro.channel} words={intro.words} frames={intro.frames} />
+      </Sequence>
     ) : null}
+    {captions && words?.length ? <ChapterCaptions words={words} intro={intro} /> : null}
     {audio ? <Audio src={staticFile(audio)} /> : null}
   </Stage>
 );

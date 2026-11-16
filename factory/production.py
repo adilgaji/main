@@ -27,12 +27,13 @@ from pathlib import Path
 import numpy as np
 
 from factory import audio, captions, chapters, checks, images, storyboard
+from factory import intro as intro_mod
 from factory.console import setup_console
 from factory.paths import LOGS_DIR, ROOT
 from factory.render import assemble, bundle, render_chapters
 from factory.settings import effective, load_settings, voice_of
 from factory.styles import require_style_chosen
-from factory.tts import narrate_many
+from factory.tts import narrate, narrate_many
 
 log = logging.getLogger("factory.production")
 FPS = storyboard.FPS
@@ -117,18 +118,35 @@ def fetch_images(folder: Path, board: dict, job_dir: Path) -> dict[str, dict]:
 
 # ---------------------------------------------------------------- 3. озвучка
 
-def _text_key(texts: list[str], voice: str, speed: float, settings: dict) -> str:
-    raw = json.dumps([texts, voice, speed, settings["tts"], (ROOT / "config" / "pronunciations.json").read_text(encoding="utf-8")], ensure_ascii=False)
+def _text_key(texts: list[str], voice: str, speed: float, settings: dict, extra: list | None = None) -> str:
+    raw = json.dumps([texts, voice, speed, settings["tts"], (ROOT / "config" / "pronunciations.json").read_text(encoding="utf-8"), *(extra or [])], ensure_ascii=False)
     return hashlib.sha1(raw.encode()).hexdigest()
 
 
-def narrate_chapters(folder: Path, script: dict, settings: dict) -> dict:
+def _intro_anchors(board: dict | None, script: dict) -> list[int] | None:
+    """Номера слов главы 1, с которых начинаются кадры раскадровки (если раскадровка уже есть)."""
+    if not board:
+        return None
+    from factory.tts.text import normalize
+
+    first = script["chapters"][0]
+    shots = next((c["shots"] for c in board.get("chapters", []) if c.get("id") == first["id"]), None)
+    try:
+        return storyboard.anchors(normalize(first["text"]).split(), shots) if shots else None
+    except ValueError:
+        return None
+
+
+def narrate_chapters(folder: Path, script: dict, settings: dict, board: dict | None = None) -> dict:
     """Озвучка глав. Длина каждой главы округляется вверх до целого кадра (тишиной в конце),
-    поэтому звук всего видео = сумма длин глав = число кадров / 30."""
+    поэтому звук всего видео = сумма длин глав = число кадров / 30.
+    Интро канала (config/intro.json) вставляется в главу 1 сразу после хука."""
     work = folder / "work"
     voice, speed = voice_of(settings), float(settings.get("voice_speed", 1.0))
     texts = [c["text"] for c in script["chapters"]]
-    key = _text_key(texts, voice, speed, settings)
+    icfg = intro_mod.load()
+    split = intro_mod.split_word(texts[0], _intro_anchors(board, script)) if icfg else None
+    key = _text_key(texts, voice, speed, settings, [intro_mod.key_of(icfg), split] if split else None)
     cached = work / "narration.json"
     if cached.exists() and (work / "narration.wav").exists():
         info = json.loads(cached.read_text(encoding="utf-8"))
@@ -138,6 +156,13 @@ def narrate_chapters(folder: Path, script: dict, settings: dict) -> dict:
     log.info("Озвучиваю %d глав голосом %s…", len(texts), voice)
     ns = narrate_many(texts, voice, speed=speed, device=settings["tts"]["device"], sentence_gap=settings["tts"]["sentence_gap"], paragraph_gap=settings["tts"]["paragraph_gap"])
     sr = ns[0].sample_rate
+    iv = None
+    if split:
+        # тот же движок и голос, что у глав, только медленнее; между фразами — пауза
+        iv = narrate(intro_mod.text_of(icfg), voice, speed=float(icfg.get("voice_speed", 0.85)), device=settings["tts"]["device"],
+                     engine=ns[0].engine.split(":")[0], paragraph_gap=float(icfg.get("pause", 0.55)))
+        if iv.sample_rate != sr:
+            raise ProductionError("Интро озвучено с другой частотой звука, чем главы")
     pieces, chs, clipped, offset = [], [], [], 0
     for c, n in zip(script["chapters"], ns):
         frames = math.ceil(n.duration * FPS - 1e-6)
@@ -151,7 +176,13 @@ def narrate_chapters(folder: Path, script: dict, settings: dict) -> dict:
         if last > frames / FPS - 0.05:
             clipped.append(f"глава {c['id']}: последнее слово не успевает прозвучать до конца главы")
         words = [{"text": w.text, "start": round(w.start, 3), "end": round(w.end, 3), **({"estimated": True} if w.estimated else {})} for w in n.words]
-        chs.append({"id": c["id"], "title": c["title"], "frames": frames, "start_frame": offset, "words": words, "wpm": round(n.words_per_minute)})
+        ch = {"id": c["id"], "title": c["title"], "frames": frames, "start_frame": offset, "words": words, "wpm": round(n.words_per_minute)}
+        if iv is not None and not chs:
+            vw = [{"text": w.text, "start": w.start, "end": w.end} for w in iv.words]
+            a, ch["words"], ch["intro"] = intro_mod.insert(a, sr, words, split, iv.audio.astype(np.float32), vw)
+            ch["frames"] = frames = frames + ch["intro"]["frames"]
+            log.info("  интро канала: после слова %d главы %s, %.1f с", split, c["id"], ch["intro"]["frames"] / FPS)
+        chs.append(ch)
         offset += frames
         pieces.append(a)
     import soundfile as sf
@@ -182,8 +213,9 @@ def build_plan(folder: Path, board: dict, narration: dict, prepared: dict[str, d
         shots = []
         for item in by_id[ch["id"]]["shots"]:
             shots.append({**item, "shot": storyboard.apply_images(item["shot"], prepared, f"job/{slug}/img")})
-        timed = storyboard.plan_chapter(ch["words"], shots, ch["frames"])
-        e, n = storyboard.duration_problems(timed, ch["id"])
+        intro = ch.get("intro")
+        timed = storyboard.plan_with_intro(ch["words"], shots, ch["frames"], intro)
+        e, n = storyboard.duration_problems([t for t in timed if not t.get("continued")] if intro else timed, ch["id"])
         errors += e
         notes += n
         props = {
@@ -191,10 +223,13 @@ def build_plan(folder: Path, board: dict, narration: dict, prepared: dict[str, d
             "words": [{"text": w["text"], "start": w["start"], "end": w["end"]} for w in ch["words"]],
             "shots": [{k: t[k] for k in ("start", "frames", "shot", "enter", "exit")} for t in timed],
         }
+        if intro:
+            props["intro"] = intro_mod.props_of(intro, intro_mod.load())
         _write(props_dir / f"{ch['id']}.json", props)
         plan_chapters.append({
             "id": ch["id"], "frames": ch["frames"], "start_frame": ch["start_frame"], "words": ch["words"],
-            "shots": [{"type": t["shot"]["type"], "nominal": t["nominal"], "transition": (t["enter"] or {}).get("kind")} for t in timed],
+            "shots": [{"type": t["shot"]["type"], "nominal": t["nominal"], "transition": (t["enter"] or {}).get("kind"), **({"continued": True} if t.get("continued") else {})} for t in timed],
+            **({"intro": {k: intro[k] for k in ("at_frame", "frames", "word")}} if intro else {}),
         })
     files = {ref: p["file"] for ref, p in prepared.items()}
     return {
@@ -205,6 +240,12 @@ def build_plan(folder: Path, board: dict, narration: dict, prepared: dict[str, d
 
 def write_texts(folder: Path, script: dict, plan: dict) -> None:
     items = captions.cues([(ch["start_frame"] / FPS, ch["words"]) for ch in plan["chapters"]], total=plan["total_frames"] / FPS)
+    for ch in plan["chapters"]:  # во время интро канала субтитров нет
+        if ch.get("intro"):
+            t = (ch["start_frame"] + ch["intro"]["at_frame"]) / FPS
+            for c in items:
+                if c["start"] < t < c["end"]:
+                    c["end"] = t
     captions.write_srt(items, folder / "captions.srt")
     first = [ch["start_frame"] / FPS + ch["words"][0]["start"] for ch in plan["chapters"]]
     chapters.write(chapters.build([c["title"] for c in script["chapters"]], first), folder)
@@ -245,7 +286,7 @@ def produce(folder: Path, render: bool = True, parallel: int = 2, gl: str | None
     _state(folder, "изображения", "готово", count=len(prepared))
 
     log.info("3/6 Озвучка")
-    narration = _retry("озвучка", narrate_chapters, folder, script, settings)
+    narration = _retry("озвучка", narrate_chapters, folder, script, settings, board)
     log.info("  движок %s, слов %d, длина %.1f с, громкость %.1f LUFS", narration["engine"], narration["words"], narration["total_frames"] / FPS, narration["loudness"]["lufs"])
     for w in narration["warnings"]:
         log.warning("  %s", w)

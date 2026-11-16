@@ -135,7 +135,9 @@ def package(folder: Path, parallel: int = 2) -> dict:
 
     sdata = {"title": script["title"], "count": 3 if len(script["chapters"]) <= 4 else 5,
              "chapters": [{"id": c["id"], "sentences": sentences_with_times(c["words"])} for c in plan["chapters"]],
-             "rules": "hook + excerpt = 30–55 s; excerpt from one chapter; start/end copied exactly; no overlaps"}
+             "rules": "hook + excerpt = 30–55 s; excerpt from one chapter; start/end copied exactly; no overlaps"
+             + "".join(f"; in chapter {c['id']} the channel intro plays before «{' '.join(w['text'] for w in c['words'][c['intro']['word']:c['intro']['word'] + 5])}» — no excerpt across it"
+                       for c in plan["chapters"] if c.get("intro"))}
     picked = agents.run("shorts-editor", "Pick the Shorts for the input below.", sdata, schemas.SHORTS, check=lambda o: shorts.check_answer(o, chs), folder=folder)
     (folder / "shorts.json").write_text(json.dumps(picked, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 

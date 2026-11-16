@@ -94,7 +94,7 @@ def run_all(folder: Path, plan: dict) -> dict:
     script = json.loads((folder / "script.json").read_text(encoding="utf-8"))
     board = json.loads((folder / "storyboard.json").read_text(encoding="utf-8"))
     bad = storyboard.validate(script, board)
-    planned = sum(len(ch["shots"]) for ch in plan["chapters"])
+    planned = sum(1 for ch in plan["chapters"] for s in ch["shots"] if not s.get("continued"))
     listed = sum(len(c.get("shots") or []) for c in board.get("chapters") or [])
     if planned != listed:
         bad.append(f"в видео {planned} кадров, а в раскадровке {listed}")

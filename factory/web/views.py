@@ -190,9 +190,11 @@ def storyboard_view(folder: Path, board: dict) -> dict:
         n = words.get(ch["id"])
         if n:
             try:
-                timed = storyboard.plan_chapter(n["words"], ch["shots"], n["frames"])
+                timed = storyboard.plan_with_intro(n["words"], ch["shots"], n["frames"], n.get("intro"))
             except (ValueError, KeyError):
                 timed = None
+            if timed and n.get("intro"):
+                timed = [t for t in timed if not t.get("continued")]
         offset = n["start_frame"] / FPS if n else 0
         shots = []
         for i, item in enumerate(ch["shots"]):
@@ -206,6 +208,12 @@ def storyboard_view(folder: Path, board: dict) -> dict:
                 "seconds": round(timed[i]["frames"] / FPS, 1) if timed else None,
                 "images": [{"ref": r, "has": image_file(r) is not None} for r in storyboard.image_refs(shot)],
             })
+        intro = (n or {}).get("intro")
+        if intro and timed:
+            at = round(offset + intro["at_frame"] / FPS, 1)
+            k = next((i for i, x in enumerate(shots) if x["start"] is not None and x["start"] > at), len(shots))
+            shots.insert(k, {"type": "intro", "at": "", "transition": "dip", "label": "Интро канала", "start": at,
+                             "seconds": round(intro["frames"] / FPS, 1), "images": []})
         chapters.append({"id": ch["id"], "title": titles.get(ch["id"], ch["id"]), "shots": shots})
     return {"chapters": chapters, "summary_ru": board.get("summary_ru", "")}
 

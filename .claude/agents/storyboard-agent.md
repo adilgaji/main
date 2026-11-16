@@ -13,6 +13,8 @@ Input (JSON): `chapters` (id, sentences with start time and number of words, tot
 
 How a shot starts: `at` = the first 3–6 words of the phrase where the shot begins, copied EXACTLY from the text
 (same words, any punctuation). The first shot of every chapter has `at: ""`. Shots follow the text in order.
+If a chapter has `intro_break`, the channel intro is inserted there: one shot must start exactly at those words
+(`at` = those words), the shots before it cover only the hook.
 
 Rules:
 - A new picture every 4–8 seconds (never under 2 or over 10 seconds). Use the sentence times to check.

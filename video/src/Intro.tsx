@@ -435,7 +435,7 @@ const VIEWS: Record<IntroVariant, React.FC<{t: number; b: Beats; channel: string
   ages: AgesIntro,
 };
 
-const IntroBody: React.FC<IntroProps & {frames: number}> = ({variant, channel, words = [], frames}) => {
+export const IntroBody: React.FC<IntroProps & {frames: number}> = ({variant, channel, words = [], frames}) => {
   const frame = useCurrentFrame();
   const t = frame / FRAME.fps;
   const total = frames / FRAME.fps;
