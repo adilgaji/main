@@ -142,6 +142,32 @@ def away_url() -> str | None:
     return f"http://{ip}:{PORT}/?key={phone_key()}" if ip else None
 
 
+def get_segno():
+    """Библиотека QR-кодов. Если её нет (не доустановилась при обновлении) — ставим сами; не вышло — None."""
+    try:
+        import segno
+
+        return segno
+    except ImportError:
+        try:
+            subprocess.run([sys.executable, "-m", "pip", "install", "-q", "segno==1.6.1"], timeout=180, check=True)
+            import segno
+
+            return segno
+        except Exception:  # noqa: BLE001
+            return None
+
+
+def qr_svg(url: str) -> str:
+    segno = get_segno()
+    if not segno:
+        return "<p style='color:#FFB547'>QR-код не получилось нарисовать — наберите ссылку ниже вручную.</p>"
+    try:
+        return '<div style="background:#fff;display:inline-block;padding:16px;border-radius:16px">' + segno.make(url, error="m").svg_inline(scale=8, dark="#0E1A2B", light="#FFFFFF") + "</div>"
+    except Exception as e:  # noqa: BLE001
+        return f"<p style='color:#FFB547'>QR-код не получился ({e}) — наберите ссылку ниже вручную.</p>"
+
+
 DENIED = """<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
 <body style="font-family:system-ui;background:#0E1A2B;color:#F5F1E8;padding:24px"><h2>🔒 Нужна ссылка с ключом</h2>
 <p>Откройте на ноутбуке страницу фабрики → «📱 Телефон» и отсканируйте QR-код камерой телефона.</p></body>"""
@@ -169,18 +195,24 @@ def phone(request: Request):
     """Страница для ноутбука: QR-код и ссылка, чтобы открыть фабрику на телефоне."""
     if (request.client.host if request.client else "") not in LOCAL:
         raise HTTPException(403, "Эта страница открывается только на ноутбуке")
-    import segno
+    try:
+        return phone_page()
+    except Exception:  # noqa: BLE001
+        return HTMLResponse("<meta charset=utf-8><body style='font-family:system-ui;padding:24px'><h3>Не получилось показать страницу телефона</h3>"
+                            "<p>Пришлите скриншот этого текста:</p><pre>" + traceback.format_exc().replace("<", "&lt;") + "</pre></body>", status_code=500)
 
+
+def phone_page() -> str:
     url = phone_url()
-    svg = segno.make(url, error="m").svg_inline(scale=8, dark="#0E1A2B", light="#FFFFFF")
+    svg = qr_svg(url)
     local_only = os.environ.get("LOCAL_ONLY")
     away = away_url()
     if away:
-        away_svg = segno.make(away, error="m").svg_inline(scale=8, dark="#0E1A2B", light="#FFFFFF")
+        away_svg = qr_svg(away)
         away_html = f"""<h2>🌍 Вне дома (через Tailscale)</h2>
 <p>Работает откуда угодно — через мобильный интернет или чужую Wi-Fi. На телефоне должно быть включено приложение Tailscale
 (тот же аккаунт, что на ноутбуке).</p>
-<div style="background:#fff;display:inline-block;padding:16px;border-radius:16px">{away_svg}</div>
+{away_svg}
 <p>Ссылка: <br><code style="font-size:18px;color:#FFC845">{away}</code></p>
 <p style="color:#8FA3BF">Эта ссылка работает и дома — можно сохранить на главный экран только её.</p>"""
     else:
@@ -194,7 +226,7 @@ def phone(request: Request):
 <ol><li>Телефон должен быть подключён к <b>той же Wi-Fi</b>, что и ноутбук.</li>
 <li>Наведите камеру телефона на QR-код и нажмите на появившуюся ссылку.</li>
 <li>Добавьте страницу на главный экран (в браузере: «Поделиться» → «На экран Домой»).</li></ol>
-<div style="background:#fff;display:inline-block;padding:16px;border-radius:16px">{svg}</div>
+{svg}
 <p>Или наберите вручную: <br><code style="font-size:18px;color:#FFC845">{url}</code></p>
 <p style="color:#8FA3BF">Ноутбук должен быть включён, а окно фабрики (start.bat) — открыто. Не пересылайте ссылку другим: в ней ключ доступа.</p>
 {away_html}
@@ -396,8 +428,7 @@ if __name__ == "__main__":
     if not local_only:
         print(f"  📱 С телефона (та же Wi-Fi): {phone_url()}")
         try:
-            import segno
-
+            segno = get_segno()
             print("  или отсканируйте QR-код камерой телефона:\n")
             segno.make(phone_url(), error="m").terminal(compact=True)
         except Exception:  # noqa: BLE001
