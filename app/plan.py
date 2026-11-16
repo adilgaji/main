@@ -63,7 +63,8 @@ def build_today(c):
     if mk: blocks.append({'key': 'mock', 'title': 'Пробный экзамен (' + ('полный' if mk == 'full' else 'мини') + ')', 'minutes': mm, 'target': 1, 'unit': 'пробник', 'route': '#/mock', 'hint': 'формат не подтверждён официально — см. EXAM_SPEC.md', 'available': True})
     review_min = min(55, due * 0.22); add('review', 'Повторение карточек', review_min, due, 'карт', '#/review', 'FSRS: сначала то, что вот-вот забудется')
     if triage_today: add('triage', 'Сортировка слов старого HSK 3 (знаю / не знаю)', triage_today * 0.17, triage_today, 'слов', '#/triage', 'быстро отсеять знакомое; незнакомое пойдёт в изучение')
-    if new_per_day: add('new', 'Новые слова', min(35, new_per_day * 1.3), new_per_day, 'слов', '#/new', 'знакомство со словом: значение, звук, пример')
+    lg = int(db.get(c, 'learn_goal', 20)); new_target = min(p['new'], max(new_per_day, lg)) if p['new'] else 0
+    if new_target: add('new', 'Учить новые слова (как в Duolingo)', min(40, new_target * 1.4), new_target, 'слов', '#/learn', f'цель дня {lg} слов; по плану нужно не меньше {new_per_day}')
     others = {'listening': ('Аудирование (задания в формате экзамена)', 1.0, '#/listening', 'слабое место №1'), 'grammar': ('Грамматика и письмо', 0.8, '#/grammar', 'слабое место №2: порядок слов, составление фраз'),
               'speaking': ('Говорение', 0.35, '#/speaking', 'устная часть нового HSK 4'), 'reading': ('Чтение', 0.5, '#/reading', 'тексты ≤ HSK 4')}
     used = sum(b['minutes'] for b in blocks); free = max(0, budget - used)

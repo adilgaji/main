@@ -380,6 +380,59 @@ async function mockResult(id) {
    ${r.words_to_review.length ? `<div class="sm">В повторение добавлены слова из ошибок: <b>${r.words_to_review.map(esc).join(' ')}</b></div>` : ''}</div>
    <div class="card"><h2>Разбор ошибок (${r.review.length})</h2>${r.review.map(e => `<div class="sm" style="margin-bottom:8px"><span class="tag">${nm[e.section] || e.section}</span> твой ответ: <span class="bad">${esc(e.your ?? '—')}</span><br>верно: <b>${esc(e.right)}</b><br><span class="mut">${esc(e.explain)}</span></div>`).join('') || '<div class="mut">ошибок нет</div>'}</div><a class="btn p" href="#/">К плану</a>`;
 }
+
+// ---------- Учить слова (в стиле Duolingo) ----------
+routes.learn = async () => {
+  const st = await api('/learn/state'); const pct = Math.min(100, Math.round(100 * st.done / st.goal));
+  const ring = `<div style="width:150px;height:150px;border-radius:50%;margin:10px auto;background:conic-gradient(var(--acc) ${pct * 3.6}deg, var(--acc2) 0);display:flex;align-items:center;justify-content:center"><div style="width:116px;height:116px;border-radius:50%;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="big">${st.done}</div><div class="sm mut">из ${st.goal}</div></div></div>`;
+  app.innerHTML = `<h1>Учить слова</h1><div class="card" style="text-align:center">${ring}
+    <div>${st.done >= st.goal ? '🎯 Цель дня выполнена! Можно продолжить.' : `До цели осталось <b>${st.goal - st.done}</b> слов`}</div><div class="sm mut">🔥 серия: ${st.streak} дн. · в очереди ещё ${st.left_in_pool} слов</div>
+    <button class="p" id="go" style="width:100%;margin-top:12px;font-size:18px;padding:16px">${st.done >= st.goal ? 'Ещё урок (5 слов)' : 'Начать урок (5 слов)'}</button></div>
+   <div class="card"><div class="sm mut">Дневная цель, слов:</div><div class="row" style="margin-top:6px">${[10, 20, 30, 50].map(g => `<button class="${g === st.goal ? 'p' : ''}" data-g="${g}">${g}</button>`).join('')}</div>
+    ${st.with_example < st.left_in_pool ? `<div class="sm warn" style="margin-top:8px">У ${st.left_in_pool - st.with_example} слов из очереди пока нет предложения-примера — они идут после слов с примером. Пополни их командой /hsk-refill.</div>` : ''}</div>`;
+  document.querySelectorAll('[data-g]').forEach(b => b.onclick = async () => { await api('/learn/goal', {goal: +b.dataset.g}); routes.learn(); });
+  $('#go').onclick = lesson;
+};
+async function lesson() {
+  const b = await api('/learn/batch?n=5'); const words = b.words;
+  if (!words.length) { app.innerHTML = '<h1>Учить слова</h1><div class="card">Новых слов больше нет — все введены. 🎉</div><a class="btn" href="#/">← Сегодня</a>'; return; }
+  const weak = new Set(); const queue = []; let step = 0; const total = words.length * 3 + 2;
+  const bar = () => `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><a href="#/learn" style="text-decoration:none;font-size:22px;color:var(--mut)">✕</a><div class="bar" style="flex:1"><i style="width:${Math.min(100, Math.round(100 * step / total))}%"></i></div><span class="sm mut">${b.state.done + Math.min(words.length, Math.floor(step / 3))}/${b.state.goal}</span></div>`;
+  const sheet = (ok, text) => `<div class="card" style="position:sticky;bottom:70px;border:2px solid var(--${ok ? 'ok' : 'bad'})"><b class="${ok ? 'ok' : 'bad'}" style="font-size:18px">${ok ? '✓ Верно!' : '✗ Неверно'}</b><div class="sm">${text}</div><button class="p" id="cont" style="width:100%;margin-top:8px">Продолжить</button></div>`;
+  let i = 0;
+  const intro = () => {
+    if (i >= words.length) { words.forEach(w => { queue.push({w, t: 'ru'}); queue.push({w, t: 'hz'}); }); queue.sort(() => Math.random() - 0.5); return quiz(); }
+    const w = words[i]; step = i;
+    app.innerHTML = bar() + `<div class="sm mut" style="text-align:center">Новое слово · ${i + 1} из ${words.length}</div><div class="card" style="text-align:center"><div class="hz" style="font-size:72px">${esc(w.hanzi)}</div><div class="py">${esc(w.pinyin)}</div>
+      <div style="margin:6px 0">${spk(w.audio, '🔊')}</div><h2 style="font-size:24px">${esc(w.ru)}</h2><div class="mut sm">${esc(w.en)}</div>
+      ${w.example ? `<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--line);text-align:left"><div class="sm mut">Пример:</div><div class="hz s" style="text-align:left;font-size:22px">${esc(w.example.zh)} ${spk(w.example.audio)}</div><div class="sm py" style="text-align:left;font-size:14px">${esc(w.example.pinyin)}</div><div class="sm">${esc(w.example.ru)}</div></div>` : '<div class="sm mut" style="margin-top:12px">Предложения-примера для этого слова пока нет.</div>'}</div>
+      <button class="p" id="nx" style="width:100%;font-size:18px;padding:14px">Дальше</button>`;
+    setTimeout(() => play(w.audio, 'normal'), 250); $('#nx').onclick = () => { i++; intro(); };
+  };
+  const quiz = () => {
+    if (!queue.length) return finish(); const q = queue.shift(); const w = q.w; step = words.length + (words.length * 2 - queue.length - 1);
+    const data = q.t === 'ru' ? w.quiz_ru : w.quiz_hz;
+    app.innerHTML = bar() + `<div class="sm mut" style="text-align:center">${q.t === 'ru' ? 'Что значит это слово?' : 'Выбери иероглифы'}</div><div class="card" style="text-align:center">
+      ${q.t === 'ru' ? `<div class="hz" style="font-size:64px">${esc(w.hanzi)}</div><div style="margin:4px 0">${spk(w.audio)}</div>` : `<h2 style="font-size:26px">${esc(w.ru.split(';')[0])}</h2>`}</div>
+      <div class="col" id="opts">${data.options.map((o, k) => `<button class="opt" data-i="${k}">${typeof o === 'string' ? esc(o) : `<span style="font-size:24px">${esc(o.hanzi)}</span> <span class="mut">${esc(o.pinyin)}</span>`}</button>`).join('')}</div><div id="sh"></div>`;
+    if (q.t === 'ru') setTimeout(() => play(w.audio, 'normal'), 200);
+    document.querySelectorAll('#opts .opt').forEach(btn => btn.onclick = () => {
+      const k = +btn.dataset.i, ok = k === data.answer; document.querySelectorAll('#opts .opt').forEach((x, j) => { x.disabled = true; if (j === data.answer) x.classList.add('ok'); else if (j === k) x.classList.add('no'); });
+      if (!ok) { weak.add(w.id); queue.push(q); }   // ошибся — вопрос вернётся в конец урока
+      $('#sh').innerHTML = sheet(ok, ok ? '' : `Правильно: <b>${esc(w.hanzi)}</b> ${esc(w.pinyin)} — ${esc(w.ru)}`); if (!ok) play(w.audio, 'normal'); $('#cont').onclick = quiz;
+    });
+  };
+  const finish = async () => {
+    const before = b.state.done; const s = await api('/learn/finish', {word_ids: words.map(w => w.id), weak: [...weak]});
+    const reached = before < s.goal && s.done >= s.goal;
+    app.innerHTML = `<div class="card" style="text-align:center"><div style="font-size:56px">${reached ? '🎯' : '✅'}</div><h1>${reached ? `Цель дня: ${s.goal} слов!` : 'Урок пройден!'}</h1>
+      <div class="big">+${words.length}</div><div class="mut">сегодня выучено ${s.done} из ${s.goal}</div>${weak.size ? `<div class="sm warn" style="margin-top:8px">Повторим скорее: ${words.filter(w => weak.has(w.id)).map(w => esc(w.hanzi)).join(' ')}</div>` : '<div class="sm ok" style="margin-top:8px">Без единой ошибки!</div>'}
+      <div class="sm mut" style="margin-top:8px">Слова уже в карточках: через 10 минут и дальше они придут на повторение.</div></div>
+      <div class="col"><button class="p" id="more" style="font-size:18px;padding:14px">Ещё урок (5 слов)</button><a class="btn" href="#/learn">Хватит на сегодня</a></div>`;
+    $('#more').onclick = lesson;
+  };
+  intro();
+}
 // ---------- Статистика / Ещё ----------
 routes.stats = async () => {
   const s = await api('/stats'), w = s.words;

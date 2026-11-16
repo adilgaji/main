@@ -165,3 +165,19 @@ def test_answer_positions_balanced():
             if it['type'] == 'passage' and 'questions' in it: pos.update(q['answer'] for q in it['questions'])
             elif 'answer' in it and it['type'] != 'order': pos[it['answer']] += 1
         assert max(pos.values()) - min(pos.values()) <= 3, (f, pos)
+
+def test_learn_page_flow():
+    s = client.get('/api/learn/state').json(); assert s['goal'] == 20 and 'done' in s
+    assert client.post('/api/learn/goal', json={'goal': 30}).json()['goal'] == 30
+    client.post('/api/learn/goal', json={'goal': 20})
+    b = client.get('/api/learn/batch?n=5').json(); ws = b['words']; assert len(ws) == 5
+    for w in ws:
+        assert w['hanzi'] and w['pinyin'] and w['ru'] and w['example'] and w['example']['zh']       # у слов в начале очереди есть пример
+        assert len(w['quiz_ru']['options']) == 4 and w['quiz_ru']['options'][w['quiz_ru']['answer']]
+        assert len(w['quiz_hz']['options']) == 4 and w['quiz_hz']['options'][w['quiz_hz']['answer']]['hanzi'] == w['hanzi']
+    d0 = client.get('/api/learn/state').json()['done']
+    s2 = client.post('/api/learn/finish', json={'word_ids': [w['id'] for w in ws], 'weak': [ws[0]['id']]}).json()
+    assert s2['done'] == d0 + 5
+    b2 = client.get('/api/learn/batch?n=5').json()['words']; assert not {w['id'] for w in b2} & {w['id'] for w in ws}   # введённые слова не повторяются
+    assert C.execute("SELECT COUNT(*) n FROM cards WHERE kind='audio' AND word_id=?", (ws[0]['id'],)).fetchone()['n'] == 1
+    t = client.get('/api/today').json(); blk = next(x for x in t['blocks'] if x['key'] == 'new'); assert blk['route'] == '#/learn' and blk['target'] >= 20

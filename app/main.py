@@ -16,6 +16,8 @@ app.include_router(speaking_router)
 from .reading import router as reading_router
 from .mock import router as mock_router
 app.include_router(reading_router)
+from .learn import router as learn_router
+app.include_router(learn_router)
 app.include_router(mock_router)
 def rows(q, a=()): return [dict(r) for r in C.execute(q, a).fetchall()]
 # ---------- общее ----------

@@ -27,16 +27,19 @@ import unicodedata
 _TONE = {'ā':1,'á':2,'ǎ':3,'à':4,'ē':1,'é':2,'ě':3,'è':4,'ī':1,'í':2,'ǐ':3,'ì':4,'ō':1,'ó':2,'ǒ':3,'ò':4,'ū':1,'ú':2,'ǔ':3,'ù':4,'ǖ':1,'ǘ':2,'ǚ':3,'ǜ':4}
 def _strip(s): return ''.join(c for c in unicodedata.normalize('NFD', s) if not unicodedata.combining(c)).replace('ü', 'u').lower()
 def tones_equal(got, dic, target):
-    """сравнение пиньиня по слогам; нейтральный тон в словаре или в тексте - совместим с любым"""
+    """сравнение пиньиня по слогам; нейтральный тон в словаре или в тексте — совместим с любым;
+    для 一/不 допускаем изменение тона (сандхи); для эризации (儿) сравниваем без 儿"""
+    g, d = _norm(got), _norm(dic)
+    if target.endswith('儿') and len(target) > 1:
+        target = target[:-1]; g = re.sub(r'[ée]?r$', '', g); d = re.sub(r'r$', '', d)
     sylls = [p[0].replace('v', 'ü') for p in pinyin(target, style=Style.NORMAL, v_to_u=True)]
     if len(sylls) != len(target): return True  # нельзя разобрать - не придираемся
-    g, d = _norm(got), _norm(dic)
-    if target.endswith('儿'): g, d = g.rstrip('r'), d.rstrip('r')
     gi = di = 0
-    for s in sylls:
+    for ch, s in zip(target, sylls):
         n = len(s)
         gc, dc = g[gi:gi+n], d[di:di+n]; gi += n; di += n
         if _strip(gc) != _strip(dc): return False
+        if ch in '一不': continue
         tg = next((_TONE[c] for c in gc if c in _TONE), 5); td = next((_TONE[c] for c in dc if c in _TONE), 5)
         if 5 not in (tg, td) and tg != td: return False
     return True
