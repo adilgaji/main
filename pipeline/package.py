@@ -1,6 +1,6 @@
 """Шаг 5: упаковка ролика.
 
-- scriptwriter (режим packaging) пишет 3 названия, описание, теги и идею обложки → packaging.json
+- scriptwriter (режим packaging) пишет названия (Shorts — 3, длинное видео — 5), описание, теги и идею обложки → packaging.json
 - программа проверяет длины, сама добавляет в описание источники и дисклеймер
 - title.txt, description.txt, tags.txt, sources.txt, thumbnail.png
 - quality-reviewer проверяет всё вместе → review.json (может вернуть на доработку)
@@ -22,13 +22,14 @@ DISCLAIMER = "Educational, not medical advice. Talk to a doctor about your own h
 FORBIDDEN = ["cure", "guarantee", "miracle", "secret", "hack", "detox", "doctors hate"]
 
 
-def check_packaging(pk: dict) -> list[str]:
+def check_packaging(pk: dict, fmt: str = "short") -> list[str]:
     problems = []
-    if len(pk.get("titles", [])) != 3:
-        problems.append("need exactly 3 titles")
+    need, limit = (5, 70) if fmt == "long" else (3, 60)
+    if len(pk.get("titles", [])) != need:
+        problems.append(f"need exactly {need} titles")
     for t in pk.get("titles", []):
-        if len(t) > 70:
-            problems.append(f"title longer than 70 characters ({len(t)}): {t}")
+        if len(t) > limit:
+            problems.append(f"title longer than {limit} characters ({len(t)}): {t}")
         if any(w in t.lower() for w in FORBIDDEN):
             problems.append(f"forbidden word in title: {t}")
     for t in pk.get("tags", []) + pk.get("titles", []):
@@ -108,7 +109,9 @@ def package(job: Path, log: Log | None = None, review: bool = True) -> dict:
         prompt = base + ("\nFix: " + "; ".join(problems) if problems else "")
         retry("упаковка", run_agent, log, name="scriptwriter", prompt=prompt, log=log)
         pk = json.loads((job / "packaging.json").read_text(encoding="utf-8"))
-        problems = check_packaging(pk)
+        from job import fmt_of
+
+        problems = check_packaging(pk, fmt_of(job))
         if not problems:
             break
         log("Упаковку нужно поправить: " + "; ".join(problems))

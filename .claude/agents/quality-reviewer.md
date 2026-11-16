@@ -21,7 +21,7 @@ Check and score each item (ok / fix):
 6b. Usefulness (docs/PRACTICAL.md): about 60% of the script is concrete, evidence-based, actionable tips; no complex terms.
 7. Loop & variety (docs/STRUCTURES.md): the last sentence flows into the first (no goodbye); the structure is
    not one of the previous ones listed in output/_history.json.
-8. Packaging: titles ≤ 60 chars, no false promises; description has sources and "Educational, not medical advice".
+8. Packaging: 3 titles ≤ 60 chars for Shorts, 5 titles ≤ 70 chars for a LONG video, no false promises; description has sources and "Educational, not medical advice".
 
 Write <job>/review.json:
 {"verdict": "pass|revise", "scores": {"medical": "ok|fix", "misinformation": "ok|fix", "originality": "ok|fix",

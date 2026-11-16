@@ -109,13 +109,13 @@ export const ThumbnailWide: React.FC<ThumbProps> = ({text, visual, visual_params
       style={style}
       bg={<Backdrop style={style} seed={7} />}
       fg={
-        <div style={{position: 'absolute', left: 0, width: VIDEO.width, top: 640, height: 600, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+        <div style={{position: 'absolute', left: 0, width: VIDEO.width, top: 700, height: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', scale: '1.12'}}>
           <Big visual={visual} vp={visual_params} />
         </div>
       }
       actor={
-        <div style={{position: 'absolute', left: 20, top: 1000}}>
-          <Stickman pose={pose as PoseName} emotion={emotion as Emotion} size={440} alive={false} />
+        <div style={{position: 'absolute', left: 660, top: 1150}}>
+          <Stickman pose={pose as PoseName} emotion={emotion as Emotion} size={300} alive={false} />
         </div>
       }
       ui={
@@ -124,11 +124,16 @@ export const ThumbnailWide: React.FC<ThumbProps> = ({text, visual, visual_params
           style={{
             position: 'absolute',
             left: -560,
-            top: 640,
-            width: 640,
+            top: 600,
+            height: 846,
+            width: 700,
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignContent: 'center',
+            columnGap: 22,
             fontFamily: FONT_FAMILY,
             fontWeight: 900,
-            fontSize: 112,
+            fontSize: text.replace(/\*/g, '').split(/\s+/).length <= 4 ? 134 : 108,
             lineHeight: 1.05,
             color: COLORS.ink,
             textTransform: 'uppercase',
@@ -141,7 +146,7 @@ export const ThumbnailWide: React.FC<ThumbProps> = ({text, visual, visual_params
                 {p.slice(1, -1)}
               </span>
             ) : (
-              <span key={i}>{p} </span>
+              <span key={i}>{p.trim()}</span>
             ),
           )}
         </div>

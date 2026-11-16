@@ -296,10 +296,10 @@ function resultView(d) {
         ${problems.length ? `<div class="card err"><b>Проверки нашли проблемы:</b><ul>${problems.map((p) => `<li>${esc(p)}</li>`).join('')}</ul></div>` : '<div class="card">✅ Все автоматические проверки пройдены</div>'}
         ${rv ? `<div class="card ${rv.verdict === 'pass' ? '' : 'err'}"><b>Контроль качества: ${rv.verdict === 'pass' ? '✅ пройден' : '⚠️ нужна доработка'}</b><p>${esc(rv.summary_ru)}</p>
           ${(rv.fixes || []).length ? `<ul>${rv.fixes.map((f) => `<li class="muted">${esc(f.file)}: ${esc(f.problem)} → ${esc(f.suggestion)}</li>`).join('')}</ul>` : ''}</div>` : ''}
-        <div class="card"><b>Названия</b><pre>${esc(d.title)}</pre></div>
+        <div class="card"><b>Названия (выберите одно)</b><pre>${esc(d.title)}</pre></div>
         <div class="card"><b>Описание</b><pre class="muted">${esc(d.description)}</pre></div>
         <div class="card"><b>Теги</b><pre class="muted">${esc(d.tags)}</pre></div>
-        <div class="card"><b>Обложка</b>${d.files['thumbnail.png'] ? `<img class="thumb" style="max-width:240px;display:block;margin-top:8px" src="/api/jobs/${d.id}/file/thumbnail.png?t=${Date.now()}">` : ''}</div>
+        <div class="card"><b>Обложка</b>${d.files['thumbnail.png'] ? `<img class="thumb" style="max-width:${st.format === 'long' ? '100%' : '240px'};display:block;margin-top:8px" src="/api/jobs/${d.id}/file/thumbnail.png?t=${Date.now()}">` : ''}</div>
         ${['localhost', '127.0.0.1'].includes(location.hostname)
           ? `<button class="primary big" onclick="act('${d.id}','open')">📂 Открыть папку</button>`
           : `<div class="row"><a href="/api/jobs/${d.id}/file/video.mp4" download="video.mp4"><button class="primary big">⬇️ Скачать видео</button></a>
