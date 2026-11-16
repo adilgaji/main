@@ -79,7 +79,7 @@ const splitName = (channel: string): [string, string] => {
   return m ? [m[1], m[2]] : [channel, ''];
 };
 
-const Wordmark: React.FC<{channel: string; t: number; start: number; maxWidth: number; color: string; accent: string; size?: number; glow?: string}> = ({
+export const Wordmark: React.FC<{channel: string; t: number; start: number; maxWidth: number; color: string; accent: string; size?: number; glow?: string}> = ({
   channel,
   t,
   start,
@@ -144,7 +144,7 @@ const Push: React.FC<{k: number; origin?: string; children: React.ReactNode}> = 
 );
 
 /** Пылинки / искры: детерминированные частицы. */
-const Particles: React.FC<{t: number; n: number; seed: number; box: [number, number, number, number]; color: string; rise: number; size: number; opacity: number}> = ({
+export const Particles: React.FC<{t: number; n: number; seed: number; box: [number, number, number, number]; color: string; rise: number; size: number; opacity: number}> = ({
   t,
   n,
   seed,

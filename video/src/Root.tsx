@@ -10,6 +10,7 @@ import {calculateShortMetadata, Short, type ShortProps} from './Short';
 import {Thumbnail, THUMB, type ThumbnailProps} from './Thumbnail';
 import {FONT_SERVICE, FRAME, getStyle, STYLE_LIST, StyleContext, useStyle} from './style';
 import {calculateIntroMetadata, Intro, INTRO_SHEET, IntroSheet, type IntroProps, type IntroWord} from './Intro';
+import {Banner, BANNER, BANNER_SHEET, BannerSheet, Logo, LOGO, LOGO_SHEET, LogoSheet} from './Brand';
 
 type DemoShot = {id: string; narration: string; shot: ShotSpec};
 const SHOTS = library.shots as unknown as DemoShot[];
@@ -239,6 +240,13 @@ export const RemotionRoot: React.FC = () => {
         height={INTRO_SHEET.height}
         defaultProps={{styleId: null as string | null, channel: 'True Tales of the Past', words: [] as IntroWord[]}}
       />
+      <Folder name="Brand">
+        {/* Оформление канала: логотип 800x800, шапка 2560x1440 и листы «5 вариантов» */}
+        <Composition id="Logo" component={Logo} durationInFrames={1} fps={FRAME.fps} width={LOGO.width} height={LOGO.height} defaultProps={{variant: 1}} />
+        <Composition id="Banner" component={Banner} durationInFrames={1} fps={FRAME.fps} width={BANNER.width} height={BANNER.height} defaultProps={{variant: 1}} />
+        <Composition id="Logo-Sheet" component={LogoSheet} durationInFrames={1} fps={FRAME.fps} width={LOGO_SHEET.width} height={LOGO_SHEET.height} />
+        <Composition id="Banner-Sheet" component={BannerSheet} durationInFrames={1} fps={FRAME.fps} width={BANNER_SHEET.width} height={BANNER_SHEET.height} />
+      </Folder>
       <Composition id="Thumbnail" component={Thumbnail} durationInFrames={1} fps={FRAME.fps} width={THUMB.width} height={THUMB.height} defaultProps={defaultThumbnail} />
       <Folder name="Styles">
         {/* Один и тот же кадр в 8 стилях: из этих листов владелец выбирает стиль */}
