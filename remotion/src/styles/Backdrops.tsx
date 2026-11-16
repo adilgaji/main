@@ -244,7 +244,8 @@ const PaperCut: React.FC<BP> = ({seed}) => {
     <AbsoluteFill style={{background: pal[0]}}>
       <Svg style={{filter: sh}}>
         <circle cx={W * (r('sx') < 0.5 ? 0.2 : 0.8)} cy={H * 0.28} r={70} fill="#F6E3A1" />
-        <circle cx={f.x} cy={f.y} r={f.r * 0.85} fill="#F1E4CF" />
+        <circle cx={f.x} cy={f.y} r={f.r * 0.85} fill={pal[3]} />
+        <circle cx={f.x} cy={f.y} r={f.r * 0.7} fill={pal[4]} opacity={0.55} />
       </Svg>
       {[1, 2, 3, 4].map((i) => (
         <Svg key={i} style={{filter: sh}}>
