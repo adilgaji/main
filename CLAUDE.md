@@ -221,6 +221,8 @@
 - Озвучка: интро тем же голосом и движком, что главы (`narrate_chapters`), вставляется в звук главы 1; слова после него
   сдвинуты, в `narration.json` у главы есть `intro {at_frame, frames, word, words}`. Раскладка — `storyboard.plan_with_intro`
   (две половины главы, кадр после интро проявляется из фона). Агент раскадровки получает `intro_break` и обязан начать там кадр.
+- Оформление канала — `video/src/Brand.tsx` (композиции `Logo`, `Banner`, листы `Logo-Sheet` / `Banner-Sheet`). Владелец выбрал
+  логотип 1 «Монограмма» и шапку 3 «Свиток»: готовые файлы `assets/brand/logo.png` (800x800) и `banner.jpg` (2560x1440).
 - Видео: слой `IntroBody` в `Chapter.tsx` (props `intro`), субтитров во время интро нет (и в `.srt` тоже). Shorts не могут
   захватывать интро (`shorts.check_answer`). Листы вариантов — композиция `Intro-Sheet`, отдельно — `Intro`.
 
