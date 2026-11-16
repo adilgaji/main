@@ -113,7 +113,7 @@ export const THEMES: Record<StyleId, Theme> = {
   },
   anime: {
     name: 'Anime painting', ru: 'Уютная рисованная анимация: небо, облака, холмы', font: 'Fredoka', weight: 700,
-    colors: { accentText: '#FFE36E',
+    colors: { accentText: '#E0527A',
       bg: '#3E8EDE', bgSoft: '#FFFFFF', bgGlow: '#CFE6F7', ink: '#1E3A5F', muted: '#5A7A9A', accent: '#FFE36E', accentInk: '#1E3A5F',
       bodyFill: '#F2C9A8', bodyEdge: '#B98A6B', muscle: '#F06C6C', muscleDark: '#B8404A', blood: '#E05252', bloodDark: '#A83A3A', vein: '#5C86D6',
       brain: '#F5A8C0', brainDark: '#C97890', gland: '#6FCF97', glandDark: '#3F9A6A', lung: '#FFB5A0', organ: '#F2B060',
