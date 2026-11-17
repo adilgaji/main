@@ -32,9 +32,9 @@ def done_today(c):
 def pools(c):
     """сколько слов ещё не введено: из старого HSK 3 (сортировка) и по-настоящему новых"""
     intro = {r['word_id'] for r in c.execute("SELECT word_id FROM cards WHERE kind='recog'")}
-    rows = c.execute('SELECT id, old FROM words').fetchall()
-    triage = sum(1 for r in rows if r['id'] not in intro and r['old'] and r['old'] <= 3)
-    new = sum(1 for r in rows if r['id'] not in intro and not (r['old'] and r['old'] <= 3))
+    rows = c.execute('SELECT id, old, level FROM words').fetchall()
+    triage = sum(1 for r in rows if r['id'] not in intro and ((r['old'] and r['old'] <= 3) or r['level'] <= 3))
+    new = sum(1 for r in rows if r['id'] not in intro and not ((r['old'] and r['old'] <= 3) or r['level'] <= 3))
     return {'triage': triage, 'new': new, 'introduced': len(intro)}
 def acc(c, table_sql, args=()):
     r = c.execute(table_sql, args).fetchone(); return (r['c'] / r['n']) if r and r['n'] else None
@@ -62,7 +62,7 @@ def build_today(c):
         blocks.append({'key': key, 'title': title, 'minutes': round(minutes), 'target': target, 'unit': unit, 'route': route, 'hint': hint, 'available': True})
     if mk: blocks.append({'key': 'mock', 'title': 'Пробный экзамен (' + ('полный' if mk == 'full' else 'мини') + ')', 'minutes': mm, 'target': 1, 'unit': 'пробник', 'route': '#/mock', 'hint': 'формат не подтверждён официально — см. EXAM_SPEC.md', 'available': True})
     review_min = min(55, due * 0.22); add('review', 'Повторение карточек', review_min, due, 'карт', '#/review', 'FSRS: сначала то, что вот-вот забудется')
-    if triage_today: add('triage', 'Сортировка слов старого HSK 3 (знаю / не знаю)', triage_today * 0.17, triage_today, 'слов', '#/triage', 'быстро отсеять знакомое; незнакомое пойдёт в изучение')
+    if triage_today: add('triage', 'Быстрая сортировка простых слов HSK 1–3 (знаю / не знаю)', triage_today * 0.17, triage_today, 'слов', '#/triage', 'быстро отсеять знакомое; незнакомое пойдёт в изучение')
     lg = int(db.get(c, 'learn_goal', 20)); new_target = min(p['new'], max(new_per_day, lg)) if p['new'] else 0
     if new_target: add('new', 'Учить новые слова (как в Duolingo)', min(40, new_target * 1.4), new_target, 'слов', '#/learn', f'цель дня {lg} слов; по плану нужно не меньше {new_per_day}')
     others = {'listening': ('Аудирование (задания в формате экзамена)', 1.0, '#/listening', 'слабое место №1'), 'grammar': ('Грамматика и письмо', 0.8, '#/grammar', 'слабое место №2: порядок слов, составление фраз'),

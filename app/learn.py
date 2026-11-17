@@ -12,11 +12,11 @@ def done_today():
     iso0 = db.iso(datetime.combine(db.today(), time(0, 0)).astimezone())
     return C.execute("SELECT COUNT(*) n FROM cards WHERE kind='recog' AND state=1 AND created>=?", (iso0,)).fetchone()['n']
 def pool(limit=None):
-    """ещё не введённые слова; слова старого HSK 3 идут через «сортировку», поэтому здесь только остальные.
+    """ещё не введённые слова; простые слова (уровни 1–3, старый HSK 3) идут через «сортировку», здесь — только слова уровня 4.
     Сначала слова, у которых есть пример (предложение показывается на каждом слове)"""
     intro = {r['word_id'] for r in C.execute("SELECT word_id FROM cards WHERE kind='recog'")}
     ex = {r['word_id'] for r in C.execute('SELECT DISTINCT word_id FROM examples')}
-    rows = [w for w in C.execute('SELECT * FROM words ORDER BY level, freq') if w['id'] not in intro and not (w['old'] and w['old'] <= 3)]
+    rows = [w for w in C.execute('SELECT * FROM words ORDER BY level, freq') if w['id'] not in intro and not cards.is_basic(w)]
     rows.sort(key=lambda w: (0 if w['id'] in ex else 1, w['level'], w['freq']))   # сортировка стабильная: внутри группы порядок по уровню
     return rows[:limit] if limit else rows
 @router.get('/state')

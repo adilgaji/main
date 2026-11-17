@@ -175,9 +175,16 @@ def test_learn_page_flow():
         assert w['hanzi'] and w['pinyin'] and w['ru'] and w['example'] and w['example']['zh']       # у слов в начале очереди есть пример
         assert len(w['quiz_ru']['options']) == 4 and w['quiz_ru']['options'][w['quiz_ru']['answer']]
         assert len(w['quiz_hz']['options']) == 4 and w['quiz_hz']['options'][w['quiz_hz']['answer']]['hanzi'] == w['hanzi']
+    assert all(w['level'] == 4 for w in ws), 'на странице «Слова» только слова уровня 4'
     d0 = client.get('/api/learn/state').json()['done']
     s2 = client.post('/api/learn/finish', json={'word_ids': [w['id'] for w in ws], 'weak': [ws[0]['id']]}).json()
     assert s2['done'] == d0 + 5
     b2 = client.get('/api/learn/batch?n=5').json()['words']; assert not {w['id'] for w in b2} & {w['id'] for w in ws}   # введённые слова не повторяются
     assert C.execute("SELECT COUNT(*) n FROM cards WHERE kind='audio' AND word_id=?", (ws[0]['id'],)).fetchone()['n'] == 1
     t = client.get('/api/today').json(); blk = next(x for x in t['blocks'] if x['key'] == 'new'); assert blk['route'] == '#/learn' and blk['target'] >= 20
+
+def test_basic_words_go_to_triage_not_learn():
+    t = client.get('/api/new/next?source=triage').json()['word']; assert t['hanzi']
+    pools = client.get('/api/today').json()['pools']
+    assert pools['triage'] >= 900          # простые слова: уровни 1-3 и старый HSK 3
+    assert pools['new'] <= 952             # изучаемые: только уровень 4

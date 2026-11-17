@@ -81,3 +81,8 @@ def build(c, card):
         return {**base, **_mcq('Вставь подходящее слово:', [{'hanzi': o['hanzi'], 'pinyin': o['pinyin']} for o in opts], [o['id'] for o in opts].index(w['id']),
                   cloze=ex['zh'].replace(w['hanzi'], '＿＿', 1), cloze_ru=ex['ru'], sentence_audio=audio.spec(ex['zh']))}
     return None
+
+def is_basic(w):
+    """простые слова: уровни 1-3 или слова старого HSK 3. Их пользователь, сдавший HSK 3, в основном знает -> быстрая сортировка «знаю / не знаю»;
+    «новые» слова для изучения — только уровень 4"""
+    return bool((w['old'] and w['old'] <= 3) or w['level'] <= 3)

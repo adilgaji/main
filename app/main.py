@@ -86,7 +86,7 @@ def pick_new(kind, limit=1):
     out = []
     for w in rs:
         if w['id'] in intro: continue
-        is_old = bool(w['old'] and w['old'] <= 3)
+        is_old = cards.is_basic(w)
         if (kind == 'triage') == is_old: out.append(w)
         if len(out) >= limit: break
     return out
