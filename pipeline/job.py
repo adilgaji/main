@@ -259,13 +259,33 @@ def step_script(job: Path, remarks: str = "", log: Log | None = None, light: boo
 
 
 # ------------------------------------------------------------------ шаг 3: раскадровка
+# Комфортный темп речи (слов в минуту): Shorts — спокойнее (субтитры + быстрая смена кадров), длинное — чуть живее.
+TARGET_WPM = {"short": 130, "long": 140}
+
+
+def speech_wpm(words: list[dict]) -> float:
+    span = (words[-1]["endMs"] - words[0]["startMs"]) / 1000 if words else 0
+    return len(words) / span * 60 if span > 0 else 0
+
+
 def make_voice(job: Path, log: Log):
     from captions import make_captions
-    from tts import synthesize
+    from tts import SPEED, SPEED_MIN, synthesize
 
     sj = json.loads((job / "script.json").read_text(encoding="utf-8"))
-    retry("озвучка", synthesize, log, text=sj["script"], out_wav=job / "voice.wav", log=log)
-    retry("субтитры", make_captions, log, wav=job / "voice.wav", script=sj["script"], out_json=job / "words.json", log=log)
+    target = TARGET_WPM[fmt_of(job)]
+    speed = SPEED
+    for attempt in range(2):
+        retry("озвучка", synthesize, log, text=sj["script"], out_wav=job / "voice.wav", log=log, speed=speed)
+        retry("субтитры", make_captions, log, wav=job / "voice.wav", script=sj["script"], out_json=job / "words.json", log=log)
+        wpm = speech_wpm(json.loads((job / "words.json").read_text(encoding="utf-8")))
+        log(f"Темп речи: {wpm:.0f} слов в минуту (норма ≈ {target})")
+        # автоподстройка: голос быстрее нормы — перезаписываем медленнее (один раз)
+        if attempt == 0 and wpm > target * 1.03 and speed > SPEED_MIN + 0.005:
+            speed = max(SPEED_MIN, round(speed * target / wpm, 3))
+            log(f"Голос быстроват — перезаписываю медленнее (скорость {speed})")
+            continue
+        break
     words = json.loads((job / "words.json").read_text(encoding="utf-8"))
     for i, w in enumerate(words):
         w["i"] = i

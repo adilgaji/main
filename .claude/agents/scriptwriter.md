@@ -13,7 +13,7 @@ No complex biology terms. Every claim in "claims" gets "kind": "theory" or "tip"
 The audience is anyone, even a 10-year-old: plain everyday words, short sentences, every unavoidable term explained right away in simple words.
 
 Write ONE script:
-- English, 75–115 spoken words (30–55 s; the voice reads ~2.4 words per second). Clarity beats brevity:
+- English, 65–100 spoken words (30–55 s; the voice reads slowly, ~2.1 words per second — do NOT cram text). Clarity beats brevity:
   use more words if a plain explanation needs them, but never pad. Count words.
 - STRUCTURE (docs/STRUCTURES.md): pick ONE structure that fits the topic and is NOT in the "avoid structures" list
   given in the prompt. Every video must feel different from the previous ones (different shape, different hook formula).

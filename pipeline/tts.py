@@ -21,8 +21,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import MODELS, Log, ffprobe_duration, gpu_available, run  # noqa: E402
 
 DEFAULT_VOICE = "am_fenrir"  # выбран пользователем; запасные: am_michael, af_heart, bf_emma
-SPEED = 0.92  # чуть медленнее обычного — легче успевать за субтитрами
-SENTENCE_PAUSE = 0.05  # без искусственных пауз: естественная интонация Kokoro
+SPEED = 0.85  # медленнее обычного: спокойный темп ≈ 125–135 слов в минуту, легко успевать за субтитрами
+SPEED_MIN = 0.78  # медленнее — голос начинает звучать неестественно
+SENTENCE_PAUSE = 0.1  # короткий «вдох» между предложениями (не длинная пауза)
+_speed = SPEED  # текущая скорость (её меняет автоподстройка темпа в job.make_voice)
 
 
 def clean_text(text: str) -> str:
@@ -44,7 +46,7 @@ def _kokoro(text: str, raw_wav: Path, voice: str, log: Log, device: str):
     gap = np.zeros(int(24000 * SENTENCE_PAUSE), dtype=np.float32)
     sentences = [s for s in re.split(r"(?<=[.!?])\s+", text) if s.strip()]
     for sent in sentences:
-        for result in pipe(sent, voice=voice, speed=SPEED, split_pattern=r"\n+"):
+        for result in pipe(sent, voice=voice, speed=_speed, split_pattern=r"\n+"):
             audio = result.audio
             audio = audio.numpy() if hasattr(audio, "numpy") else audio
             off = pos / 24000
@@ -88,7 +90,12 @@ def piper(text: str, raw_wav: Path, voice: str, log: Log):
     log(f"Озвучка: Piper ({PIPER_VOICE}) на процессоре")
     v = PiperVoice.load(onnx)
     with wave.open(str(raw_wav), "wb") as w:
-        v.synthesize_wav(text, w)
+        try:
+            from piper import SynthesisConfig
+
+            v.synthesize_wav(text, w, syn_config=SynthesisConfig(length_scale=1 / _speed))
+        except ImportError:
+            v.synthesize_wav(text, w)
 
 
 # ----------------------------------------------------------------- edge-tts
@@ -97,7 +104,7 @@ def edge(text: str, raw_wav: Path, voice: str, log: Log):
 
     log("Озвучка: edge-tts (онлайн-сервис, запасной вариант)")
     mp3 = raw_wav.with_suffix(".mp3")
-    asyncio.run(edge_tts.Communicate(text, "en-US-GuyNeural").save(str(mp3)))
+    asyncio.run(edge_tts.Communicate(text, "en-US-GuyNeural", rate=f"{round((_speed - 1) * 100):+d}%").save(str(mp3)))
     run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(mp3), str(raw_wav)])
 
 
@@ -121,7 +128,9 @@ def postprocess(raw_wav: Path, out_wav: Path, trim: float = 0.0):
     run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(raw_wav), "-af", flt, "-ar", "48000", "-ac", "1", str(out_wav)])
 
 
-def synthesize(text: str, out_wav: Path, voice: str = DEFAULT_VOICE, log: Log | None = None, engines=None) -> str:
+def synthesize(text: str, out_wav: Path, voice: str = DEFAULT_VOICE, log: Log | None = None, engines=None, speed: float | None = None) -> str:
+    global _speed
+    _speed = max(SPEED_MIN, min(1.0, speed or SPEED))
     log = log or Log()
     text = clean_text(text)
     out_wav.parent.mkdir(parents=True, exist_ok=True)
