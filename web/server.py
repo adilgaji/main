@@ -15,6 +15,7 @@ import datetime as dt
 import json
 import os
 import platform
+import re
 import secrets
 import socket
 import subprocess
@@ -31,7 +32,7 @@ from fastapi.staticfiles import StaticFiles
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "pipeline"))
 
-from common import OUTPUT, Log  # noqa: E402
+from common import OUTPUT, LimitReached, Log  # noqa: E402
 from job import (  # noqa: E402
     DEFAULT_STYLE,
     STYLE_INFO,
@@ -70,6 +71,12 @@ def background(key: str, job: Path | None, fn, *args, **kw):
     def run():
         try:
             fn(*args, **kw)
+        except LimitReached as e:
+            if job:
+                Log(job / "log.txt")(f"ПАУЗА: {e}")
+                schedule_resume(job, e)
+            else:
+                (IDEAS / "error.txt").write_text(str(e) + "\n", encoding="utf-8")
         except Exception as e:  # noqa: BLE001
             msg = str(e)[:1500]
             if job:
@@ -81,6 +88,50 @@ def background(key: str, job: Path | None, fn, *args, **kw):
     th = threading.Thread(target=run, daemon=True)
     _busy[key] = th
     th.start()
+
+
+def seconds_until(reset_time: str, tz: str) -> int | None:
+    """Сколько секунд до сброса лимита («1:50am», «Asia/Shanghai»). None — если не удалось понять."""
+    m = re.match(r"(\d{1,2})(?::(\d{2}))?\s*([ap]m)", reset_time or "", re.I)
+    if not m:
+        return None
+    h, mi = int(m.group(1)) % 12 + (12 if m.group(3).lower() == "pm" else 0), int(m.group(2) or 0)
+    try:
+        from zoneinfo import ZoneInfo
+
+        now = dt.datetime.now(ZoneInfo(tz)) if tz else dt.datetime.now().astimezone()
+    except Exception:  # noqa: BLE001 — нет базы часовых поясов: считаем по местному времени
+        now = dt.datetime.now().astimezone()
+    target = now.replace(hour=h, minute=mi, second=0, microsecond=0)
+    if target <= now:
+        target += dt.timedelta(days=1)
+    return int((target - now).total_seconds())
+
+
+def schedule_resume(job: Path, e: LimitReached):
+    """Пауза до сброса лимита Claude, потом шаг продолжится сам (пока окно фабрики открыто)."""
+    st = load_state(job)
+    tries = int(st.get("limit_tries", 0)) + 1
+    wait = seconds_until(e.reset_time, e.reset_tz)
+    delay = (wait + 180) if wait is not None else 1800  # не поняли время — пробуем раз в 30 минут
+    resume_at = (dt.datetime.now() + dt.timedelta(seconds=delay)).strftime("%H:%M")
+    if tries > 12:
+        update_state(job, status="error", error=str(e) + " Автопродолжение остановлено после 12 попыток — нажмите «Повторить».")
+        return
+    update_state(job, status="limit", error=str(e), resume_at=resume_at, limit_tries=tries)
+
+    def resume():
+        cur = load_state(job)
+        if cur.get("status") == "limit":
+            Log(job / "log.txt")("Лимит Claude должен был обновиться — продолжаю")
+            try:
+                retry_step(job.name)
+            except Exception as err:  # noqa: BLE001
+                Log(job / "log.txt")(f"Автопродолжение не удалось: {err}")
+
+    t = threading.Timer(delay, resume)
+    t.daemon = True
+    t.start()
 
 
 def job_dir(job_id: str) -> Path:
@@ -409,6 +460,8 @@ def retry_step(job_id: str):
     """Повторить упавший шаг с того места, где он остановился."""
     job = job_dir(job_id)
     st = load_state(job)
+    if st.get("status") in ("limit", "error"):
+        update_state(job, status="working", error=None)
     step = st.get("step")
     if step == "script":
         background(job_id, job, step_script, job)

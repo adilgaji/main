@@ -5,6 +5,7 @@ import datetime as _dt
 import json
 import shutil
 import subprocess
+import re
 import time
 from pathlib import Path
 
@@ -41,14 +42,35 @@ def ffprobe_duration(path: Path) -> float:
     return float(json.loads(out[out.index("{"):])["format"]["duration"])
 
 
+class LimitReached(RuntimeError):
+    """Закончился лимит подписки Claude (окно 5 часов / недельный). Повторять сразу бессмысленно."""
+
+    def __init__(self, raw: str):
+        self.raw = raw
+        m = re.search(r"resets?\s+(?:at\s+)?([0-9]{1,2}(?::[0-9]{2})?\s*[ap]m)?\s*(?:\(([^)]+)\))?", raw, re.I)
+        self.reset_time = (m.group(1) or "").strip() if m else ""
+        self.reset_tz = (m.group(2) or "").strip() if m else ""
+        when = f" Он обновится в {self.reset_time}" + (f" ({self.reset_tz})" if self.reset_tz else "") + "." if self.reset_time else ""
+        super().__init__(
+            "Закончился лимит вашей подписки Claude (агенты фабрики работают через неё)." + when
+            + " Фабрика сама продолжит с этого же места после сброса лимита, если окно start.bat открыто. "
+            + "Можно и вручную: кнопка «Повторить»."
+        )
+
+
+LIMIT_PATTERNS = re.compile(r"hit your .{0,40}limit|usage limit|rate limit|limit reached|limit · resets|out of (?:extra )?usage", re.I)
+
+
 def retry(step_name: str, fn, logger: Log, attempts: int = 3, **kwargs):
-    """Выполнить шаг; при ошибке повторить до `attempts` раз."""
+    """Выполнить шаг; при ошибке повторить до `attempts` раз (кроме исчерпанного лимита Claude)."""
     last = None
     for i in range(1, attempts + 1):
         try:
             if i > 1:
                 logger(f"Шаг «{step_name}»: попытка {i} из {attempts}")
             return fn(**kwargs)
+        except LimitReached:
+            raise
         except Exception as e:  # noqa: BLE001
             last = e
             logger(f"Шаг «{step_name}» не удался: {str(e)[:500]}")

@@ -14,13 +14,14 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 import re
 import subprocess
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import OUTPUT, ROOT, Log, ffprobe_duration, retry  # noqa: E402
+from common import LIMIT_PATTERNS, OUTPUT, ROOT, LimitReached, Log, ffprobe_duration, retry  # noqa: E402
 
 MIN_SEC, MAX_SEC = 30, 55  # допустимая длина ролика (сек)
 import shutil  # noqa: E402
@@ -37,6 +38,15 @@ def _find_claude() -> str:
 
 
 CLAUDE = _find_claude()
+# Модель агентов. Sonnet — хорошее качество и в несколько раз меньше расход лимита подписки, чем Opus.
+# Поменять для всех агентов: переменная окружения FACTORY_MODEL (например opus или haiku).
+AGENT_MODEL = {
+    "idea-researcher": "sonnet",
+    "scriptwriter": "sonnet",
+    "fact-checker": "sonnet",
+    "storyboard-agent": "sonnet",
+    "quality-reviewer": "sonnet",
+}
 AGENT_TOOLS = {
     "idea-researcher": "WebSearch WebFetch Read Write",
     "scriptwriter": "WebSearch WebFetch Read Write",
@@ -139,11 +149,16 @@ def update_state(job: Path, **kw):
 def run_agent(name: str, prompt: str, log: Log, timeout: int = 1500) -> str:
     """Запустить субагента Claude Code без диалога (claude -p)."""
     log(f"Агент {name}: работает…")
+    model = os.environ.get("FACTORY_MODEL") or AGENT_MODEL.get(name, "sonnet")
     res = subprocess.run(
-        [CLAUDE, "-p", "--agent", name, "--allowedTools", *AGENT_TOOLS[name].split(), "--output-format", "text", prompt],
+        [CLAUDE, "-p", "--agent", name, "--model", model, "--allowedTools", *AGENT_TOOLS[name].split(), "--output-format", "text", prompt],
         cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout,
     )
     out = (res.stdout or "").strip()
+    raw = f"{res.stderr or ''}\n{out}"
+    if res.returncode != 0 and LIMIT_PATTERNS.search(raw):
+        log("Закончился лимит подписки Claude: " + raw.strip()[-200:])
+        raise LimitReached(raw)
     if res.returncode != 0:
         raise RuntimeError(f"Агент {name} завершился с ошибкой: {(res.stderr or out)[-800:]}")
     log(f"Агент {name}: {out.splitlines()[-1] if out else 'готово'}")
@@ -184,7 +199,7 @@ def remember_structure(job: Path, structure: str):
     HISTORY.write_text(json.dumps(hist, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
-def step_script(job: Path, remarks: str = "", log: Log | None = None) -> dict:
+def step_script(job: Path, remarks: str = "", log: Log | None = None, light: bool = False) -> dict:
     log = log or Log(job / "log.txt")
     st = update_state(job, step="script", status="working")
     rel = job.relative_to(ROOT).as_posix()
@@ -206,7 +221,7 @@ def step_script(job: Path, remarks: str = "", log: Log | None = None) -> dict:
     issues = read_problems(sj["script"])
     a = analyze(sj["script"])
     log(f"Простота текста: уровень {a['grade']} класса, в среднем {a['avg_sentence']} слов в предложении")
-    if a["grade"] > 6.0 or a["long_sentences"] or len(a["hard_words"]) > 3:
+    if not light and (a["grade"] > 6.0 or a["long_sentences"] or len(a["hard_words"]) > 3):
         log("Текст сложноват — отправляю сценаристу на упрощение")
         simp = ("Make the language simpler so a 10-year-old understands it (docs/PLAIN_LANGUAGE.md). Problems: "
                 + "; ".join(issues) + f". Rewrite {rel}/script.json keeping the facts and sources.")
@@ -223,7 +238,7 @@ def step_script(job: Path, remarks: str = "", log: Log | None = None) -> dict:
 
     share = tip_share(sj)
     log(f"Доля практических советов: {share:.0%}")
-    if share < 0.5 and any("kind" in c for c in sj.get("claims", [])):
+    if not light and share < 0.5 and any("kind" in c for c in sj.get("claims", [])):
         log("Советов мало — прошу сценариста сделать ролик полезнее (≈60% советов)")
         more = ("Make the video more practical (docs/PRACTICAL.md): about 40% simple explanation and about 60% concrete, "
                 f"evidence-based tips (what to do, when, how). Current tip share is {share:.0%}. Keep the hook, structure, loop and sources.")
@@ -304,7 +319,8 @@ def step_storyboard(job: Path, remarks: str = "", log: Log | None = None):
         words_now = len(json.loads((job / "words.json").read_text(encoding="utf-8")))
         target = round(words_now * ((hi * 0.85) if dur > hi else (lo * 1.15)) / dur)
         log(f"Озвучка {dur:.1f} с — вне нормы {lo}–{hi} с. Прошу сценариста привести текст к ~{target} словам")
-        step_script(job, remarks=f"The voiceover is {dur:.1f} s, it must be {lo}-{hi} s. Rewrite to about {target} words, keep the hook, the core idea, the plain-language explanations and the strongest facts.", log=log)
+        step_script(job, remarks=f"The voiceover is {dur:.1f} s, it must be {lo}-{hi} s. Rewrite to about {target} words, keep the hook, the core idea, "
+                    "the plain-language explanations (grade ≤ 6), about 60% practical tips and the strongest facts.", log=log, light=True)
         update_state(job, step="storyboard", status="working")
         make_voice(job, log)
     rel = job.relative_to(ROOT).as_posix()
